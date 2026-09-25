@@ -10,7 +10,7 @@ export default function LandingPage() {
         <span className="text-lg font-semibold tracking-tight">
           {strings.app.name}
         </span>
-        <Button variant="ghost" render={<Link href="/login" />}>
+        <Button variant="ghost" nativeButton={false} render={<Link href="/login" />}>
           {strings.landing.ctaLogin}
         </Button>
       </header>
@@ -24,10 +24,15 @@ export default function LandingPage() {
         </p>
 
         <div className="flex flex-col gap-3 sm:flex-row">
-          <Button size="lg" render={<Link href="/signup" />}>
+          <Button size="lg" nativeButton={false} render={<Link href="/signup" />}>
             {strings.landing.ctaStart}
           </Button>
-          <Button size="lg" variant="outline" render={<Link href="/login" />}>
+          <Button
+            size="lg"
+            variant="outline"
+            nativeButton={false}
+            render={<Link href="/login" />}
+          >
             {strings.landing.ctaLogin}
           </Button>
         </div>

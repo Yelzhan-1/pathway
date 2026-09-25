@@ -12,7 +12,7 @@ export default function NotFound() {
       <p className="max-w-md text-muted-foreground">
         {strings.notFoundPage.description}
       </p>
-      <Button render={<Link href="/" />}>
+      <Button nativeButton={false} render={<Link href="/" />}>
         {strings.notFoundPage.backHome}
       </Button>
     </div>

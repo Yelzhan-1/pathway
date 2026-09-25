@@ -27,7 +27,7 @@ export default function ErrorPage({
       </p>
       <div className="flex gap-3">
         <Button onClick={reset}>{strings.errorPage.retry}</Button>
-        <Button variant="outline" render={<Link href="/" />}>
+        <Button variant="outline" nativeButton={false} render={<Link href="/" />}>
           {strings.errorPage.backHome}
         </Button>
       </div>

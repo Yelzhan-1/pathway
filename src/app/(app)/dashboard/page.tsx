@@ -47,7 +47,7 @@ export default async function DashboardPage() {
         </CardHeader>
         {!profile?.onboarding_completed && (
           <CardContent>
-            <Button render={<Link href="/onboarding" />}>
+            <Button nativeButton={false} render={<Link href="/onboarding" />}>
               {strings.dashboard.onboardingCta}
             </Button>
           </CardContent>
