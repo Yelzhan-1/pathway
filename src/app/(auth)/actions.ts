@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 
+import { getSafeRedirectPath } from "@/lib/safe-redirect";
 import { strings } from "@/lib/strings";
 import { createClient } from "@/lib/supabase/server";
 import { mapAuthErrorToMessage } from "@/lib/supabase/auth-errors";
@@ -9,7 +10,10 @@ import type { LoginInput, SignupInput } from "@/lib/validations/auth";
 
 export type AuthActionResult = { error: string } | { error: null };
 
-export async function loginAction(values: LoginInput): Promise<AuthActionResult> {
+export async function loginAction(
+  values: LoginInput,
+  next?: string | null,
+): Promise<AuthActionResult> {
   const supabase = await createClient();
 
   const { error } = await supabase.auth.signInWithPassword({
@@ -21,7 +25,7 @@ export async function loginAction(values: LoginInput): Promise<AuthActionResult>
     return { error: mapAuthErrorToMessage(error) };
   }
 
-  redirect("/dashboard");
+  redirect(getSafeRedirectPath(next));
 }
 
 export async function signupAction(values: SignupInput): Promise<AuthActionResult> {

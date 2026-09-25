@@ -26,7 +26,10 @@ export function UserMenu({ fullName }: { fullName: string }) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
+      <DropdownMenuTrigger
+        aria-label="Меню пользователя"
+        className="flex items-center rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+      >
         <Avatar>
           <AvatarFallback>{getInitials(fullName)}</AvatarFallback>
         </Avatar>

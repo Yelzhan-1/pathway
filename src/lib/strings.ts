@@ -6,6 +6,9 @@ export const strings = {
   app: {
     name: "Pathway",
   },
+  common: {
+    close: "Закрыть",
+  },
   nav: {
     dashboard: "Дашборд",
     profile: "Профиль",
@@ -39,6 +42,7 @@ export const strings = {
     ],
     ctaStart: "Начать",
     ctaLogin: "Войти",
+    ctaDashboard: "Открыть кабинет",
   },
   auth: {
     login: {
@@ -65,13 +69,15 @@ export const strings = {
     errors: {
       invalidCredentials: "Неверный email или пароль.",
       emailAlreadyRegistered: "Этот email уже зарегистрирован.",
-      weakPassword: "Пароль слишком простой. Используйте минимум 8 символов.",
       network:
         "Не удалось связаться с сервером. Проверьте подключение к интернету и попробуйте снова.",
       generic: "Что-то пошло не так. Попробуйте снова.",
       fullNameRequired: "Введите имя и фамилию.",
+      emailRequired: "Введите email.",
       emailInvalid: "Введите корректный email.",
-      passwordMin: "Пароль должен содержать минимум 8 символов.",
+      passwordRequired: "Введите пароль.",
+      passwordWeak:
+        "Пароль должен содержать минимум 8 символов, включая хотя бы одну букву и одну цифру.",
     },
   },
   dashboard: {

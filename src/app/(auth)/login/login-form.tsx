@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { strings } from "@/lib/strings";
 import { loginSchema, type LoginInput } from "@/lib/validations/auth";
 
-export function LoginForm() {
+export function LoginForm({ next }: { next?: string }) {
   const [isPending, startTransition] = useTransition();
   const [formError, setFormError] = useState<string | null>(null);
   const {
@@ -32,7 +32,7 @@ export function LoginForm() {
   const onSubmit = (values: LoginInput) => {
     setFormError(null);
     startTransition(async () => {
-      const result = await loginAction(values);
+      const result = await loginAction(values, next);
       if (result.error) {
         setFormError(result.error);
       }

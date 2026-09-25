@@ -2,17 +2,29 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { strings } from "@/lib/strings";
+import { createClient } from "@/lib/supabase/server";
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <div className="flex min-h-screen flex-col">
       <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-6">
         <span className="text-lg font-semibold tracking-tight">
           {strings.app.name}
         </span>
-        <Button variant="ghost" nativeButton={false} render={<Link href="/login" />}>
-          {strings.landing.ctaLogin}
-        </Button>
+        {user ? (
+          <Button nativeButton={false} render={<Link href="/dashboard" />}>
+            {strings.landing.ctaDashboard}
+          </Button>
+        ) : (
+          <Button variant="ghost" nativeButton={false} render={<Link href="/login" />}>
+            {strings.landing.ctaLogin}
+          </Button>
+        )}
       </header>
 
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center gap-8 px-6 py-16 text-center">
@@ -23,19 +35,25 @@ export default function LandingPage() {
           {strings.landing.tagline}
         </p>
 
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Button size="lg" nativeButton={false} render={<Link href="/signup" />}>
-            {strings.landing.ctaStart}
+        {user ? (
+          <Button size="lg" nativeButton={false} render={<Link href="/dashboard" />}>
+            {strings.landing.ctaDashboard}
           </Button>
-          <Button
-            size="lg"
-            variant="outline"
-            nativeButton={false}
-            render={<Link href="/login" />}
-          >
-            {strings.landing.ctaLogin}
-          </Button>
-        </div>
+        ) : (
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Button size="lg" nativeButton={false} render={<Link href="/signup" />}>
+              {strings.landing.ctaStart}
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              nativeButton={false}
+              render={<Link href="/login" />}
+            >
+              {strings.landing.ctaLogin}
+            </Button>
+          </div>
+        )}
       </main>
 
       <section className="mx-auto w-full max-w-5xl px-6 pb-20">

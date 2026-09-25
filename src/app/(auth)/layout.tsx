@@ -6,7 +6,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className="mb-8 text-2xl font-semibold tracking-tight">
         {strings.app.name}
       </div>
-      <div className="w-full max-w-sm">{children}</div>
+      <main className="w-full max-w-sm">{children}</main>
     </div>
   );
 }

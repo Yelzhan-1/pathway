@@ -63,6 +63,8 @@ export async function proxy(request: NextRequest) {
   if (isProtectedPath && !isAuthenticated) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    url.search = "";
+    url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
   }
 

@@ -25,7 +25,7 @@ export function mapAuthErrorToMessage(error: AuthError): string {
   }
 
   if (code === "weak_password" || message.includes("password")) {
-    return strings.auth.errors.weakPassword;
+    return strings.auth.errors.passwordWeak;
   }
 
   if (

@@ -17,7 +17,12 @@ export const metadata: Metadata = {
   title: `${strings.auth.login.title} — ${strings.app.name}`,
 };
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: PageProps<"/login">) {
+  const params = await searchParams;
+  const next = typeof params.next === "string" ? params.next : undefined;
+
   return (
     <Card>
       <CardHeader>
@@ -25,7 +30,7 @@ export default function LoginPage() {
         <CardDescription>{strings.auth.login.subtitle}</CardDescription>
       </CardHeader>
       <CardContent>
-        <LoginForm />
+        <LoginForm next={next} />
       </CardContent>
       <CardFooter className="justify-center gap-1.5 text-sm">
         <span className="text-muted-foreground">
