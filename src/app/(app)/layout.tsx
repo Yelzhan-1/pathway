@@ -26,22 +26,32 @@ export default async function AppLayout({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name")
+    .select("full_name, onboarding_completed")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
+
+  if (!profile?.onboarding_completed) {
+    redirect("/onboarding");
+  }
 
   const fullName = profile?.full_name ?? user.email ?? "";
 
   return (
     <div className="flex min-h-screen">
-      <AppSidebar />
+      <div className="app-chrome print:hidden">
+        <AppSidebar />
+      </div>
       <div className="flex min-h-screen flex-1 flex-col">
-        <TopBar fullName={fullName} />
-        <main className="flex-1 overflow-y-auto px-4 pb-24 pt-6 md:px-8 md:pb-6">
+        <div className="app-chrome print:hidden">
+          <TopBar fullName={fullName} />
+        </div>
+        <main className="flex-1 overflow-y-auto px-4 pb-24 pt-6 md:px-8 md:pb-6 print:px-0 print:pb-0 print:pt-0">
           {children}
         </main>
       </div>
-      <BottomNav />
+      <div className="app-chrome print:hidden">
+        <BottomNav />
+      </div>
     </div>
   );
 }

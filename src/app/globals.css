@@ -128,3 +128,25 @@
     @apply font-sans;
   }
 }
+
+@media print {
+  @page {
+    size: A4;
+    margin: 16mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    color: #111 !important;
+  }
+
+  .app-chrome {
+    display: none !important;
+  }
+
+  .cv-document {
+    box-shadow: none !important;
+    max-width: none !important;
+  }
+}

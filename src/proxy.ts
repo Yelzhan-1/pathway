@@ -5,6 +5,7 @@ const PROTECTED_PATHS = [
   "/dashboard",
   "/onboarding",
   "/profile",
+  "/cv",
   "/universities",
   "/roadmap",
   "/tasks",

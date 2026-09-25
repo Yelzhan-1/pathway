@@ -1,5 +1,6 @@
 import {
   ClipboardList,
+  FileText,
   GraduationCap,
   LayoutDashboard,
   Map,
@@ -18,6 +19,7 @@ export interface NavItem {
 export const navItems: NavItem[] = [
   { href: "/dashboard", label: strings.nav.dashboard, icon: LayoutDashboard },
   { href: "/profile", label: strings.nav.profile, icon: User },
+  { href: "/cv", label: strings.nav.cv, icon: FileText },
   { href: "/universities", label: strings.nav.universities, icon: GraduationCap },
   { href: "/roadmap", label: strings.nav.roadmap, icon: Map },
   { href: "/tasks", label: strings.nav.tasks, icon: ClipboardList },

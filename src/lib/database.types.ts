@@ -53,6 +53,9 @@ export interface Database {
           activities: Json;
           cv: Json;
           onboarding_completed: boolean;
+          onboarding_step: number;
+          intake_year: number | null;
+          english_level: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -72,6 +75,9 @@ export interface Database {
           activities?: Json;
           cv?: Json;
           onboarding_completed?: boolean;
+          onboarding_step?: number;
+          intake_year?: number | null;
+          english_level?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -91,6 +97,9 @@ export interface Database {
           activities?: Json;
           cv?: Json;
           onboarding_completed?: boolean;
+          onboarding_step?: number;
+          intake_year?: number | null;
+          english_level?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -117,6 +126,16 @@ export interface Database {
           last_verified: string;
           notes: string | null;
           created_at: string;
+          source_type: string;
+          sat_total_min: number | null;
+          sat_total_max: number | null;
+          region: string | null;
+          ielts_min: number | null;
+          toefl_min: number | null;
+          duolingo_min: number | null;
+          unt_min: number | null;
+          sat_policy: string | null;
+          sat_middle_50: string | null;
         };
         Insert: {
           id?: string;
@@ -138,6 +157,16 @@ export interface Database {
           last_verified: string;
           notes?: string | null;
           created_at?: string;
+          source_type?: string;
+          sat_total_min?: number | null;
+          sat_total_max?: number | null;
+          region?: never;
+          ielts_min?: never;
+          toefl_min?: never;
+          duolingo_min?: never;
+          unt_min?: never;
+          sat_policy?: never;
+          sat_middle_50?: never;
         };
         Update: {
           id?: string;
@@ -159,6 +188,16 @@ export interface Database {
           last_verified?: string;
           notes?: string | null;
           created_at?: string;
+          source_type?: string;
+          sat_total_min?: number | null;
+          sat_total_max?: number | null;
+          region?: never;
+          ielts_min?: never;
+          toefl_min?: never;
+          duolingo_min?: never;
+          unt_min?: never;
+          sat_policy?: never;
+          sat_middle_50?: never;
         };
         Relationships: [];
       };
@@ -176,6 +215,7 @@ export interface Database {
           source_url: string;
           last_verified: string;
           created_at: string;
+          source_type: string;
         };
         Insert: {
           id?: string;
@@ -190,6 +230,7 @@ export interface Database {
           source_url: string;
           last_verified: string;
           created_at?: string;
+          source_type?: string;
         };
         Update: {
           id?: string;
@@ -204,6 +245,7 @@ export interface Database {
           source_url?: string;
           last_verified?: string;
           created_at?: string;
+          source_type?: string;
         };
         Relationships: [];
       };
@@ -225,6 +267,7 @@ export interface Database {
           source_url: string;
           last_verified: string;
           created_at: string;
+          source_type: string;
         };
         Insert: {
           id?: string;
@@ -243,6 +286,7 @@ export interface Database {
           source_url: string;
           last_verified: string;
           created_at?: string;
+          source_type?: string;
         };
         Update: {
           id?: string;
@@ -261,6 +305,7 @@ export interface Database {
           source_url?: string;
           last_verified?: string;
           created_at?: string;
+          source_type?: string;
         };
         Relationships: [];
       };
