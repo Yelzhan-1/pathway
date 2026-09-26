@@ -43,6 +43,10 @@ export const ExamsField = forwardRef<
   const needsSubject = EXAMS_WITH_OPTIONAL_SUBJECT.has(code);
   const isALevel = code === "A_LEVEL";
 
+  function clearDraftError() {
+    setFormError(null);
+  }
+
   function applyCommit(
     result: { ok: true; exams: ExamEntry[] } | { ok: false; error: string },
   ) {
@@ -144,6 +148,7 @@ export const ExamsField = forwardRef<
             className="h-11 min-h-11 w-full rounded-lg border border-input bg-transparent px-2.5 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             value={code}
             onChange={(event) => {
+              clearDraftError();
               setCode(event.target.value as ExamCode);
               setScore("");
             }}
@@ -163,7 +168,10 @@ export const ExamsField = forwardRef<
               id="exam-grade"
               className="h-11 min-h-11 w-full rounded-lg border border-input bg-transparent px-2.5 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               value={score}
-              onChange={(event) => setScore(event.target.value)}
+              onChange={(event) => {
+                clearDraftError();
+                setScore(event.target.value);
+              }}
             >
               <option value="">—</option>
               {A_LEVEL_GRADES.map((grade) => (
@@ -182,7 +190,10 @@ export const ExamsField = forwardRef<
               type="number"
               inputMode="decimal"
               value={score}
-              onChange={(event) => setScore(event.target.value)}
+              onChange={(event) => {
+                clearDraftError();
+                setScore(event.target.value);
+              }}
             />
           </div>
         )}
@@ -194,7 +205,10 @@ export const ExamsField = forwardRef<
               id="exam-subject"
               className="h-11 min-h-11"
               value={subject}
-              onChange={(event) => setSubject(event.target.value)}
+              onChange={(event) => {
+                clearDraftError();
+                setSubject(event.target.value);
+              }}
             />
           </div>
         ) : null}
@@ -213,7 +227,10 @@ export const ExamsField = forwardRef<
               className={`min-h-11 rounded-xl border px-3 text-sm font-medium focus-visible:ring-3 focus-visible:ring-ring/50 ${
                 status === option.value ? "border-primary bg-accent" : ""
               }`}
-              onClick={() => setStatus(option.value)}
+              onClick={() => {
+                clearDraftError();
+                setStatus(option.value);
+              }}
             >
               {option.label}
             </button>
@@ -227,7 +244,10 @@ export const ExamsField = forwardRef<
             className="h-11 min-h-11"
             type="date"
             value={date}
-            onChange={(event) => setDate(event.target.value)}
+            onChange={(event) => {
+              clearDraftError();
+              setDate(event.target.value);
+            }}
           />
         </div>
 

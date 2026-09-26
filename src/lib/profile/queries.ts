@@ -11,6 +11,7 @@ export async function getCurrentProfile(): Promise<{
   user: User;
   profile: ProfileData;
   supabase: Awaited<ReturnType<typeof requireUser>>["supabase"];
+  updatedAt: string | null;
 }> {
   const { supabase, user } = await requireUser();
 
@@ -21,7 +22,12 @@ export async function getCurrentProfile(): Promise<{
     .maybeSingle();
 
   if (data) {
-    return { user, profile: parseProfile(data), supabase };
+    return {
+      user,
+      profile: parseProfile(data),
+      supabase,
+      updatedAt: data.updated_at,
+    };
   }
 
   const metadataName = user.user_metadata?.full_name;
@@ -42,6 +48,7 @@ export async function getCurrentProfile(): Promise<{
     user,
     profile: created ? parseProfile(created as ProfileRow) : emptyProfile(),
     supabase,
+    updatedAt: created?.updated_at ?? null,
   };
 }
 

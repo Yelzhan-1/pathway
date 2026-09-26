@@ -21,7 +21,7 @@ export function StepEnglish({ profile, step }: { profile: ProfileData; step: num
       (LANGUAGE_EXAM_CODES as readonly string[]).includes(exam.code),
     ),
   );
-  const { isPending, error, setError, goBack, save } = useOnboardingStep(
+  const { isPending, error, goBack, save } = useOnboardingStep(
     step,
     englishStepSchema,
     { english_level: level, exams },
@@ -37,10 +37,7 @@ export function StepEnglish({ profile, step }: { profile: ProfileData; step: num
       onBack={goBack}
       onSubmit={() => {
         const pending = examsRef.current?.commitPending() ?? { ok: true as const, exams };
-        if (!pending.ok) {
-          setError(pending.error);
-          return;
-        }
+        if (!pending.ok) return;
         setExams(pending.exams);
         save(englishStepSchema, { english_level: level, exams: pending.exams });
       }}

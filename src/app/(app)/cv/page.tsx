@@ -9,9 +9,14 @@ export const metadata: Metadata = {
 };
 
 export default async function CvPage() {
-  const { user, profile } = await getCurrentProfile();
+  const { user, profile, updatedAt } = await getCurrentProfile();
 
   return (
-    <CvBuilder profile={profile} email={user.email ?? ""} />
+    <CvBuilder
+      profile={profile}
+      email={user.email ?? ""}
+      userId={user.id}
+      updatedAt={updatedAt}
+    />
   );
 }

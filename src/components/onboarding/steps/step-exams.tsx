@@ -17,7 +17,7 @@ export function StepExams({ profile, step }: { profile: ProfileData; step: numbe
       (ACADEMIC_EXAM_CODES as readonly string[]).includes(exam.code),
     ),
   );
-  const { isPending, error, setError, goBack, save, skip } = useOnboardingStep(
+  const { isPending, error, goBack, save, skip } = useOnboardingStep(
     step,
     examsStepSchema,
     { exams },
@@ -35,10 +35,7 @@ export function StepExams({ profile, step }: { profile: ProfileData; step: numbe
       onSkip={skip}
       onSubmit={() => {
         const pending = examsRef.current?.commitPending() ?? { ok: true as const, exams };
-        if (!pending.ok) {
-          setError(pending.error);
-          return;
-        }
+        if (!pending.ok) return;
         setExams(pending.exams);
         save(examsStepSchema, { exams: pending.exams });
       }}

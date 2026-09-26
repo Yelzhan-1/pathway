@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "cn";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { saveActivitiesAction, saveCvAction } from "@/app/(app)/cv/actions";
 import { AutosaveIndicator } from "@/components/cv/autosave-indicator";
@@ -14,8 +14,9 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { moveActivity, newActivityId } from "@/lib/profile/activities";
-import { useAutosave } from "@/lib/hooks/use-autosave";
 import { formatExamEntry } from "@/lib/profile/labels";
+import { parseActivities, parseCv } from "@/lib/profile/parse";
+import { useAutosave, type AutosaveWriteResult } from "@/lib/hooks/use-autosave";
 import { ACTIVITY_TYPES, emptyCv, type Activity, type Cv, type ProfileData } from "@/lib/profile/types";
 import { cvLinkError } from "@/lib/profile/url";
 import { strings } from "@/lib/strings";
@@ -43,11 +44,16 @@ function sanitizeCv(cv: Cv): Cv {
 export function CvBuilder({
   profile,
   email,
+  userId,
+  updatedAt,
 }: {
   profile: ProfileData;
   email: string;
+  userId: string;
+  updatedAt: string | null;
 }) {
   const fullName = profile.full_name ?? email;
+  const versionRef = useRef(updatedAt);
   const [cv, setCv] = useState<Cv>({
     ...emptyCv(),
     ...profile.cv,
@@ -67,18 +73,57 @@ export function CvBuilder({
   const [mobileTab, setMobileTab] = useState("editor");
   const [showPlannedExams, setShowPlannedExams] = useState(false);
 
+  const version = {
+    get: () => versionRef.current,
+    set: (value: string) => {
+      versionRef.current = value;
+    },
+  };
+
   const cvSave = useAutosave(
     cv,
-    async (next) => saveCvAction(next),
+    async (next): Promise<AutosaveWriteResult<Cv>> => {
+      const result = await saveCvAction(next, versionRef.current);
+      if (result.conflict) {
+        return {
+          error: null,
+          conflict: {
+            serverValue: result.conflict.data,
+            updatedAt: result.conflict.updatedAt,
+          },
+        };
+      }
+      return { error: result.error, updatedAt: result.updatedAt };
+    },
     {
       prepare: sanitizeCv,
       keepalive: { url: "/api/cv/autosave", kind: "cv" },
+      journal: { userId, kind: "cv" },
+      onRestore: (payload) => setCv(parseCv(payload)),
+      version,
     },
   );
   const activitiesSave = useAutosave(
     activities,
-    async (next) => saveActivitiesAction(next),
-    { keepalive: { url: "/api/cv/autosave", kind: "activities" } },
+    async (next): Promise<AutosaveWriteResult<Activity[]>> => {
+      const result = await saveActivitiesAction(next, versionRef.current);
+      if (result.conflict) {
+        return {
+          error: null,
+          conflict: {
+            serverValue: result.conflict.data,
+            updatedAt: result.conflict.updatedAt,
+          },
+        };
+      }
+      return { error: result.error, updatedAt: result.updatedAt };
+    },
+    {
+      keepalive: { url: "/api/cv/autosave", kind: "activities" },
+      journal: { userId, kind: "activities" },
+      onRestore: (payload) => setActivities(parseActivities(payload)),
+      version,
+    },
   );
 
   const saveStatus =
