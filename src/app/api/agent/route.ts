@@ -12,8 +12,8 @@ import {
   asksForUniversityMatches,
   fitCategoryRu,
   forcedToolChoice,
+  generalQuestionStep,
   historyForCurrentUniversity,
-  matchToolChoice,
   profileMatchContext,
   universityFactsContext,
   universityNamedInMessage,
@@ -22,6 +22,7 @@ import {
 import { historyForModel, partsToJson, textFromParts } from "@/lib/agent/messages";
 import { AGENT_SYSTEM_PROMPT } from "@/lib/agent/prompt";
 import { englishRequirementLabel } from "@/lib/agent/university-facts";
+import { aidLabel } from "@/lib/labels/display";
 import { loadShortlist, loadUniversities, loadUniversity } from "@/lib/data/load";
 import { parseProfile } from "@/lib/profile/parse";
 import {
@@ -153,10 +154,15 @@ export async function POST(request: Request) {
       matches: universities.items.slice(0, 6).map((item) => ({
         name: item.name,
         categoryRu: fitCategoryRu(item.fit.suggestedCategory),
+        grantRu:
+          aidLabel(item.aid_for_internationals) ??
+          (item.tuition_usd_per_year === 0 ? "бесплатное обучение" : "грант не указан"),
         sourceUrl: item.source_url,
       })),
     })}`;
   }
+
+  const answerOnly = generalQuestionStep(matchQuestion);
 
   try {
     let failed = false;
@@ -165,13 +171,14 @@ export async function POST(request: Request) {
       model: agentModelId(),
       system,
       messages,
-      tools: createAgentTools(supabase, user.id),
-      prepareStep: ({ stepNumber }) => {
-        const toolChoice = named
-          ? forcedToolChoice(stepNumber, named.slug)
-          : matchToolChoice(stepNumber, matchQuestion);
-        return toolChoice ? { toolChoice } : {};
-      },
+      tools: answerOnly ? undefined : createAgentTools(supabase, user.id),
+      toolChoice: answerOnly?.toolChoice,
+      prepareStep: answerOnly
+        ? undefined
+        : ({ stepNumber }) => {
+            const toolChoice = forcedToolChoice(stepNumber, named?.slug ?? null);
+            return toolChoice ? { toolChoice } : {};
+          },
       stopWhen: isStepCount(6),
       onError({ error }) {
         failed = true;

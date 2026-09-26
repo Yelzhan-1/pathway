@@ -123,12 +123,10 @@ export function wantsGrantMatches(message: string): boolean {
   return /грант|стипенд/i.test(message);
 }
 
-export function matchToolChoice(
-  stepNumber: number,
-  enabled: boolean,
-): { type: "tool"; toolName: "searchUniversities" } | undefined {
-  if (!enabled || stepNumber !== 0) return undefined;
-  return { type: "tool", toolName: "searchUniversities" };
+/** General questions are answered from the injected matches. No university-details tool call. */
+export function generalQuestionStep(enabled: boolean): { toolChoice: "none" } | undefined {
+  if (!enabled) return undefined;
+  return { toolChoice: "none" };
 }
 
 export function fitCategoryRu(category: string | null | undefined): string {
@@ -149,6 +147,7 @@ export type AgentProfileFacts = {
 export type AgentMatch = {
   name: string;
   categoryRu: string;
+  grantRu: string;
   sourceUrl: string;
 };
 
@@ -169,7 +168,7 @@ export function profileMatchContext(input: {
     : "пуст";
   const lines = input.matches
     .slice(0, 6)
-    .map((item) => `${item.name}: ${item.categoryRu}. Источник: ${item.sourceUrl}`);
+    .map((item) => `${item.name}: ${item.categoryRu}. Грант: ${item.grantRu}. Источник: ${item.sourceUrl}`);
   return [
     "Профиль уже загружен. Не спрашивай специальность, бюджет, стипендию, баллы и шортлист.",
     `Специальность: ${major}. Бюджет: ${budget}. Стипендия: ${scholarship}. Баллы: ${exams}. Шортлист: ${shortlist}.`,
@@ -177,8 +176,7 @@ export function profileMatchContext(input: {
       ? "Подборка вузов с грантом или бесплатным обучением:"
       : "Подборка вузов по профилю:",
     lines.length > 0 ? lines.join("\n") : "в подборке нет вузов.",
-    "Ответь этими вузами и их категориями. Не повторяй вузы из прошлых сообщений, если их нет в этой подборке.",
-    "Сначала вызови searchUniversities.",
+    "Ответь только по-русски этими вузами: категория и грант. Не вызывай getUniversityDetails и не передавай список имён в инструмент.",
   ].join("\n");
 }
 

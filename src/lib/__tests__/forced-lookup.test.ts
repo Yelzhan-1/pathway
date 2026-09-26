@@ -5,13 +5,14 @@ import {
   englishLookupLine,
   forcedToolChoice,
   historyForCurrentUniversity,
-  matchToolChoice,
+  generalQuestionStep,
   profileMatchContext,
   universityFactsContext,
   universityNamedInMessage,
   wantsGrantMatches,
 } from "@/lib/agent/forced-lookup";
 import { NOT_IN_DATABASE_RU } from "@/lib/agent/prompt";
+import { universityLookupInputSchema, universityNamesFromInput } from "@/lib/agent/schemas";
 
 const CATALOG = [
   { slug: "kaist", name: "KAIST" },
@@ -114,8 +115,31 @@ describe("profile-backed university matches", () => {
     expect(asksForUniversityMatches(message, CATALOG)).toBe(true);
     expect(wantsGrantMatches(message)).toBe(true);
     expect(universityNamedInMessage(message, CATALOG)).toBeNull();
-    expect(matchToolChoice(0, true)).toEqual({ type: "tool", toolName: "searchUniversities" });
-    expect(matchToolChoice(1, true)).toBeUndefined();
+    expect(generalQuestionStep(true)).toEqual({ toolChoice: "none" });
+    expect(generalQuestionStep(false)).toBeUndefined();
+  });
+
+  it("answers from the injected matches and accepts one name or several", () => {
+    const context = profileMatchContext({
+      grantOnly: true,
+      profile: {
+        intendedMajor: "Компьютерные науки",
+        budgetUsd: 10000,
+        needsScholarship: true,
+        exams: [{ code: "IELTS", score: "6.5" }],
+        shortlist: [],
+      },
+      matches: [{ name: "SDU", categoryRu: "Цель", grantRu: "С финансированием", sourceUrl: "https://sdu.edu.kz" }],
+    });
+    expect(context).toContain("SDU: Цель");
+    expect(context).toContain("Грант: С финансированием");
+    expect(context).toMatch(/по-русски/);
+    expect(context).toMatch(/Не вызывай getUniversityDetails/);
+    expect(universityNamesFromInput({ slug: "kaist" })).toEqual(["kaist"]);
+    expect(universityNamesFromInput({ slug: ["sdu", "kbtu", "sdu"] })).toEqual(["sdu", "kbtu"]);
+    expect(universityNamesFromInput({ names: ["MIT", "KAIST"] })).toEqual(["MIT", "KAIST"]);
+    expect(universityLookupInputSchema.safeParse({ slug: "kaist" }).success).toBe(true);
+    expect(universityLookupInputSchema.safeParse({ slug: ["sdu", "kbtu"] }).success).toBe(true);
   });
 
   it("injects the profile and concrete universities instead of asking for them again", () => {
@@ -129,8 +153,8 @@ describe("profile-backed university matches", () => {
         shortlist: [{ name: "KAIST", category: "Мечта" }],
       },
       matches: [
-        { name: "SDU", categoryRu: "Цель", sourceUrl: "https://sdu.edu.kz" },
-        { name: "KBTU", categoryRu: "Запасной", sourceUrl: "https://kbtu.edu.kz" },
+        { name: "SDU", categoryRu: "Цель", grantRu: "С финансированием", sourceUrl: "https://sdu.edu.kz" },
+        { name: "KBTU", categoryRu: "Запасной", grantRu: "грант не указан", sourceUrl: "https://kbtu.edu.kz" },
       ],
     });
     expect(context).toContain("Компьютерные науки");
