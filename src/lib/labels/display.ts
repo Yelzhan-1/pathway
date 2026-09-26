@@ -59,7 +59,34 @@ export function isInternalNote(value: string | null | undefined): boolean {
 
 export function publicNote(value: string | null | undefined): string | null {
   if (!value?.trim() || isInternalNote(value)) return null;
-  return value.trim();
+  return translatePublicNote(value.trim());
+}
+
+function translatePublicNote(value: string): string {
+  const withRounds = value
+    .replace(/early\s+decision/gi, "раннее решение")
+    .replace(/early\s+action/gi, "ранняя подача")
+    .replace(/early\s+admissions?/gi, "ранний приём");
+  return withRounds.replace(
+    /\b(\d{1,2})(?::(\d{2}))?\s*(AM|PM)\s*KST\b/gi,
+    (_match, hour: string, minutes: string | undefined, ampm: string) => {
+      let clock = Number(hour);
+      const marker = ampm.toUpperCase();
+      if (marker === "PM" && clock < 12) clock += 12;
+      if (marker === "AM" && clock === 12) clock = 0;
+      const mm = minutes ?? "00";
+      return `${String(clock).padStart(2, "0")}:${mm} по времени Кореи (KST)`;
+    },
+  );
+}
+
+/** Show a stored "free" cost in Russian. Leave "not free" and other wording as stored. */
+export function displayCost(cost: string | null | undefined): string | null {
+  if (cost == null) return null;
+  const text = cost.trim();
+  if (!text) return null;
+  if (/^free$/i.test(text)) return "бесплатно";
+  return text;
 }
 
 export function examLabel(code: string): string {

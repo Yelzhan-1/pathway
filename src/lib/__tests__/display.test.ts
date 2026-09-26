@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { displayMajor } from "@/lib/matching/synonyms";
+import { displayMajor, uniqueDisplayMajors } from "@/lib/matching/synonyms";
 import {
   aidLabel,
+  displayCost,
   examLabel,
   formatMoneyUsd,
   publicNote,
@@ -24,6 +25,25 @@ describe("display labels", () => {
 
   it("hides internal notes", () => {
     expect(publicNote("price list is published as a scanned PDF")).toBeNull();
+  });
+
+  it("translates deadline notes, majors, a free cost, and the ЕНТ title", () => {
+    expect(publicNote("Early admissions close at 6 PM KST")).toBe(
+      "ранний приём close at 18:00 по времени Кореи (KST)",
+    );
+    expect(displayMajor("Government")).toBe("Государственное управление");
+    expect(displayMajor("History")).toBe("История");
+    expect(
+      uniqueDisplayMajors([
+        "Mathematics",
+        "Math",
+        "Statistics",
+        "Government",
+      ]),
+    ).toEqual(["Математика и статистика", "Государственное управление"]);
+    expect(displayCost("free")).toBe("бесплатно");
+    expect(displayCost("not free")).toBe("not free");
+    expect(examLabel("UNT")).toBe("ЕНТ");
   });
 
   it("drops «(offered)» from program names", () => {

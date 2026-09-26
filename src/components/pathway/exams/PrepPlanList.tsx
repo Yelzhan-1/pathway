@@ -3,13 +3,19 @@ import { examLabel } from "@/lib/labels/display";
 import type { PrepExamPlan } from "@/lib/prep/plan";
 import { strings } from "@/lib/strings";
 
+function examTitle(exam: PrepExamPlan): string {
+  const label = examLabel(exam.code);
+  if (label !== exam.code) return label;
+  return exam.examName ?? label;
+}
+
 export function PrepPlanList({ exams }: { exams: PrepExamPlan[] }) {
   return (
     <div className="flex flex-col gap-4">
       {exams.map((exam) => (
         <TCard key={exam.code} labelledBy={`exam-${exam.code}`}>
           <Display as="h2" id={`exam-${exam.code}`} className="text-[20px]">
-            {exam.examName ?? examLabel(exam.code)}
+            {examTitle(exam)}
           </Display>
           <p className="mt-1 text-[13px] font-semibold text-muted-foreground">
             {strings.exams.forUniversity} {exam.targetUniversityName}

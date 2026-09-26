@@ -6,7 +6,7 @@ import { UniMonogram } from "@/components/pathway/ui/UniMonogram";
 import { TCard } from "@/components/pathway/ui/tropa";
 import { toCountryCode } from "@/lib/dashboard/present";
 import { initials } from "@/lib/format";
-import { displayMajor } from "@/lib/matching/synonyms";
+import { uniqueDisplayMajors } from "@/lib/matching/synonyms";
 import type { FitCategory } from "@/lib/matching/types";
 import { getCountryLabel } from "@/lib/profile/types";
 import type { UniversityWithFit } from "@/lib/data/load";
@@ -21,7 +21,7 @@ export function UniversityCard({
   savedCategory: FitCategory | null;
 }) {
   const place = [university.city, getCountryLabel(university.country)].filter(Boolean).join(", ");
-  const majors = (university.majors ?? []).filter(Boolean).slice(0, 3);
+  const majors = uniqueDisplayMajors((university.majors ?? []).filter(Boolean)).slice(0, 3);
 
   return (
     <TCard as="article" className="flex flex-col gap-3">
@@ -46,7 +46,7 @@ export function UniversityCard({
         <p className="flex flex-wrap gap-1">
           {majors.map((major) => (
             <span key={major} className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-bold text-ink-2">
-              {displayMajor(major)}
+              {major}
             </span>
           ))}
         </p>

@@ -1,7 +1,7 @@
 import { isFreeOrGrantUniversity, isGrantAid } from "./budget";
 import { classifyDeadlines, LAST_CYCLE_WARNING_RU } from "./deadlines";
 import { gpaRatio, universityGpaMinRatio } from "./gpa";
-import { displayMajor, majorMatches, universityMatchesQuery } from "./synonyms";
+import { majorMatches, uniqueDisplayMajors, universityMatchesQuery } from "./synonyms";
 import { aidLabel, examLabel, formatMoneyUsd, roundLabel } from "@/lib/labels/display";
 import { getCountryLabel } from "@/lib/profile/types";
 import {
@@ -404,7 +404,7 @@ function majorCheck(profile: FitProfile, university: FitUniversity): BuiltCheck 
         key: "major",
         status: "unknown",
         have: null,
-        need: majors.map(displayMajor).join(", "),
+        need: uniqueDisplayMajors(majors).join(", "),
         sourceUrl: university.source_url,
       },
       gap: { key: "major", message_ru: PROFILE_GAP_RU.major, delta: null },
@@ -416,7 +416,7 @@ function majorCheck(profile: FitProfile, university: FitUniversity): BuiltCheck 
       key: "major",
       status: meets ? "meets" : "below",
       have: profile.intended_major,
-      need: majors.map(displayMajor).join(", "),
+      need: uniqueDisplayMajors(majors).join(", "),
       sourceUrl: university.source_url,
     },
     gap: meets

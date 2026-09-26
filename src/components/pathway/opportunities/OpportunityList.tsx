@@ -1,5 +1,6 @@
 import type { Database } from "@/lib/database.types";
 import { opportunityReasons, type OpportunityProfile } from "@/lib/opportunities/match";
+import { displayCost } from "@/lib/labels/display";
 import { strings } from "@/lib/strings";
 import { dayMonth } from "@/lib/format";
 
@@ -34,7 +35,9 @@ export function OpportunityList({
             {item.deadline ? (
               <p className="mt-1 text-[13px] font-semibold text-ink-2">{dayMonth(item.deadline.slice(0, 10))}</p>
             ) : null}
-            {item.cost ? <p className="text-[13px] font-medium text-muted-foreground">{item.cost}</p> : null}
+            {displayCost(item.cost) ? (
+              <p className="text-[13px] font-medium text-muted-foreground">{displayCost(item.cost)}</p>
+            ) : null}
             {reasons.length > 0 ? (
               <ul className="mt-2 flex flex-wrap gap-1">
                 {reasons.map((reason) => (

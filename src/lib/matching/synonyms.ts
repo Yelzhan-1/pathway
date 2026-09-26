@@ -161,9 +161,30 @@ function fuzzyIncludes(hay: string, needle: string): boolean {
   return hay.includes(needle) || needle.includes(hay);
 }
 
+function extraMajorLabel(needle: string): string | null {
+  if (/(^|[^a-zа-яё])government([^a-zа-яё]|$)/.test(needle)) return "Государственное управление";
+  if (/(^|[^a-zа-яё])history([^a-zа-яё]|$)/.test(needle)) return "История";
+  return null;
+}
+
+export function uniqueDisplayMajors(majors: string[]): string[] {
+  const seen = new Set<string>();
+  const labels: string[] = [];
+  for (const major of majors) {
+    const label = displayMajor(major);
+    const key = normalizeSearch(label);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    labels.push(label);
+  }
+  return labels;
+}
+
 export function displayMajor(value: string): string {
   const needle = normalizeSearch(value.replace(/\s*\(offered\)\s*/gi, " "));
   if (!needle) return value.trim();
+  const extra = extraMajorLabel(needle);
+  if (extra) return extra;
   for (const option of MAJOR_OPTIONS) {
     const optionN = normalizeSearch(option);
     const aliases = MAJOR_ALIASES[option].map(normalizeSearch);

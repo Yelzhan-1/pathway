@@ -13,7 +13,7 @@ import type {
   UniCard,
 } from "@/types/pathway";
 import { classifyDeadlines } from "@/lib/matching/deadlines";
-import { displayMajor } from "@/lib/matching/synonyms";
+import { displayMajor, uniqueDisplayMajors } from "@/lib/matching/synonyms";
 import { roundLabel } from "@/lib/labels/display";
 import { shiftUtcDays, utcWeekRange } from "@/lib/matching/dates";
 import type { FitCategory, FitUniversity } from "@/lib/matching/types";
@@ -190,7 +190,7 @@ export type UniversityRow = {
 
 export function toUniCards(rows: UniversityRow[], savedIds: Set<string> = new Set()): UniCard[] {
   return rows.map((row) => {
-    const tags = (row.majors ?? []).filter(Boolean).slice(0, 2).map(displayMajor);
+    const tags = uniqueDisplayMajors((row.majors ?? []).filter(Boolean)).slice(0, 2);
     return {
       id: row.id,
       name: row.name,
