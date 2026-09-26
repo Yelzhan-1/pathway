@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { AGENT_UNAVAILABLE_RU, agentErrorText, isGatewayAuthOrCreditError } from "./errors";
+import { AGENT_UNAVAILABLE_RU, agentErrorLogLine, agentErrorText, isGatewayAuthOrCreditError } from "./errors";
 
 describe("agentErrorText", () => {
   it("maps gateway auth and credit failures to a short Russian message", () => {
@@ -14,5 +14,15 @@ describe("agentErrorText", () => {
       AGENT_UNAVAILABLE_RU,
     );
     expect(agentErrorText(new Error("network down"))).not.toBe(AGENT_UNAVAILABLE_RU);
+    expect(AGENT_UNAVAILABLE_RU).toMatch(/Попробуй ещё раз/);
+  });
+
+  it("logs the error name and message without a secret", () => {
+    expect(agentErrorLogLine({ name: "APICallError", message: "Insufficient credits" })).toBe(
+      "[agent] APICallError: Insufficient credits",
+    );
+    expect(
+      agentErrorLogLine({ name: "LoadAPIKeyError", message: "AI Gateway authentication failed sk-live-secret" }),
+    ).toBe("[agent] LoadAPIKeyError: AI Gateway authentication failed [redacted]");
   });
 });

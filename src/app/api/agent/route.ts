@@ -6,7 +6,7 @@ import {
   type ModelMessage,
 } from "ai";
 
-import { agentErrorText } from "@/lib/agent/errors";
+import { agentErrorText, logAgentError } from "@/lib/agent/errors";
 import { agentModelId } from "@/lib/agent/model";
 import { partsToJson, textFromParts } from "@/lib/agent/messages";
 import { AGENT_SYSTEM_PROMPT } from "@/lib/agent/prompt";
@@ -103,7 +103,7 @@ export async function POST(request: Request) {
       stopWhen: isStepCount(6),
       onError({ error }) {
         failed = true;
-        console.error("agent", error);
+        logAgentError(error);
       },
     });
 
@@ -111,7 +111,7 @@ export async function POST(request: Request) {
       stream: result.stream,
       onError: (error) => {
         failed = true;
-        console.error("agent", error);
+        logAgentError(error);
         return agentErrorText(error);
       },
       onFinish: async ({ responseMessage }) => {
@@ -138,7 +138,7 @@ export async function POST(request: Request) {
 
     return createUIMessageStreamResponse({ stream: uiStream });
   } catch (error) {
-    console.error("agent", error);
+    logAgentError(error);
     return Response.json({ error: agentErrorText(error) }, { status: 503 });
   }
 }

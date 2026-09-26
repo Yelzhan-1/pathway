@@ -1,10 +1,18 @@
-export const AGENT_UNAVAILABLE_RU = "Ассистент временно недоступен";
+export const AGENT_UNAVAILABLE_RU = "Ассистент временно недоступен. Попробуй ещё раз.";
 export const AGENT_GENERIC_ERROR_RU = "Помощник сейчас недоступен. Попробуй позже.";
 
 function errorBlob(error: unknown): { name: string; message: string; status: number | null } {
   const record = error && typeof error === "object" ? (error as Record<string, unknown>) : null;
   const name = record && typeof record.name === "string" ? record.name : "";
-  const message = error instanceof Error ? error.message : typeof error === "string" ? error : "";
+  const recordMessage = record && typeof record.message === "string" ? record.message : "";
+  const message =
+    error instanceof Error
+      ? error.message
+      : recordMessage
+        ? recordMessage
+        : typeof error === "string"
+          ? error
+          : "";
   const nested =
     record && record.cause && typeof record.cause === "object"
       ? (record.cause as Record<string, unknown>)
@@ -26,4 +34,23 @@ export function isGatewayAuthOrCreditError(error: unknown): boolean {
 
 export function agentErrorText(error: unknown): string {
   return isGatewayAuthOrCreditError(error) ? AGENT_UNAVAILABLE_RU : AGENT_GENERIC_ERROR_RU;
+}
+
+function redactSecrets(message: string): string {
+  return message
+    .replace(/sk-[A-Za-z0-9_-]+/g, "[redacted]")
+    .replace(/Bearer\s+\S+/gi, "Bearer [redacted]")
+    .replace(/AI_GATEWAY_API_KEY=\S+/g, "AI_GATEWAY_API_KEY=[redacted]")
+    .replace(/(api[_-]?key["']?\s*[:=]\s*)\S+/gi, "$1[redacted]");
+}
+
+/** One Vercel log line: name and message only. No error object, headers, or keys. */
+export function agentErrorLogLine(error: unknown): string {
+  const { name, message } = errorBlob(error);
+  const safe = redactSecrets(message.trim() || "unknown");
+  return `[agent] ${name || "Error"}: ${safe}`;
+}
+
+export function logAgentError(error: unknown): void {
+  console.error(agentErrorLogLine(error));
 }
