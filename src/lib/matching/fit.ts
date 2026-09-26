@@ -206,9 +206,23 @@ function untCheck(profile: FitProfile, university: FitUniversity): BuiltCheck {
   });
 }
 
+/** Lowest published SAT bar: explicit minimum, otherwise the low end of a middle-50 range. */
+export function publishedSatMin(university: FitUniversity): number | null {
+  if (typeof university.sat_total_min === "number" && Number.isFinite(university.sat_total_min)) {
+    return university.sat_total_min;
+  }
+  const middle = university.sat_middle_50;
+  if (!middle) return null;
+  const match = middle.match(/(\d{3,4})/);
+  if (!match) return null;
+  const value = Number(match[1]);
+  return Number.isFinite(value) ? value : null;
+}
+
 function satCheck(profile: FitProfile, university: FitUniversity): BuiltCheck {
   const policy = university.sat_policy;
   const score = takenScore(profile, "SAT");
+  const satMin = publishedSatMin(university);
   const sourceUrl = university.source_url;
 
   if (policy === "not_used") {
@@ -232,7 +246,7 @@ function satCheck(profile: FitProfile, university: FitUniversity): BuiltCheck {
     });
   }
 
-  if (university.sat_total_min == null) {
+  if (satMin == null) {
     return check({
       check: {
         key: "sat",
@@ -247,14 +261,14 @@ function satCheck(profile: FitProfile, university: FitUniversity): BuiltCheck {
     });
   }
 
-  const need = `SAT ${formatNumber(university.sat_total_min)}`;
+  const need = `SAT ${formatNumber(satMin)}`;
   if (score == null) {
     return check({
       check: { key: "sat", status: "unknown", have: null, need, sourceUrl },
       gap: { key: "sat", message_ru: PROFILE_GAP_RU.sat, delta: null },
     });
   }
-  const meets = score >= university.sat_total_min;
+  const meets = score >= satMin;
   return check({
     check: {
       key: "sat",
@@ -268,7 +282,7 @@ function satCheck(profile: FitProfile, university: FitUniversity): BuiltCheck {
       : {
           key: "sat",
           message_ru: "SAT ниже требования",
-          delta: `${formatNumber(score)} < ${formatNumber(university.sat_total_min)}`,
+          delta: `${formatNumber(score)} < ${formatNumber(satMin)}`,
         },
   });
 }
@@ -498,44 +512,92 @@ function deadlineCheck(university: FitUniversity, today: string): BuiltCheck {
   });
 }
 
-/** Values ≤ 1 are fractions; values above 1 are percents. Selective means under 15%. */
-export function isVerySelective(acceptanceRate: number | null): boolean {
+/** Values ≤ 1 are fractions; values above 1 are percents. */
+export function acceptanceFraction(acceptanceRate: number | null): number | null {
   if (acceptanceRate == null || !Number.isFinite(acceptanceRate) || acceptanceRate < 0) {
-    return false;
+    return null;
   }
-  if (acceptanceRate <= 1) return acceptanceRate < 0.15;
-  return acceptanceRate < 15;
+  if (acceptanceRate <= 1) return acceptanceRate;
+  return acceptanceRate / 100;
 }
 
-function suggestedCategory(
-  checks: FitCheck[],
-  gaps: FitGap[],
+/** Selective means 15% or under. */
+export function isVerySelective(acceptanceRate: number | null): boolean {
+  const fraction = acceptanceFraction(acceptanceRate);
+  return fraction != null && fraction <= 0.15;
+}
+
+function flaggedHighlySelective(requirements: Record<string, unknown> | null): boolean {
+  if (!requirements) return false;
+  const flag = requirements.highly_selective ?? requirements.highlySelective;
+  if (flag === true || flag === "true") return true;
+  const selectivity = requirements.selectivity;
+  return typeof selectivity === "string" && /highly|most\s+selective/i.test(selectivity);
+}
+
+const ACADEMIC_KEYS = ["english", "gpa", "sat"] as const;
+
+function capCategory(
+  category: FitCategory | null,
   acceptanceRate: number | null,
+  requirements: Record<string, unknown> | null,
 ): FitCategory | null {
+  if (!category) return null;
+  const fraction = acceptanceFraction(acceptanceRate);
+  const ceiling: FitCategory =
+    flaggedHighlySelective(requirements) || (fraction != null && fraction <= 0.15)
+      ? "dream"
+      : fraction != null && fraction <= 0.3
+        ? "target"
+        : "safety";
+  const rank = { dream: 0, target: 1, safety: 2 } as const;
+  return rank[category] > rank[ceiling] ? ceiling : category;
+}
+
+function baseCategory(checks: FitCheck[]): FitCategory | null {
   const scored = new Set<string>(SCORED_FIT_KEYS);
-  const comparable = checks.filter(
+  const scoredChecks = checks.filter((item) => scored.has(item.key));
+  if (scoredChecks.some((item) => item.status === "below")) return "dream";
+  if (scoredChecks.some((item) => item.status === "unknown" && item.need != null)) return "target";
+
+  const academicMet = checks.some(
     (item) =>
-      scored.has(item.key) && (item.status === "meets" || item.status === "below"),
+      (ACADEMIC_KEYS as readonly string[]).includes(item.key) && item.status === "meets",
   );
-  const profileGaps = gaps.some((gap) => scored.has(gap.key) && gap.message_ru.startsWith("добавьте"));
-  if (comparable.some((item) => item.status === "below")) return "dream";
-  if (isVerySelective(acceptanceRate)) return "dream";
-  if (comparable.length > 0 && comparable.every((item) => item.status === "meets") && !profileGaps) {
+  const budget = checks.find((item) => item.key === "budget");
+  const major = checks.find((item) => item.key === "major");
+  const budgetMajorOk =
+    budget?.status !== "below" && major?.status !== "below";
+  if (academicMet && budgetMajorOk) return "safety";
+
+  const academicsUnpublished = ACADEMIC_KEYS.every((key) => {
+    const item = checks.find((check) => check.key === key);
+    return !item || item.status === "not_required" || (item.status === "unknown" && item.need == null);
+  });
+  if (budget?.status === "meets" && major?.status === "meets" && academicsUnpublished) {
     return "safety";
   }
-  if (comparable.some((item) => item.status === "meets") && profileGaps) return "target";
+  if (budget?.status === "meets" || major?.status === "meets" || academicMet) return "target";
   return null;
 }
 
 function fitScore(checks: FitCheck[]): number | null {
   const scored = new Set<string>(SCORED_FIT_KEYS);
-  const comparable = checks.filter(
-    (item) =>
-      scored.has(item.key) && (item.status === "meets" || item.status === "below"),
-  );
+  const comparable = checks.filter((item) => {
+    if (!scored.has(item.key)) return false;
+    if (item.status === "meets" || item.status === "below") return true;
+    return item.status === "unknown" && item.need != null;
+  });
   if (comparable.length === 0) return null;
   const total = comparable.reduce((sum, item) => sum + (item.status === "meets" ? 100 : 0), 0);
-  return Math.round(total / comparable.length);
+  let score = Math.round(total / comparable.length);
+  const academicCompared = checks.some(
+    (item) =>
+      (ACADEMIC_KEYS as readonly string[]).includes(item.key) &&
+      (item.status === "meets" || item.status === "below"),
+  );
+  if (!academicCompared) score = Math.min(score, 60);
+  return score;
 }
 
 export function fitUniversity(
@@ -558,7 +620,11 @@ export function fitUniversity(
   const gaps = built.flatMap((item) => (item.gap ? [item.gap] : []));
   return {
     score: fitScore(checks),
-    suggestedCategory: suggestedCategory(checks, gaps, university.acceptance_rate),
+    suggestedCategory: capCategory(
+      baseCategory(checks),
+      university.acceptance_rate,
+      university.requirements,
+    ),
     checks,
     gaps,
   };

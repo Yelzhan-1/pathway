@@ -1,6 +1,6 @@
 import { examLabel } from "@/lib/labels/display";
 import { universityGpaMinRatio } from "@/lib/matching/gpa";
-import { fitUniversity } from "@/lib/matching/fit";
+import { fitUniversity, publishedSatMin } from "@/lib/matching/fit";
 import type { FitCategory, FitProfile, FitUniversity } from "@/lib/matching/types";
 import { EXAM_RANGES } from "@/lib/profile/exam-ranges";
 
@@ -146,14 +146,15 @@ function collectLevers(profile: FitProfile, university: FitUniversity): PathLeve
     if (lever) levers.push(lever);
   }
 
-  if (university.sat_policy === "required" && university.sat_total_min != null) {
+  const satMin = publishedSatMin(university);
+  if (university.sat_policy === "required" && satMin != null) {
     const score = takenScore(profile, "SAT");
-    const lever = examLever("SAT", score, university.sat_total_min, score == null ? "take" : "raise");
+    const lever = examLever("SAT", score, satMin, score == null ? "take" : "raise");
     if (lever) levers.push(lever);
-  } else if (university.sat_policy === "optional" && university.sat_total_min != null) {
+  } else if (university.sat_policy === "optional" && satMin != null) {
     const score = takenScore(profile, "SAT");
     if (score != null) {
-      const lever = examLever("SAT", score, university.sat_total_min, "raise");
+      const lever = examLever("SAT", score, satMin, "raise");
       if (lever) levers.push(lever);
     }
   }

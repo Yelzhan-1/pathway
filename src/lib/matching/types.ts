@@ -87,6 +87,8 @@ export type FitUniversity = {
   sat_policy: string | null;
   sat_total_min: number | null;
   sat_total_max: number | null;
+  /** Middle 50% range such as "1510-1580". The low number is a floor when sat_total_min is empty. */
+  sat_middle_50?: string | null;
 };
 
 export type UniversityFilters = {

@@ -104,7 +104,7 @@ describe("fitUniversity", () => {
     expect(result.suggestedCategory).not.toBe("dream");
   });
 
-  it("asks for a missing profile score instead of penalizing it", () => {
+  it("treats a missing profile score as unknown and lowers the score", () => {
     const result = fitUniversity(profile({ exams: [] }), university(), TODAY);
     expect(checkByKey(result, "english").status).toBe("unknown");
     expect(result.gaps).toContainEqual({
@@ -112,8 +112,46 @@ describe("fitUniversity", () => {
       message_ru: "добавьте результат IELTS, TOEFL или Duolingo",
       delta: null,
     });
-    expect(result.score).toBe(100);
+    expect(result.score).toBeLessThan(100);
     expect(result.suggestedCategory).toBe("target");
+  });
+
+  it("reads a 4-point GPA minimum that has no explicit scale", () => {
+    const result = fitUniversity(
+      profile({ gpa: 3.6, gpa_scale: 4 }),
+      university({ requirements: { gpa_min: 3.5 } }),
+      TODAY,
+    );
+    expect(checkByKey(result, "gpa").status).toBe("meets");
+  });
+
+  it("caps a 15% school at dream and a 30% school at target", () => {
+    const openProfile = profile();
+    const dream = fitUniversity(openProfile, university({ acceptance_rate: 0.15 }), TODAY);
+    const target = fitUniversity(openProfile, university({ acceptance_rate: 0.3 }), TODAY);
+    const flagged = fitUniversity(
+      openProfile,
+      university({ acceptance_rate: 0.5, requirements: { gpa_min: 0.8, highly_selective: true } }),
+      TODAY,
+    );
+    expect(dream.suggestedCategory).toBe("dream");
+    expect(target.suggestedCategory).toBe("target");
+    expect(flagged.suggestedCategory).toBe("dream");
+  });
+
+  it("uses the low end of a SAT middle-50 range when no minimum is published", () => {
+    const result = fitUniversity(
+      profile({
+        exams: [
+          { code: "IELTS", score: 7, status: "taken" },
+          { code: "SAT", score: 1400, status: "taken" },
+        ],
+      }),
+      university({ sat_policy: "required", sat_total_min: null, sat_middle_50: "1450-1550" }),
+      TODAY,
+    );
+    expect(checkByKey(result, "sat").status).toBe("below");
+    expect(checkByKey(result, "sat").need).toBe("SAT 1450");
   });
 
   it("does not parse a text gpa note into a threshold", () => {
