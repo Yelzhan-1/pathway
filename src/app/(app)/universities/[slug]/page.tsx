@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { DeadlineList } from "@/components/pathway/universities/DeadlineList";
 import { FitBreakdown } from "@/components/pathway/universities/FitBreakdown";
+import { FeedbackWidget } from "@/components/pathway/feedback/FeedbackWidget";
 import { ShortestPathCard } from "@/components/pathway/universities/ShortestPathCard";
 import { ShortlistControls } from "@/components/pathway/universities/ShortlistControls";
 import { FitBadge } from "@/components/pathway/fit/FitBadge";
@@ -19,6 +20,7 @@ import { aidLabel, formatMoneyUsd, publicNote } from "@/lib/labels/display";
 import { shortestPath } from "@/lib/matching/path";
 import { getCountryLabel } from "@/lib/profile/types";
 import { getCurrentProfile } from "@/lib/profile/queries";
+import { universityFeedbackPage } from "@/lib/feedback/storage";
 import { strings } from "@/lib/strings";
 
 export async function generateMetadata({
@@ -139,6 +141,8 @@ export default async function UniversityDetailPage({
         <p className="text-[14px] font-semibold">{grant ?? (hasGrant ? strings.universities.freeTuition : "—")}</p>
         {scholarshipsNote ? <p className="mt-1 text-[14px] font-medium text-ink-2">{scholarshipsNote}</p> : null}
       </TCard>
+
+      <FeedbackWidget page={universityFeedbackPage(item.slug)} />
     </div>
   );
 }

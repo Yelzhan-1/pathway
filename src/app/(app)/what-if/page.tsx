@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { FeedbackWidget } from "@/components/pathway/feedback/FeedbackWidget";
 import { WhatIfScreen, type WhatIfRow } from "@/components/pathway/what-if/WhatIfScreen";
 import { getShortlist, getUniversities } from "@/lib/data";
 import { toFitProfile } from "@/lib/data/map";
@@ -40,5 +41,10 @@ export default async function WhatIfPage() {
       })),
   ];
 
-  return <WhatIfScreen profile={fitProfile} rows={rows} today={today} />;
+  return (
+    <div className="flex min-w-0 flex-col gap-4">
+      <WhatIfScreen profile={fitProfile} rows={rows} today={today} />
+      <FeedbackWidget page="what-if" />
+    </div>
+  );
 }

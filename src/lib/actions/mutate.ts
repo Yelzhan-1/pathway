@@ -21,6 +21,7 @@ import {
   mentorQuestionSchema,
   removeShortlistSchema,
   restoreTaskSchema,
+  submitFeedbackSchema,
   updateTaskStatusSchema,
   weeklyGoalSchema,
 } from "./schemas";
@@ -459,5 +460,27 @@ export async function postMentorAnswerForUser(
     .single();
   if (error || !data) return fail("Не удалось опубликовать ответ.");
   await markActivity(supabase, userId);
+  return ok({ id: data.id });
+}
+
+export async function submitFeedbackForUser(
+  supabase: DbClient,
+  userId: string,
+  input: unknown,
+): Promise<ActionResult<{ id: string }>> {
+  const parsed = submitFeedbackSchema.safeParse(input);
+  if (!parsed.success) return fail(zodErrorRu(parsed.error));
+  const comment = parsed.data.comment ? parsed.data.comment : null;
+  const { data, error } = await supabase
+    .from("feedback")
+    .insert({
+      user_id: userId,
+      page: parsed.data.page,
+      helpful: parsed.data.helpful,
+      comment,
+    })
+    .select("id")
+    .single();
+  if (error || !data) return fail("Не удалось отправить отзыв.");
   return ok({ id: data.id });
 }

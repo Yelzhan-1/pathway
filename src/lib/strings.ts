@@ -365,6 +365,18 @@ export const strings = {
     withExams: "с экзаменами",
     withShortlist: "со списком вузов",
     withCv: "с резюме",
+    feedback: "Отзывы",
+    feedbackAvg: "Средняя оценка",
+    feedbackNone: "Пока нет отзывов",
+  },
+  feedback: {
+    title: "Помогло ли тебе?",
+    hint: "Оценка от 1 до 5.",
+    score: (n: number) => `${n} из 5`,
+    comment: "Комментарий",
+    submit: "Отправить",
+    thanks: "Спасибо за отзыв.",
+    pick: "Выбери оценку.",
   },
   credits: {
     link: "Фото и лицензии",

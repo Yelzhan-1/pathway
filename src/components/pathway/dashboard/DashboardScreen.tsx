@@ -14,11 +14,12 @@ import { DocumentsBackpack } from './DocumentsBackpack';
 import { AiBuddyCard } from './AiBuddyCard';
 import { ProgressPanel } from './ProgressPanel';
 import { WeeklyGoalForm } from './WeeklyGoalForm';
+import { FeedbackWidget } from '../feedback/FeedbackWidget';
 
 /**
  * Dashboard «Тропа» (content only — wrap in <AppShell active="home">).
  * ≥lg: [main | 340px rail]. <lg: one column; wrappers use `contents` so `order-*` interleaves both columns on phones.
- * Mobile order: hero → strength → check → popular → streak → chances → deadlines → docs → AI → opportunities.
+ * Mobile order: hero → strength → check → popular → streak → chances → deadlines → docs → AI → opportunities → feedback.
  */
 export function DashboardScreen({ data }: { data: DashboardData }) {
   const single = data.road.length === 1;
@@ -56,6 +57,7 @@ export function DashboardScreen({ data }: { data: DashboardData }) {
         {data.progress ? <div className="order-5 lg:order-none"><ProgressPanel data={data.progress} /></div> : null}
         <div className="order-9 lg:order-none"><AiBuddyCard data={data.ai} /></div>
         <div className="order-8 lg:order-none"><DocumentsBackpack docs={data.docs} /></div>
+        <div className="order-11 lg:order-none"><FeedbackWidget page="dashboard" /></div>
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { AssistantChat } from "@/components/pathway/assistant/AssistantChat";
+import { FeedbackWidget } from "@/components/pathway/feedback/FeedbackWidget";
 import { Display } from "@/components/pathway/ui/tropa";
 import { rowsToUiMessages } from "@/lib/agent/messages";
 import { getAgentHistory } from "@/lib/data";
@@ -23,7 +24,10 @@ export default async function AssistantPage() {
           {error_ru}
         </p>
       ) : (
-        <AssistantChat initialMessages={rowsToUiMessages(messages)} />
+        <>
+          <AssistantChat initialMessages={rowsToUiMessages(messages)} />
+          <FeedbackWidget page="assistant" />
+        </>
       )}
     </div>
   );

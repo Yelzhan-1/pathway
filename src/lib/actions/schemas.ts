@@ -87,3 +87,13 @@ export const mentorAnswerSchema = z.object({
 export const agentUserMessageSchema = z.object({
   message: z.string().trim().min(1, "Введите сообщение.").max(4000, "Сообщение слишком длинное."),
 });
+
+export const submitFeedbackSchema = z.object({
+  page: z.string().trim().min(1, "Страница не указана.").max(100, "Страница слишком длинная."),
+  helpful: z
+    .number()
+    .int("Оценка от 1 до 5.")
+    .min(1, "Оценка от 1 до 5.")
+    .max(5, "Оценка от 1 до 5."),
+  comment: z.string().trim().max(1000, "Комментарий слишком длинный.").optional(),
+});

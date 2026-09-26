@@ -69,6 +69,22 @@ export default async function ImpactPage() {
               ))}
             </ul>
           </TCard>
+          <TCard labelledBy="impact-feedback">
+            <h2 id="impact-feedback" className="text-[16px] font-bold">
+              {strings.impact.feedback}
+            </h2>
+            {stats.feedback_count ? (
+              <>
+                <p className="mt-2 font-display text-[28px] font-semibold">{stats.feedback_count}</p>
+                <p className="mt-1 text-[14px] font-bold">
+                  {strings.impact.feedbackAvg}:{" "}
+                  {stats.feedback_avg == null ? "—" : Number(stats.feedback_avg).toFixed(1)}
+                </p>
+              </>
+            ) : (
+              <p className="mt-2 text-[14px] font-semibold text-ink-2">{strings.impact.feedbackNone}</p>
+            )}
+          </TCard>
         </>
       )}
     </div>

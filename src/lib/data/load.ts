@@ -334,7 +334,14 @@ export async function loadAgentHistory(supabase: DbClient, userId: string) {
 export async function loadImpactStats(supabase: DbClient) {
   const { data, error } = await supabase.rpc("impact_stats");
   if (error || !data) return { stats: null, error_ru: LOAD_ERROR };
-  return { stats: data, error_ru: null };
+  return {
+    stats: {
+      ...data,
+      feedback_count: data.feedback_count ?? 0,
+      feedback_avg: data.feedback_avg ?? null,
+    },
+    error_ru: null,
+  };
 }
 
 export async function loadSettings(supabase: DbClient, userId: string) {
