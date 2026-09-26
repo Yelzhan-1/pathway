@@ -250,6 +250,37 @@ export const strings = {
     plan: "Недели",
     resources: "Материалы",
   },
+  roadmap: {
+    title: "План",
+    empty: "Добавь вузы в список — появится план на недели.",
+    emptyCta: "Выбрать вузы",
+    sync: "Собрать план в задачи",
+    synced: (inserted: number, updated: number) =>
+      `Добавлено ${inserted}, обновлено ${updated}.`,
+  },
+  tasks: {
+    title: "Задачи",
+    empty: "Пока нет задач. Соберите план или добавьте свою.",
+    emptyCta: "Открыть план",
+    add: "Добавить",
+    name: "Название",
+    due: "Срок",
+    notes: "Заметка",
+    delete: "Удалить",
+    thisWeek: "Эта неделя",
+    noDate: "Без даты",
+    weekFrom: (d: string) => `Неделя с ${d}`,
+    status: {
+      todo: "К делу",
+      in_progress: "В работе",
+      done: "Готово",
+    },
+    source: {
+      roadmap: "План",
+      agent: "Помощник",
+      manual: "Своя",
+    },
+  },
   credits: {
     link: "Фото и лицензии",
   },
