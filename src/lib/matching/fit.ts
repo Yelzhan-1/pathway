@@ -207,17 +207,33 @@ function untCheck(profile: FitProfile, university: FitUniversity): BuiltCheck {
   });
 }
 
-/** Lowest published SAT bar: explicit minimum, otherwise the low end of a middle-50 range. */
+const SAT_TOTAL_MIN = 1000;
+const SAT_TOTAL_MAX = 1600;
+
+/** First total SAT in free text: a 1000–1600 range such as "1500-1570", else a single total. Section scores (200–800) are ignored. */
+function satTotalFromText(value: string): number | null {
+  const rangeRe = /(\d{3,4})\s*[-–—]\s*(\d{3,4})/g;
+  for (const match of value.matchAll(rangeRe)) {
+    const low = Number(match[1]);
+    const high = Number(match[2]);
+    if (low >= SAT_TOTAL_MIN && low <= SAT_TOTAL_MAX && high >= low && high <= SAT_TOTAL_MAX) return low;
+  }
+  const numberRe = /\d{3,4}/g;
+  for (const match of value.matchAll(numberRe)) {
+    const score = Number(match[0]);
+    if (score >= SAT_TOTAL_MIN && score <= SAT_TOTAL_MAX) return score;
+  }
+  return null;
+}
+
+/** Lowest published SAT bar: explicit minimum, otherwise the low end of a total middle-50 range. */
 export function publishedSatMin(university: FitUniversity): number | null {
   if (typeof university.sat_total_min === "number" && Number.isFinite(university.sat_total_min)) {
     return university.sat_total_min;
   }
   const middle = university.sat_middle_50;
   if (!middle) return null;
-  const match = middle.match(/(\d{3,4})/);
-  if (!match) return null;
-  const value = Number(match[1]);
-  return Number.isFinite(value) ? value : null;
+  return satTotalFromText(middle);
 }
 
 function satCheck(profile: FitProfile, university: FitUniversity): BuiltCheck {

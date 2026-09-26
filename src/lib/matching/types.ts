@@ -87,7 +87,7 @@ export type FitUniversity = {
   sat_policy: string | null;
   sat_total_min: number | null;
   sat_total_max: number | null;
-  /** Middle 50% range such as "1510-1580". The low number is a floor when sat_total_min is empty. */
+  /** Middle 50% text such as "1510-1580". A total (1000–1600) is a floor when sat_total_min is empty. Section scores are ignored. */
   sat_middle_50?: string | null;
 };
 

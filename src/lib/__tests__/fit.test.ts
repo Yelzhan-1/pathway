@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { checkByKey, fitUniversity, rankUniversities } from "@/lib/matching/fit";
+import { checkByKey, fitUniversity, publishedSatMin, rankUniversities } from "@/lib/matching/fit";
 import type { FitProfile, FitUniversity } from "@/lib/matching/types";
 
 const TODAY = "2026-09-26";
@@ -137,6 +137,33 @@ describe("fitUniversity", () => {
     expect(dream.suggestedCategory).toBe("dream");
     expect(target.suggestedCategory).toBe("target");
     expect(flagged.suggestedCategory).toBe("dream");
+  });
+
+  it("ignores SAT section scores and reads only a total", () => {
+    expect(
+      publishedSatMin(
+        university({
+          sat_total_min: null,
+          sat_middle_50: "SAT Math 780-800, SAT ERW 740-780",
+        }),
+      ),
+    ).toBeNull();
+    expect(
+      publishedSatMin(
+        university({
+          sat_total_min: null,
+          sat_middle_50: "SAT Math 780-800; 1500-1570",
+        }),
+      ),
+    ).toBe(1500);
+    expect(
+      publishedSatMin(
+        university({
+          sat_total_min: 1520,
+          sat_middle_50: "SAT Math 780-800",
+        }),
+      ),
+    ).toBe(1520);
   });
 
   it("uses the low end of a SAT middle-50 range when no minimum is published", () => {
