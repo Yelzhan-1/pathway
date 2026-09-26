@@ -87,6 +87,29 @@ function pathAllowed(profile: OpportunityProfile, opportunity: OpportunityInput)
   return true;
 }
 
+export function opportunityReasons(
+  profile: OpportunityProfile,
+  opportunity: OpportunityInput,
+  today: Date | string = new Date(),
+): string[] {
+  const reasons: string[] = [];
+  const day = toUtcDateString(today);
+  if (opportunity.grades && opportunity.grades.length > 0) {
+    if (profile.grade_or_year && gradeMatches(profile.grade_or_year, opportunity.grades)) {
+      reasons.push(`Подходит по классу: ${profile.grade_or_year}`);
+    }
+  } else {
+    reasons.push("Нет ограничения по классу");
+  }
+  if (isFreeCost(opportunity.cost) === true) reasons.push("Бесплатно");
+  const deadline = opportunity.deadline?.slice(0, 10);
+  if (deadline && deadline >= day) reasons.push("Дедлайн ещё открыт");
+  if (opportunity.format && opportunity.format !== "unknown") {
+    reasons.push(opportunity.format);
+  }
+  return reasons;
+}
+
 export function matchOpportunities<T extends OpportunityInput>(
   profile: OpportunityProfile,
   opportunities: T[],

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isFreeCost, matchOpportunities, type OpportunityInput } from "@/lib/opportunities/match";
+import { isFreeCost, matchOpportunities, opportunityReasons, type OpportunityInput } from "@/lib/opportunities/match";
 
 const TODAY = "2026-09-26";
 
@@ -86,5 +86,16 @@ describe("matchOpportunities", () => {
       TODAY,
     );
     expect(items.map((item) => item.slug)).toEqual(["uni"]);
+  });
+});
+
+describe("opportunityReasons", () => {
+  it("explains grade, free cost, and an open deadline", () => {
+    const reasons = opportunityReasons(
+      { grade_or_year: "11 класс", path: "graduate" },
+      opportunity({ grades: ["11 класс"], cost: "бесплатно", deadline: "2026-10-01", format: "online" }),
+      TODAY,
+    );
+    expect(reasons).toEqual(["Подходит по классу: 11 класс", "Бесплатно", "Дедлайн ещё открыт", "online"]);
   });
 });

@@ -1,12 +1,31 @@
 import type { Metadata } from "next";
 
-import { SoonScreen } from "@/components/pathway/shell/SoonScreen";
+import { PrepPlanList } from "@/components/pathway/exams/PrepPlanList";
+import { Display, EmptyCta } from "@/components/pathway/ui/tropa";
+import { getPrepPlan } from "@/lib/data";
 import { strings } from "@/lib/strings";
 
 export const metadata: Metadata = {
-  title: `Экзамены — ${strings.app.name}`,
+  title: `${strings.exams.title} — ${strings.app.name}`,
 };
 
-export default function ExamsPage() {
-  return <SoonScreen title="Экзамены" />;
+export default async function ExamsPage() {
+  const { plan, error_ru } = await getPrepPlan();
+
+  return (
+    <div className="flex flex-col gap-4">
+      <Display as="h1" className="text-[28px] font-bold sm:text-[32px]">
+        {strings.exams.title}
+      </Display>
+      {error_ru || !plan ? (
+        <p role="alert" className="rounded-[20px] bg-danger-soft px-4 py-3 text-[14px] font-semibold text-destructive">
+          {error_ru ?? strings.errorPage.description}
+        </p>
+      ) : plan.exams.length === 0 ? (
+        <EmptyCta title={strings.exams.empty} cta={strings.exams.emptyCta} href="/universities" />
+      ) : (
+        <PrepPlanList exams={plan.exams} />
+      )}
+    </div>
+  );
 }
