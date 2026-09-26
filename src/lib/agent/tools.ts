@@ -20,11 +20,13 @@ import { toFitProfile } from "@/lib/data/map";
 import { toUtcDateString } from "@/lib/matching/dates";
 import { shortestPath } from "@/lib/matching/path";
 import { isLastCycleNote } from "@/lib/matching/deadlines";
+import { displayCost, publicNote, roundLabel } from "@/lib/labels/display";
 import type { FitResult } from "@/lib/matching/types";
 import { parseCv, parseProfile } from "@/lib/profile/parse";
 
 import { reviewCv } from "./cv-review";
 import { NOT_IN_DATABASE_RU } from "./prompt";
+import { englishRequirementLabel } from "./university-facts";
 import {
   addShortlistInputSchema,
   createAgentTaskInputSchema,
@@ -95,7 +97,8 @@ export function createAgentTools(supabase: DbClient, userId: string) {
       },
     }),
     getUniversityDetails: tool({
-      description: "Карточка вуза: требования, дедлайны, источники. Дедлайны прошлого цикла помечены.",
+      description:
+        "Карточка вуза: требования, дедлайны, источники. english_requirement_ru — то же требование IELTS/TOEFL, что на странице вуза. «Нет данных» значит минимум не опубликован, вуз при этом найден.",
       inputSchema: universitySlugInputSchema,
       execute: async ({ slug }) => {
         const { item, error_ru } = await loadUniversity(supabase, userId, slug, today);
@@ -120,9 +123,12 @@ export function createAgentTools(supabase: DbClient, userId: string) {
           sat_policy: item.sat_policy,
           sat_total_min: item.sat_total_min,
           sat_total_max: item.sat_total_max,
+          english_requirement_ru: englishRequirementLabel(item.fit),
           requirements: item.requirements,
           deadlines: item.deadlines.map((deadline) => ({
-            ...deadline,
+            round: roundLabel(deadline.round),
+            date: deadline.date,
+            note: publicNote(deadline.note),
             lastCycle: deadline.date < today && isLastCycleNote(deadline.note),
             warning_ru:
               deadline.date < today && isLastCycleNote(deadline.note)
@@ -201,7 +207,7 @@ export function createAgentTools(supabase: DbClient, userId: string) {
             type: item.type,
             deadline: item.deadline,
             deadline_note: item.deadline_note,
-            cost: item.cost,
+            cost: displayCost(item.cost),
             format: item.format,
             grades: item.grades,
             url: item.url,
