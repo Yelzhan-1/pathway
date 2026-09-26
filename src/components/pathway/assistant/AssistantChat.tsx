@@ -40,9 +40,28 @@ export function AssistantChat({ initialMessages }: { initialMessages: UIMessage[
     <div className="flex flex-col gap-4">
       <p className="text-[12px] font-bold text-muted-foreground">{strings.assistant.label}</p>
       {messages.length === 0 ? (
-        <p className="rounded-[20px] border-2 border-dashed border-input p-4 text-[15px] font-bold">
-          {strings.assistant.empty}
-        </p>
+        <div className="flex flex-col gap-3 rounded-[20px] border-2 border-dashed border-input p-4">
+          <div className="flex items-start gap-2">
+            <MentorMark size={36} />
+            <p className="text-[15px] font-bold leading-snug">{strings.assistant.empty}</p>
+          </div>
+          <div>
+            <p className="text-[12px] font-bold text-muted-foreground">{strings.assistant.examplesLabel}</p>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {strings.assistant.examples.map((example) => (
+                <button
+                  key={example}
+                  type="button"
+                  disabled={pending}
+                  onClick={() => void sendMessage({ text: example })}
+                  className="inline-flex min-h-9 items-center rounded-full bg-secondary px-3 text-[13px] font-bold text-foreground hover:bg-secondary/80 disabled:opacity-60"
+                >
+                  {example}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       ) : (
         <ul className="flex flex-col gap-3">
           {messages.map((message) => {

@@ -1,4 +1,5 @@
 import { MentorAnswerForm } from "@/components/pathway/mentors/MentorAnswerForm";
+import { TCard } from "@/components/pathway/ui/tropa";
 import { dayMonth } from "@/lib/format";
 import type { MentorBoardQuestion } from "@/lib/data/load";
 import { strings } from "@/lib/strings";
@@ -27,7 +28,8 @@ export function MentorBoard({
   return (
     <ul className="grid gap-4">
       {questions.map((question) => (
-        <li key={question.id} className="rounded-[var(--radius-card)] bg-card p-4 shadow-card ring-1 ring-border">
+        <li key={question.id}>
+          <TCard as="div">
           <div className="flex flex-wrap items-center gap-2">
             <AuthorMark isMentor={question.isMentor} />
             <span className="text-[12px] font-semibold text-muted-foreground">
@@ -66,6 +68,7 @@ export function MentorBoard({
             )}
             {canAnswer ? <MentorAnswerForm questionId={question.id} /> : null}
           </div>
+        </TCard>
         </li>
       ))}
     </ul>

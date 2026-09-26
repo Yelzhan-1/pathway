@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 
 import { AssistantChat } from "@/components/pathway/assistant/AssistantChat";
 import { FeedbackWidget } from "@/components/pathway/feedback/FeedbackWidget";
-import { Display } from "@/components/pathway/ui/tropa";
+import { Compass } from "@/components/pathway/ui/illustrations";
+import { PageHeader } from "@/components/pathway/ui/tropa";
 import { rowsToUiMessages } from "@/lib/agent/messages";
 import { getAgentHistory } from "@/lib/data";
 import { strings } from "@/lib/strings";
@@ -16,9 +17,7 @@ export default async function AssistantPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Display as="h1" className="text-[28px] font-bold sm:text-[32px]">
-        {strings.assistant.title}
-      </Display>
+      <PageHeader title={strings.assistant.title} illustration={<Compass className="w-full" />} />
       {error_ru ? (
         <p role="alert" className="rounded-[20px] bg-danger-soft px-4 py-3 text-[14px] font-semibold text-destructive">
           {error_ru}

@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 
 import { OpportunityFilters } from "@/components/pathway/opportunities/OpportunityFilters";
 import { OpportunityList } from "@/components/pathway/opportunities/OpportunityList";
-import { Display, EmptyCta } from "@/components/pathway/ui/tropa";
+import { Compass } from "@/components/pathway/ui/illustrations";
+import { EmptyCta, PageHeader } from "@/components/pathway/ui/tropa";
 import { getOpportunities, getSettings } from "@/lib/data";
 import type { OpportunityType } from "@/lib/database.types";
 import { toUtcDateString } from "@/lib/matching/dates";
@@ -47,9 +48,7 @@ export default async function OpportunitiesPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <Display as="h1" className="text-[28px] font-bold sm:text-[32px]">
-        {strings.opportunities.title}
-      </Display>
+      <PageHeader title={strings.opportunities.title} illustration={<Compass className="w-full" />} />
       <OpportunityFilters type={type} format={format} upcomingOnly={upcomingOnly} freeOnly={settings.freeOnly} />
       {list.error_ru ? (
         <p role="alert" className="rounded-[20px] bg-danger-soft px-4 py-3 text-[14px] font-semibold text-destructive">
