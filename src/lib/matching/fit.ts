@@ -1,7 +1,9 @@
 import { isFreeOrGrantUniversity, isGrantAid } from "./budget";
 import { classifyDeadlines, LAST_CYCLE_WARNING_RU } from "./deadlines";
 import { gpaRatio, universityGpaMinRatio } from "./gpa";
-import { majorMatches, universityMatchesQuery } from "./synonyms";
+import { displayMajor, majorMatches, universityMatchesQuery } from "./synonyms";
+import { aidLabel, examLabel, formatMoneyUsd, roundLabel } from "@/lib/labels/display";
+import { getCountryLabel } from "@/lib/profile/types";
 import {
   SCORED_FIT_KEYS,
   type FitCategory,
@@ -67,9 +69,9 @@ function check(partial: BuiltCheck): BuiltCheck {
 
 function englishCheck(profile: FitProfile, university: FitUniversity): BuiltCheck {
   const options = [
-    { code: "IELTS", label: "IELTS", min: university.ielts_min },
-    { code: "TOEFL_IBT", label: "TOEFL", min: university.toefl_min },
-    { code: "DET", label: "Duolingo", min: university.duolingo_min },
+    { code: "IELTS", label: examLabel("IELTS"), min: university.ielts_min },
+    { code: "TOEFL_IBT", label: examLabel("TOEFL_IBT"), min: university.toefl_min },
+    { code: "DET", label: examLabel("DET"), min: university.duolingo_min },
   ].filter((option) => option.min != null);
 
   if (options.length === 0) {
@@ -322,20 +324,21 @@ function budgetCheck(profile: FitProfile, university: FitUniversity): BuiltCheck
   const sourceUrl = university.source_url;
   if (tuition == null) {
     return check({
-      check: { key: "budget", status: "unknown", have: profile.budget_usd == null ? null : `${profile.budget_usd} USD`, need: null, sourceUrl },
+      check: { key: "budget", status: "unknown", have: profile.budget_usd == null ? null : formatMoneyUsd(profile.budget_usd), need: null, sourceUrl },
       gap: profile.budget_usd == null
         ? { key: "budget", message_ru: PROFILE_GAP_RU.budget, delta: null }
         : null,
     });
   }
-  const need = `обучение ${tuition} USD${aid ? `, помощь: ${aid}` : ""}`;
+  const aidText = aidLabel(aid);
+  const need = `обучение ${formatMoneyUsd(tuition)}${aidText ? `, помощь: ${aidText}` : ""}`;
   if (profile.budget_usd == null) {
     return check({
       check: { key: "budget", status: "unknown", have: null, need, sourceUrl },
       gap: { key: "budget", message_ru: PROFILE_GAP_RU.budget, delta: null },
     });
   }
-  const have = `${profile.budget_usd} USD${profile.needs_scholarship ? ", нужна стипендия" : ""}`;
+  const have = `${formatMoneyUsd(profile.budget_usd)}${profile.needs_scholarship ? ", нужна стипендия" : ""}`;
   if (tuition <= profile.budget_usd) {
     return check({
       check: { key: "budget", status: "meets", have, need, sourceUrl },
@@ -354,7 +357,7 @@ function budgetCheck(profile: FitProfile, university: FitUniversity): BuiltCheck
       gap: null,
     });
   }
-  const delta = `${tuition - profile.budget_usd} USD`;
+  const delta = formatMoneyUsd(tuition - profile.budget_usd);
   return check({
     check: { key: "budget", status: "below", have, need, sourceUrl },
     gap: {
@@ -387,7 +390,7 @@ function majorCheck(profile: FitProfile, university: FitUniversity): BuiltCheck 
         key: "major",
         status: "unknown",
         have: null,
-        need: majors.join(", "),
+        need: majors.map(displayMajor).join(", "),
         sourceUrl: university.source_url,
       },
       gap: { key: "major", message_ru: PROFILE_GAP_RU.major, delta: null },
@@ -399,7 +402,7 @@ function majorCheck(profile: FitProfile, university: FitUniversity): BuiltCheck 
       key: "major",
       status: meets ? "meets" : "below",
       have: profile.intended_major,
-      need: majors.join(", "),
+      need: majors.map(displayMajor).join(", "),
       sourceUrl: university.source_url,
     },
     gap: meets
@@ -420,7 +423,7 @@ function countryCheck(profile: FitProfile, university: FitUniversity): BuiltChec
         key: "country",
         status: "unknown",
         have: null,
-        need: university.country,
+        need: getCountryLabel(university.country),
         sourceUrl: university.source_url,
       },
       gap: { key: "country", message_ru: PROFILE_GAP_RU.country, delta: null },
@@ -433,8 +436,8 @@ function countryCheck(profile: FitProfile, university: FitUniversity): BuiltChec
     check: {
       key: "country",
       status: meets ? "meets" : "below",
-      have: countries.join(", "),
-      need: university.country,
+      have: countries.map(getCountryLabel).join(", "),
+      need: getCountryLabel(university.country),
       sourceUrl: university.source_url,
     },
     gap: null,
@@ -450,7 +453,7 @@ function deadlineCheck(university: FitUniversity, today: string): BuiltCheck {
       check: {
         key: "deadline",
         status: "meets",
-        have: `${next.round}: ${next.date}`,
+        have: `${roundLabel(next.round)}: ${next.date}`,
         need: next.date,
         sourceUrl,
       },
@@ -463,7 +466,7 @@ function deadlineCheck(university: FitUniversity, today: string): BuiltCheck {
       check: {
         key: "deadline",
         status: "below",
-        have: `${past.round}: ${past.date}`,
+        have: `${roundLabel(past.round)}: ${past.date}`,
         need: past.date,
         sourceUrl,
       },
@@ -476,7 +479,7 @@ function deadlineCheck(university: FitUniversity, today: string): BuiltCheck {
       check: {
         key: "deadline",
         status: "unknown",
-        have: `${stale.round}: ${stale.date}`,
+        have: `${roundLabel(stale.round)}: ${stale.date}`,
         need: LAST_CYCLE_WARNING_RU,
         sourceUrl,
       },

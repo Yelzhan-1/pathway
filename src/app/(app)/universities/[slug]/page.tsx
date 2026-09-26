@@ -13,16 +13,9 @@ import { toCountryCode } from "@/lib/dashboard/present";
 import { initials } from "@/lib/format";
 import { isGrantAid } from "@/lib/matching/budget";
 import { toUtcDateString } from "@/lib/matching/dates";
+import { aidLabel, formatMoneyUsd, publicNote } from "@/lib/labels/display";
 import { getCountryLabel } from "@/lib/profile/types";
 import { strings } from "@/lib/strings";
-
-type AidKey = keyof typeof strings.universities.aid;
-
-function aidLabel(value: string | null): string | null {
-  if (!value) return null;
-  if (value in strings.universities.aid) return strings.universities.aid[value as AidKey];
-  return value;
-}
 
 export async function generateMetadata({
   params,
@@ -61,8 +54,10 @@ export default async function UniversityDetailPage({
       ? strings.universities.tuitionUnknown
       : item.tuition_usd_per_year === 0
         ? strings.universities.freeTuition
-        : `${item.tuition_usd_per_year.toLocaleString("ru-RU")} USD ${strings.universities.perYear}`;
+        : `${formatMoneyUsd(item.tuition_usd_per_year)} ${strings.universities.perYear}`;
   const grant = aidLabel(item.aid_for_internationals);
+  const tuitionNote = publicNote(item.tuition_note);
+  const scholarshipsNote = publicNote(item.scholarships);
   const hasGrant = isGrantAid(item.aid_for_internationals) || item.tuition_usd_per_year === 0;
 
   return (
@@ -79,7 +74,7 @@ export default async function UniversityDetailPage({
               {place}
             </p>
           </div>
-          <FitBadge category={item.fit.suggestedCategory} score={item.fit.score} />
+          <FitBadge category={item.fit.suggestedCategory} score={item.fit.score} savedCategory={saved} />
         </div>
         <div className="mt-4">
           <ShortlistControls universityId={item.id} current={saved} />
@@ -129,10 +124,10 @@ export default async function UniversityDetailPage({
           {strings.universities.cost}
         </Display>
         <p className="mt-2 text-[16px] font-bold">{tuition}</p>
-        {item.tuition_note ? <p className="mt-1 text-[14px] font-medium text-ink-2">{item.tuition_note}</p> : null}
+        {tuitionNote ? <p className="mt-1 text-[14px] font-medium text-ink-2">{tuitionNote}</p> : null}
         <p className="mt-3 text-[13px] font-bold text-muted-foreground">{strings.universities.grants}</p>
         <p className="text-[14px] font-semibold">{grant ?? (hasGrant ? strings.universities.freeTuition : "—")}</p>
-        {item.scholarships ? <p className="mt-1 text-[14px] font-medium text-ink-2">{item.scholarships}</p> : null}
+        {scholarshipsNote ? <p className="mt-1 text-[14px] font-medium text-ink-2">{scholarshipsNote}</p> : null}
       </TCard>
     </div>
   );

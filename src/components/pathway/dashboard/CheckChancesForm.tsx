@@ -1,19 +1,24 @@
 'use client';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ArrowRight, ChevronDown, Lock } from 'lucide-react';
 import type { CheckChancesOptions, Option } from '@/types/pathway';
+import { filterCheckUniversities } from '@/lib/dashboard/check-filter';
 import { Display, TCard, Button } from '../ui/tropa';
 import { HandNote } from '../primitives/Scribble';
 
 /**
- * Quick chance check (block 3 · LATER). Native <select>s (accessible, mobile pickers), forest card, chunky honey CTA.
- * options = null → locked preview (explains what unlocks it) instead of a fake form.
+ * Quick chance check. Native <select>s. options = null → locked preview.
  */
 export function CheckChancesForm({ options, onSubmit, pending }: { options: CheckChancesOptions | null; onSubmit?: (v: { program: string; country: string; university: string }) => void; pending?: boolean }) {
   const [v, setV] = useState({ program: options?.defaults?.program ?? '', country: options?.defaults?.country ?? '', university: options?.defaults?.university ?? '' });
   const locked = !options;
+  const universities = useMemo(() => {
+    if (!options) return [] as Option[];
+    return filterCheckUniversities(options.universities, { country: v.country, program: v.program });
+  }, [options, v.country, v.program]);
+  const universityValue = universities.some((row) => row.value === v.university) ? v.university : '';
   return (
-    <TCard surface="forest" labelledBy="cc-h" className="overflow-hidden">
+    <TCard surface="forest" labelledBy="cc-h" className="min-w-0 overflow-hidden">
       <span id="check" className="absolute -top-24" aria-hidden />
       <Display id="cc-h" className="text-[16px] text-white">Проверить шансы</Display>
       {!locked && <HandNote className="absolute right-5 top-4 rotate-[-6deg] text-[21px] !text-honey">10 секунд</HandNote>}
@@ -24,13 +29,13 @@ export function CheckChancesForm({ options, onSubmit, pending }: { options: Chec
           <Button href="/onboarding" variant="honey" className="mt-3 w-full" icon>Заполнить профиль</Button>
         </div>
       ) : (
-        <form className="mt-3" onSubmit={(e) => { e.preventDefault(); onSubmit?.(v); }}>
-          <div className="grid grid-cols-2 gap-2">
-            <Select label="Программа" value={v.program} options={options.programs} onChange={(program) => setV({ ...v, program })} />
-            <Select label="Страна" value={v.country} options={options.countries} onChange={(country) => setV({ ...v, country })} />
+        <form className="mt-3" onSubmit={(e) => { e.preventDefault(); onSubmit?.({ ...v, university: universityValue }); }}>
+          <div className="grid min-w-0 grid-cols-2 gap-2">
+            <Select label="Программа" value={v.program} options={options.programs} onChange={(program) => setV({ ...v, program, university: '' })} />
+            <Select label="Страна" value={v.country} options={options.countries} onChange={(country) => setV({ ...v, country, university: '' })} />
           </div>
-          <Select className="mt-2" label="Вуз" value={v.university} options={options.universities} onChange={(university) => setV({ ...v, university })} />
-          <button type="submit" disabled={pending || !v.university} className="press mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-honey text-[15px] font-extrabold text-honey-ink shadow-chunky-honey disabled:opacity-60">
+          <Select className="mt-2" label="Вуз" value={universityValue} options={universities} onChange={(university) => setV({ ...v, university })} />
+          <button type="submit" disabled={pending || !universityValue} className="press mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-honey text-[15px] font-extrabold text-honey-ink shadow-chunky-honey disabled:opacity-60">
             {pending ? 'Считаем…' : 'Проверить'} <ArrowRight className="size-4" aria-hidden />
           </button>
         </form>
@@ -41,9 +46,9 @@ export function CheckChancesForm({ options, onSubmit, pending }: { options: Chec
 
 function Select({ label, value, options, onChange, className = '' }: { label: string; value: string; options: Option[]; onChange: (v: string) => void; className?: string }) {
   return (
-    <label className={`relative block ${className}`}>
+    <label className={`relative block min-w-0 ${className}`}>
       <span className="sr-only">{label}</span>
-      <select value={value} onChange={(e) => onChange(e.target.value)} className="h-11 w-full appearance-none truncate rounded-[14px] bg-white/12 pl-3 pr-8 text-[14px] font-bold text-white ring-1 ring-white/25 focus-visible:outline-3 focus-visible:outline-honey [&>option]:text-foreground">
+      <select value={value} onChange={(e) => onChange(e.target.value)} className="h-11 w-full min-w-0 appearance-none truncate rounded-[14px] bg-white/12 pl-3 pr-8 text-[14px] font-bold text-white ring-1 ring-white/25 focus-visible:outline-3 focus-visible:outline-honey [&>option]:text-foreground">
         <option value="">{label}</option>
         {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>

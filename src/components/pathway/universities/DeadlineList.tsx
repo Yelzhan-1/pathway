@@ -1,4 +1,5 @@
 import { classifyDeadlines, LAST_CYCLE_WARNING_RU } from "@/lib/matching/deadlines";
+import { roundLabel, publicNote } from "@/lib/labels/display";
 import { dayMonth } from "@/lib/format";
 import { strings } from "@/lib/strings";
 import type { UniversityWithFit } from "@/lib/data/load";
@@ -28,10 +29,12 @@ export function DeadlineList({
             {dayMonth(entry.date)}
           </span>
           <div className="min-w-0">
-            <p className="text-[14px] font-bold">{entry.round}</p>
+            <p className="text-[14px] font-bold">{roundLabel(entry.round)}</p>
             {note ? <p className="mt-0.5 text-[13px] font-medium text-ink-2">{note}</p> : null}
-            {!note && entry.note ? (
-              <p className="mt-0.5 text-[12.5px] font-medium text-muted-foreground">{entry.note}</p>
+            {!note && publicNote(entry.note) ? (
+              <p className="mt-0.5 min-w-0 text-[12.5px] font-medium text-muted-foreground [overflow-wrap:anywhere]">
+                {publicNote(entry.note)}
+              </p>
             ) : null}
           </div>
         </li>

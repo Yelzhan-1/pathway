@@ -5,7 +5,7 @@ import { MapScenery, ProgressRoad } from './ProgressRoad';
 import { StatTiles } from './StatTiles';
 import { ProfileStrengthRing } from './ProfileStrengthRing';
 import { StreakCard } from './StreakCard';
-import { PopularUniversities } from './PopularUniversities';
+import { PopularUniversitiesLive } from './PopularUniversitiesLive';
 import { DashboardCheckForm } from './DashboardCheckForm';
 import { ChancesColumns } from './ChancesColumns';
 import { DeadlinesTickets } from './DeadlinesTickets';
@@ -39,7 +39,7 @@ export function DashboardScreen({ data }: { data: DashboardData }) {
         </section>
 
         <div className="contents lg:grid lg:grid-cols-[1.25fr_1fr] lg:gap-4">
-          <div className="order-4 min-w-0 lg:order-none"><PopularUniversities unis={data.popular} total={data.popularTotal} /></div>
+          <div className="order-4 min-w-0 lg:order-none"><PopularUniversitiesLive unis={data.popular} total={data.popularTotal} /></div>
           <div className="order-3 lg:order-none"><DashboardCheckForm options={data.checkOptions} /></div>
         </div>
         <div className="contents lg:grid lg:grid-cols-3 lg:gap-4">

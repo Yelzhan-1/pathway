@@ -1,4 +1,5 @@
 import { Display, TCard } from "@/components/pathway/ui/tropa";
+import { examLabel } from "@/lib/labels/display";
 import type { PrepExamPlan } from "@/lib/prep/plan";
 import { strings } from "@/lib/strings";
 
@@ -8,7 +9,7 @@ export function PrepPlanList({ exams }: { exams: PrepExamPlan[] }) {
       {exams.map((exam) => (
         <TCard key={exam.code} labelledBy={`exam-${exam.code}`}>
           <Display as="h2" id={`exam-${exam.code}`} className="text-[20px]">
-            {exam.examName ?? exam.code}
+            {exam.examName ?? examLabel(exam.code)}
           </Display>
           <p className="mt-1 text-[13px] font-semibold text-muted-foreground">
             {strings.exams.forUniversity} {exam.targetUniversityName}

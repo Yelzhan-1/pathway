@@ -1,11 +1,12 @@
-import { shiftUtcDays, toUtcDateString } from "@/lib/matching/dates";
+import { examLabel, roundLabel } from "@/lib/labels/display";
+import { clampDueDate, shiftUtcDays, toUtcDateString } from "@/lib/matching/dates";
 import {
   classifyDeadlines,
   LAST_CYCLE_WARNING_RU,
   type DeadlineEntry,
 } from "@/lib/matching/deadlines";
-import type { FitUniversity } from "@/lib/matching/types";
-import { selectExamTargets, type ExamCatalogItem } from "@/lib/prep/plan";
+import type { FitProfile, FitUniversity } from "@/lib/matching/types";
+import { examAlreadyMet, selectExamTargets, type ExamCatalogItem } from "@/lib/prep/plan";
 
 export type RoadmapTaskDraft = {
   roadmapKey: string;
@@ -85,6 +86,7 @@ export function buildRoadmap(
   shortlistUniversities: FitUniversity[],
   exams: ExamCatalogItem[],
   today: Date | string = new Date(),
+  profile: FitProfile | null = null,
 ): RoadmapTaskDraft[] {
   if (shortlistUniversities.length === 0) return [];
   const day = toUtcDateString(today);
@@ -102,6 +104,7 @@ export function buildRoadmap(
   const anchorUrl = anchorOwner?.source_url ?? "";
 
   for (const target of selectExamTargets(shortlistUniversities)) {
+    if (profile && examAlreadyMet(profile, target.code, target.target)) continue;
     const requiring = shortlistUniversities.filter((university) =>
       university.id === target.universityId ||
       selectExamTargets([university]).some((item) => item.code === target.code),
@@ -110,11 +113,12 @@ export function buildRoadmap(
     const upcoming = earliestFuture(deadlines, day);
     const stale = earliestLastCycle(deadlines, day);
     const lastCycle = !upcoming && stale != null;
+    const examName = examLabel(target.code);
     tasks.push({
       roadmapKey: `exam-register:${target.code}`,
-      title: `Зарегистрироваться на ${target.code}`,
+      title: `Зарегистрироваться на ${examName}`,
       description: describe(
-        `Регистрация на ${target.code}. Ориентир балла: ${target.target} (${target.universityName}).`,
+        `Регистрация на ${examName}. Ориентир балла: ${target.target} (${target.universityName}).`,
         target.sourceUrl,
         lastCycle,
         stale?.date ?? null,
@@ -153,11 +157,12 @@ export function buildRoadmap(
       const classified = classifyDeadlines([entry], day);
       const lastCycle = classified.lastCycle.length > 0;
       const upcoming = classified.upcoming.length > 0;
+      const round = roundLabel(entry.round);
       tasks.push({
         roadmapKey: `apply:${university.id}:${slug}`,
-        title: `Подать заявку: ${university.name}, ${entry.round}`,
+        title: `Подать заявку: ${university.name}, ${round}`,
         description: describe(
-          `Раунд «${entry.round}».`,
+          `Раунд «${round}».`,
           university.source_url,
           lastCycle,
           lastCycle ? entry.date : null,
@@ -170,5 +175,8 @@ export function buildRoadmap(
     });
   }
 
-  return tasks;
+  return tasks.map((task, index) => ({
+    ...task,
+    dueDate: clampDueDate(task.dueDate, day, index + 1),
+  }));
 }

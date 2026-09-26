@@ -23,13 +23,13 @@ export function FitBreakdown({ fit }: { fit: FitResult }) {
                 <dt className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
                   {strings.universities.have}
                 </dt>
-                <dd>{check.have ?? "—"}</dd>
+                <dd className="min-w-0 [overflow-wrap:anywhere]">{check.have ?? "—"}</dd>
               </div>
               <div>
                 <dt className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
                   {strings.universities.need}
                 </dt>
-                <dd>{check.need ?? "—"}</dd>
+                <dd className="min-w-0 [overflow-wrap:anywhere]">{check.need ?? "—"}</dd>
               </div>
             </dl>
           </li>

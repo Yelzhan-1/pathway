@@ -38,7 +38,7 @@ export type Opportunity = { id: string; kind: OpportunityKind; title: string; me
 export type DocStatus = 'done' | 'progress' | 'todo';
 export type DocItem = { id: 'cv' | 'passport' | 'transcript' | 'motivation' | 'english' | 'recommendations' | string; title: string; status: DocStatus; meta?: string; href?: string };
 export type AiBuddy = { message: string; primary: { label: string; href: string }; secondary?: { label: string; href: string } };
-export type Option = { value: string; label: string; country?: CountryCode };
+export type Option = { value: string; label: string; country?: CountryCode; countryKey?: string; majors?: string[] };
 export type CheckChancesOptions = { programs: Option[]; countries: Option[]; universities: Option[]; defaults?: { program?: string; country?: string; university?: string } };
 
 export type DashboardData = {

@@ -1,7 +1,8 @@
 import type { Database } from "@/lib/database.types";
-import { toFitUniversity } from "@/lib/data/map";
+import { toFitProfile, toFitUniversity } from "@/lib/data/map";
 import { toUtcDateString } from "@/lib/matching/dates";
-import type { FitUniversity } from "@/lib/matching/types";
+import type { FitProfile, FitUniversity } from "@/lib/matching/types";
+import { parseProfile } from "@/lib/profile/parse";
 import type { ExamCatalogItem } from "@/lib/prep/plan";
 import { buildRoadmap } from "@/lib/roadmap/build";
 import { applyRoadmapSync, type RoadmapStore } from "@/lib/roadmap/sync";
@@ -102,6 +103,12 @@ async function loadExams(supabase: DbClient): Promise<ExamCatalogItem[]> {
     .select("id, code, name, official_url, source_url, typical_test_dates_note");
   if (error) throw new Error(error.message);
   return data ?? [];
+}
+
+async function loadFitProfile(supabase: DbClient, userId: string): Promise<FitProfile | null> {
+  const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
+  if (error || !data) return null;
+  return toFitProfile(parseProfile(data));
 }
 
 export async function addToShortlistForUser(
@@ -246,9 +253,12 @@ export async function syncRoadmapForUser(
   today: Date | string = new Date(),
 ): Promise<ActionResult<{ inserted: number; updated: number; unchanged: number }>> {
   try {
-    const universities = await loadShortlistUniversities(supabase, userId);
-    const exams = await loadExams(supabase);
-    const plan = buildRoadmap(universities, exams, today);
+    const [universities, exams, profile] = await Promise.all([
+      loadShortlistUniversities(supabase, userId),
+      loadExams(supabase),
+      loadFitProfile(supabase, userId),
+    ]);
+    const plan = buildRoadmap(universities, exams, today, profile);
     const stats = await applyRoadmapSync(createRoadmapStore(supabase, userId), plan);
     await markActivity(supabase, userId, toUtcDateString(today));
     return ok(stats);

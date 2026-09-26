@@ -6,9 +6,9 @@ import { UniMonogram } from "@/components/pathway/ui/UniMonogram";
 import { TCard } from "@/components/pathway/ui/tropa";
 import { toCountryCode } from "@/lib/dashboard/present";
 import { initials } from "@/lib/format";
+import { displayMajor } from "@/lib/matching/synonyms";
 import type { FitCategory } from "@/lib/matching/types";
 import { getCountryLabel } from "@/lib/profile/types";
-import { strings } from "@/lib/strings";
 import type { UniversityWithFit } from "@/lib/data/load";
 
 import { ShortlistControls } from "./ShortlistControls";
@@ -36,20 +36,19 @@ export function UniversityCard({
             {place}
           </p>
         </div>
-        <FitBadge category={university.fit.suggestedCategory} score={university.fit.score} />
+        <FitBadge
+          category={university.fit.suggestedCategory}
+          score={university.fit.score}
+          savedCategory={savedCategory}
+        />
       </div>
       {majors.length > 0 ? (
         <p className="flex flex-wrap gap-1">
           {majors.map((major) => (
             <span key={major} className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-bold text-ink-2">
-              {major}
+              {displayMajor(major)}
             </span>
           ))}
-        </p>
-      ) : null}
-      {savedCategory ? (
-        <p className="text-[12.5px] font-bold text-ink-2">
-          {strings.favorites.title}: {strings.fit.category[savedCategory]}
         </p>
       ) : null}
       <ShortlistControls universityId={university.id} current={savedCategory} />

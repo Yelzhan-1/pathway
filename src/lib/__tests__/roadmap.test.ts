@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { FitUniversity } from "@/lib/matching/types";
+import type { FitProfile, FitUniversity } from "@/lib/matching/types";
 import { buildRoadmap } from "@/lib/roadmap/build";
 import {
   applyRoadmapSync,
@@ -131,5 +131,30 @@ describe("roadmap sync", () => {
     expect(application?.dueDate).toBeNull();
     expect(application?.description).toContain("по прошлому циклу — проверьте на сайте вуза");
     expect(application?.description).toContain("https://uni.edu/apply");
+  });
+
+  it("skips a met exam and never creates an already overdue due date", () => {
+    const profile: FitProfile = {
+      target_countries: [],
+      intended_major: null,
+      budget_usd: null,
+      needs_scholarship: false,
+      gpa: null,
+      gpa_scale: null,
+      exams: [{ code: "IELTS", score: 7, status: "taken" }],
+    };
+    const plan = buildRoadmap(
+      [
+        university({
+          ielts_min: 6.5,
+          deadlines: [{ round: "RD", date: "2026-09-10", note: null }],
+        }),
+      ],
+      [],
+      TODAY,
+      profile,
+    );
+    expect(plan.some((task) => task.roadmapKey === "exam-register:IELTS")).toBe(false);
+    expect(plan.every((task) => task.dueDate == null || task.dueDate >= TODAY)).toBe(true);
   });
 });

@@ -161,6 +161,20 @@ function fuzzyIncludes(hay: string, needle: string): boolean {
   return hay.includes(needle) || needle.includes(hay);
 }
 
+export function displayMajor(value: string): string {
+  const needle = normalizeSearch(value.replace(/\s*\(offered\)\s*/gi, " "));
+  if (!needle) return value.trim();
+  for (const option of MAJOR_OPTIONS) {
+    const optionN = normalizeSearch(option);
+    const aliases = MAJOR_ALIASES[option].map(normalizeSearch);
+    const group = unique([optionN, ...aliases]);
+    if (group.some((item) => fuzzyIncludes(needle, item) || fuzzyIncludes(item, needle))) {
+      return option;
+    }
+  }
+  return value.replace(/\s*\(offered\)\s*/gi, "").trim() || value.trim();
+}
+
 export function majorMatches(intended: string, majors: string[]): boolean {
   const needles = expandMajorTerms(intended);
   if (needles.length === 0) return false;

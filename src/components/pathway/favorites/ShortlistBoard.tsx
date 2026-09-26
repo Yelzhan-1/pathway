@@ -46,7 +46,11 @@ export function ShortlistBoard({ items }: { items: Item[] }) {
                           {getCountryLabel(item.university.country)}
                         </p>
                       </div>
-                      <FitBadge category={item.university.fit.suggestedCategory} score={item.university.fit.score} />
+                      <FitBadge
+                        category={item.university.fit.suggestedCategory}
+                        score={item.university.fit.score}
+                        savedCategory={item.category}
+                      />
                     </div>
                     <div className="mt-3">
                       <ShortlistControls universityId={item.university.id} current={item.category} />

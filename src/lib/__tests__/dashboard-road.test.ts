@@ -28,6 +28,11 @@ describe("roadSteps", () => {
     });
   });
 
+  it("marks «Выбери вузы» done when the shortlist has rows even if CV is empty", () => {
+    const steps = roadSteps({ percent: 40, cvStarted: false, shortlistCount: 1 });
+    expect(steps.find((step) => step.id === "unis")?.status).toBe("done");
+  });
+
   it("marks «Выбери вузы» done when the shortlist has rows", () => {
     const steps = roadSteps({ percent: 100, cvStarted: true, shortlistCount: 2 });
     expect(steps.find((step) => step.id === "unis")?.status).toBe("done");

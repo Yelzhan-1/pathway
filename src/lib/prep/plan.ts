@@ -1,3 +1,4 @@
+import { examLabel } from "@/lib/labels/display";
 import { daysBetween, toUtcDateString } from "@/lib/matching/dates";
 import {
   classifyDeadlines,
@@ -163,6 +164,11 @@ export function weeklyMilestones(weeks: number | null): PrepMilestone[] {
   return milestones;
 }
 
+export function examAlreadyMet(profile: FitProfile, code: string, target: number): boolean {
+  const current = takenScore(profile, code);
+  return current != null && current >= target;
+}
+
 export function prepPlan(
   profile: FitProfile,
   shortlistUniversities: FitUniversity[],
@@ -171,7 +177,9 @@ export function prepPlan(
 ): PrepPlan {
   const day = toUtcDateString(today);
   const catalog = new Map(exams.map((exam) => [exam.code, exam]));
-  const plans = selectExamTargets(shortlistUniversities).map((target) => {
+  const plans = selectExamTargets(shortlistUniversities)
+    .filter((target) => !examAlreadyMet(profile, target.code, target.target))
+    .map((target) => {
     const current = takenScore(profile, target.code);
     const deadline = relevantDeadline(
       universitiesRequiring(target.code, shortlistUniversities),
@@ -188,7 +196,7 @@ export function prepPlan(
         : null;
     return {
       code: target.code,
-      examName: catalogExam?.name ?? null,
+      examName: catalogExam?.name ?? examLabel(target.code),
       target: target.target,
       targetUniversityId: target.universityId,
       targetUniversityName: target.universityName,

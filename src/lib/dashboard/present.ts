@@ -13,6 +13,8 @@ import type {
   UniCard,
 } from "@/types/pathway";
 import { classifyDeadlines } from "@/lib/matching/deadlines";
+import { displayMajor } from "@/lib/matching/synonyms";
+import { roundLabel } from "@/lib/labels/display";
 import { shiftUtcDays, utcWeekRange } from "@/lib/matching/dates";
 import type { FitCategory, FitUniversity } from "@/lib/matching/types";
 import type { ProgressReport } from "@/lib/progress/readiness";
@@ -132,10 +134,11 @@ export function roadSteps(input: {
   const profileDone = input.percent >= 80;
   const cvDone = profileDone && input.cvStarted;
   const shortlistCount = input.shortlistCount;
-  const unisDone = cvDone && shortlistCount != null && shortlistCount > 0;
+  const unisDone = shortlistCount != null && shortlistCount > 0;
 
   let unisStatus: RoadStep["status"] = "locked";
-  if (cvDone && shortlistCount != null) unisStatus = unisDone ? "done" : "current";
+  if (unisDone) unisStatus = "done";
+  else if (cvDone && shortlistCount != null) unisStatus = "current";
 
   return [
     {
@@ -187,7 +190,7 @@ export type UniversityRow = {
 
 export function toUniCards(rows: UniversityRow[], savedIds: Set<string> = new Set()): UniCard[] {
   return rows.map((row) => {
-    const tags = (row.majors ?? []).filter(Boolean).slice(0, 2);
+    const tags = (row.majors ?? []).filter(Boolean).slice(0, 2).map(displayMajor);
     return {
       id: row.id,
       name: row.name,
@@ -220,7 +223,7 @@ function docsFor(profile: ProfileData): DocItem[] {
       .map((exam) => exam.code),
   );
   if (planned.has("IELTS")) docs.push({ id: "english", title: "IELTS", status: "todo" });
-  if (planned.has("TOEFL_IBT")) docs.push({ id: "toefl", title: "TOEFL", status: "todo" });
+  if (planned.has("TOEFL_IBT")) docs.push({ id: "toefl", title: "TOEFL iBT", status: "todo" });
 
   const abroad = profile.target_countries.some(
     (country) => country !== "Kazakhstan" && country !== "KZ",
@@ -255,6 +258,8 @@ function checkOptionsFrom(rows: UniversityRow[], profile: ProfileData): CheckCha
     value: row.slug,
     label: row.name,
     country: asCountry(row.country),
+    countryKey: row.country,
+    majors: (row.majors ?? []).filter(Boolean),
   }));
   for (const row of rows) {
     countries.set(row.country, {
@@ -263,9 +268,15 @@ function checkOptionsFrom(rows: UniversityRow[], profile: ProfileData): CheckCha
       country: asCountry(row.country),
     });
     for (const major of row.majors ?? []) {
-      const label = major.trim();
+      const label = displayMajor(major.trim());
       if (label) programs.set(label, { value: label, label });
     }
+  }
+  if (profile.intended_major?.trim()) {
+    programs.set(profile.intended_major, {
+      value: profile.intended_major,
+      label: profile.intended_major,
+    });
   }
   const byLabel = (a: { label: string }, b: { label: string }) => a.label.localeCompare(b.label, "ru");
   return {
@@ -320,7 +331,7 @@ function presentDeadlines(
     for (const entry of classifyDeadlines(item.university.deadlines, today).upcoming) {
       tickets.push({
         id: `${item.university.id}-${entry.round}-${entry.date}`,
-        title: `${item.university.name} · ${entry.round}`,
+        title: `${item.university.name} · ${roundLabel(entry.round)}`,
         date: entry.date,
         href: `/universities/${item.university.slug}`,
       });

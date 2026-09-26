@@ -38,9 +38,9 @@ export const strings = {
     },
     check: {
       meets: "Подходит",
-      below: "Частично",
-      unknown: "Пока нет",
-      not_required: "Не требуется",
+      below: "Ниже требования",
+      unknown: "Нет данных",
+      not_required: "Нет требования",
     },
   },
   nav: {
@@ -69,7 +69,7 @@ export const strings = {
       {
         title: "Получи подбор вузов",
         description:
-          "Dream, target и safety варианты на основе реальных требований.",
+          "Мечта, Цель и Запасной — по реальным требованиям, без выдуманных шансов.",
       },
       {
         title: "Следуй плану",
@@ -132,7 +132,7 @@ export const strings = {
     levelReady: "Профиль заполнен",
     levelGap: (countLabel: string) => `до уровня «Готов» — ${countLabel}`,
     readiness: "Готовность",
-    littleData: "мало данных",
+    littleData: "Нет данных",
     achievements: "Отметки",
     weeklyGoal: "Цель на неделю",
     weeklyGoalHint: "Сколько задач закрыть на этой неделе",
@@ -197,7 +197,7 @@ export const strings = {
     deadlinesTitle: "Дедлайны",
     noGaps: "По известным данным пробелов нет.",
     noDeadlines: "Дедлайнов в базе нет.",
-    littleData: "мало данных",
+    littleData: "Нет данных",
     score: (n: number) => `${n}`,
     have: "у тебя",
     need: "нужно",
@@ -210,12 +210,14 @@ export const strings = {
       asia_other: "Азия",
     },
     aid: {
-      need_blind: "Need-blind грант",
-      need_aware: "Need-aware грант",
-      merit: "Merit грант",
+      need_blind: "Без учёта дохода",
+      need_aware: "С учётом дохода",
+      merit: "За успехи",
       none: "без гранта для иностранцев",
       unknown: "помощь неизвестна",
+      funded: "С финансированием",
     },
+    hintCategory: "подсказка движка",
     checks: {
       english: "Английский",
       unt: "ЕНТ",
@@ -429,7 +431,7 @@ export const strings = {
       },
       budget: {
         title: "Какой бюджет на год обучения?",
-        legend: "Бюджет в год, USD",
+        legend: "Бюджет в год, $",
         scholarship: "Показывать только бесплатные / с полным грантом",
         ranges: {
           zero: "Только гранты",
@@ -517,7 +519,7 @@ export const strings = {
       city: "Город",
       major: "Направление",
       countries: "Страны",
-      budget: "Бюджет в год, USD",
+      budget: "Бюджет в год, $",
       scholarship: "Только бесплатные / с полным грантом",
       english: "Уровень английского",
       exams: "Экзамены",

@@ -103,4 +103,14 @@ describe("prepPlan", () => {
     expect(ielts?.lastCycleWarning).toContain("по прошлому циклу — проверьте на сайте вуза");
     expect(ielts?.lastCycleWarning).toContain("https://alpha.edu");
   });
+
+  it("skips an exam the profile already meets", () => {
+    const plan = prepPlan(
+      { ...profile, exams: [{ code: "IELTS", score: 7, status: "taken" }] },
+      [university({ ielts_min: 6.5 })],
+      [],
+      TODAY,
+    );
+    expect(plan.exams.some((item) => item.code === "IELTS")).toBe(false);
+  });
 });

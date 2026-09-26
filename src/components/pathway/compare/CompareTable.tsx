@@ -3,7 +3,7 @@ import Link from "next/link";
 import { CheckStatusBadge } from "@/components/pathway/fit/CheckStatusBadge";
 import { FitBadge } from "@/components/pathway/fit/FitBadge";
 import { classifyDeadlines, LAST_CYCLE_WARNING_RU } from "@/lib/matching/deadlines";
-import { isGrantAid } from "@/lib/matching/budget";
+import { aidLabel, formatMoneyUsd, roundLabel } from "@/lib/labels/display";
 import { FIT_CHECK_KEYS, type FitCategory, type FitResult, type FitUniversity } from "@/lib/matching/types";
 import { getCountryLabel } from "@/lib/profile/types";
 import { strings } from "@/lib/strings";
@@ -17,9 +17,9 @@ type CompareItem = {
 
 function nextDeadline(university: CompareUni, today: string): string {
   const classified = classifyDeadlines(university.deadlines, today);
-  if (classified.upcoming[0]) return classified.upcoming[0].date;
+  if (classified.upcoming[0]) return `${roundLabel(classified.upcoming[0].round)}: ${classified.upcoming[0].date}`;
   if (classified.lastCycle[0]) {
-    return `${classified.lastCycle[0].date} · ${LAST_CYCLE_WARNING_RU}`;
+    return `${roundLabel(classified.lastCycle[0].round)}: ${classified.lastCycle[0].date} · ${LAST_CYCLE_WARNING_RU}`;
   }
   return "—";
 }
@@ -27,16 +27,12 @@ function nextDeadline(university: CompareUni, today: string): string {
 function cost(university: CompareUni): string {
   if (university.tuition_usd_per_year == null) return strings.universities.tuitionUnknown;
   if (university.tuition_usd_per_year === 0) return strings.universities.freeTuition;
-  return `${university.tuition_usd_per_year.toLocaleString("ru-RU")} USD`;
+  return formatMoneyUsd(university.tuition_usd_per_year);
 }
 
 function grants(university: CompareUni): string {
   if (university.tuition_usd_per_year === 0) return strings.universities.freeTuition;
-  if (university.aid_for_internationals && university.aid_for_internationals in strings.universities.aid) {
-    return strings.universities.aid[university.aid_for_internationals as keyof typeof strings.universities.aid];
-  }
-  if (isGrantAid(university.aid_for_internationals)) return university.aid_for_internationals ?? "—";
-  return university.scholarships || university.aid_for_internationals || "—";
+  return aidLabel(university.aid_for_internationals) ?? "—";
 }
 
 export function CompareTable({ items, today }: { items: CompareItem[]; today: string }) {
@@ -69,7 +65,11 @@ export function CompareTable({ items, today }: { items: CompareItem[]; today: st
               <th className="sticky left-0 bg-background p-3 font-bold">{strings.universities.fitTitle}</th>
               {items.map((item) => (
                 <td key={item.university.id} className="p-3">
-                  <FitBadge category={item.university.fit.suggestedCategory} score={item.university.fit.score} />
+                  <FitBadge
+                    category={item.university.fit.suggestedCategory}
+                    score={item.university.fit.score}
+                    savedCategory={item.category}
+                  />
                 </td>
               ))}
             </tr>
@@ -141,7 +141,11 @@ export function CompareTable({ items, today }: { items: CompareItem[]; today: st
               {strings.fit.category[item.category]} · {getCountryLabel(item.university.country)}
             </p>
             <div className="mt-2">
-              <FitBadge category={item.university.fit.suggestedCategory} score={item.university.fit.score} />
+              <FitBadge
+                category={item.university.fit.suggestedCategory}
+                score={item.university.fit.score}
+                savedCategory={item.category}
+              />
             </div>
             <dl className="mt-3 space-y-2 text-[13px]">
               {FIT_CHECK_KEYS.filter((key) => key !== "country" && key !== "deadline").map((key) => {

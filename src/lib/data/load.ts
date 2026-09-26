@@ -218,11 +218,15 @@ export async function loadRoadmap(
   today: Date | string = new Date(),
 ): Promise<{ tasks: RoadmapTaskDraft[]; error_ru: string | null }> {
   try {
-    const [universities, exams] = await Promise.all([
+    const [bundle, universities, exams] = await Promise.all([
+      profileBundle(supabase, userId),
       loadShortlistUniversities(supabase, userId),
       loadExamCatalog(supabase),
     ]);
-    return { tasks: buildRoadmap(universities, exams, today), error_ru: null };
+    return {
+      tasks: buildRoadmap(universities, exams, today, toFitProfile(bundle.profile)),
+      error_ru: null,
+    };
   } catch (error) {
     console.error("loadRoadmap", error);
     return { tasks: [], error_ru: LOAD_ERROR };

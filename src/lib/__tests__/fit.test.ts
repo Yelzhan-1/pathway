@@ -54,6 +54,8 @@ describe("fitUniversity", () => {
     expect(checkByKey(result, "major").status).toBe("meets");
     expect(checkByKey(result, "unt").status).toBe("unknown");
     expect(checkByKey(result, "sat").status).toBe("not_required");
+    expect(checkByKey(result, "country").need).toBe("США");
+    expect(checkByKey(result, "country").have).toBe("США");
     expect(result.score).toBe(100);
     expect(result.suggestedCategory).toBe("safety");
   });
