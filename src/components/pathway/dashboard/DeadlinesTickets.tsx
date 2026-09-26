@@ -21,9 +21,7 @@ export function DeadlinesTickets({ items, today, loading }: { items: DeadlineTic
               events={items.map((d) => ({ uid: d.id, title: d.title, date: d.date, url: d.href }))}
               filename="pathway-deadlines.ics"
               label={strings.calendar.addAll}
-              variant="ghost"
-              size="sm"
-              className="px-2 text-[12.5px]"
+              iconOnly
             />
           ) : undefined
         }

@@ -5,6 +5,7 @@ import { CalendarPlus } from "lucide-react";
 import { Button } from "@/components/pathway/ui/tropa";
 import { buildIcsCalendar, type IcsEvent } from "@/lib/calendar/ics";
 import { strings } from "@/lib/strings";
+import { cn } from "@/lib/utils";
 
 function downloadIcs(filename: string, events: readonly IcsEvent[]) {
   const content = buildIcsCalendar(events);
@@ -24,6 +25,7 @@ export function AddToCalendarButton({
   events,
   filename,
   label,
+  iconOnly = false,
   variant = "soft",
   size = "sm",
   className,
@@ -31,11 +33,26 @@ export function AddToCalendarButton({
   events: readonly IcsEvent[];
   filename: string;
   label?: string;
+  /** Renders a small round icon-only button — for tight header rows on narrow screens. */
+  iconOnly?: boolean;
   variant?: "primary" | "honey" | "soft" | "ghost" | "inverse";
   size?: "sm" | "md" | "lg";
   className?: string;
 }) {
   if (events.length === 0) return null;
+  const text = label ?? strings.calendar.add;
+  if (iconOnly) {
+    return (
+      <button
+        type="button"
+        aria-label={text}
+        onClick={() => downloadIcs(filename, events)}
+        className={cn("grid size-9 shrink-0 place-items-center rounded-full bg-secondary text-foreground", className)}
+      >
+        <CalendarPlus className="size-[18px]" aria-hidden />
+      </button>
+    );
+  }
   return (
     <Button
       type="button"
@@ -45,7 +62,7 @@ export function AddToCalendarButton({
       onClick={() => downloadIcs(filename, events)}
     >
       <CalendarPlus className="size-4" aria-hidden />
-      {label ?? strings.calendar.add}
+      {text}
     </Button>
   );
 }
