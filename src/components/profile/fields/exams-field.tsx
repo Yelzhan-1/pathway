@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { A_LEVEL_GRADES, EXAM_CODES, EXAMS_WITH_OPTIONAL_SUBJECT, type ExamCode } from "@/lib/profile/exam-ranges";
 import { formatExamEntry, getExamCodeLabel } from "@/lib/profile/labels";
-import { commitPendingExam } from "@/lib/profile/pending-exam";
+import { commitPendingExam, isPendingExamEmpty } from "@/lib/profile/pending-exam";
 import type { ExamEntry, ExamStatus } from "@/lib/profile/types";
 import { strings } from "@/lib/strings";
 
@@ -76,6 +76,17 @@ export const ExamsField = forwardRef<
   }));
 
   function addExam() {
+    if (
+      isPendingExamEmpty({
+        scoreRaw: score,
+        date,
+        subject,
+        status,
+      })
+    ) {
+      setFormError(strings.profile.errors.examAddEmpty);
+      return;
+    }
     applyCommit(
       commitPendingExam(value, {
         code,

@@ -390,6 +390,8 @@ export const profileFormSchema = z
       .int({ error: strings.profile.errors.intakeYearRange })
       .min(INTAKE_YEAR_MIN, { error: strings.profile.errors.intakeYearRange })
       .max(INTAKE_YEAR_MAX, { error: strings.profile.errors.intakeYearRange }),
+    city_is_other: z.boolean().optional(),
+    major_is_other: z.boolean().optional(),
   })
   .superRefine((value, ctx) => {
     const allowed =
@@ -415,6 +417,20 @@ export const profileFormSchema = z
           message: strings.profile.errors.gpaExceedsScale,
         });
       }
+    }
+    if (value.city_is_other && value.city.trim().length === 0) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["city"],
+        message: strings.profile.errors.cityOtherRequired,
+      });
+    }
+    if (value.major_is_other && !value.intended_major?.trim()) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["intended_major"],
+        message: strings.profile.errors.majorOtherRequired,
+      });
     }
   });
 

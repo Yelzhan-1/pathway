@@ -5,8 +5,9 @@ import { useState } from "react";
 import { StepForm } from "@/components/onboarding/step-form";
 import { useOnboardingStep } from "@/components/onboarding/use-onboarding-step";
 import { CityField } from "@/components/profile/fields/city-field";
+import { canonicalizePreset } from "@/lib/profile/presets";
 import { cityStepSchema } from "@/lib/profile/schemas";
-import type { ProfileData } from "@/lib/profile/types";
+import { KZ_CITIES, type ProfileData } from "@/lib/profile/types";
 import { strings } from "@/lib/strings";
 
 export function StepCity({ profile, step }: { profile: ProfileData; step: number }) {
@@ -19,11 +20,13 @@ export function StepCity({ profile, step }: { profile: ProfileData; step: number
     <StepForm
       title={strings.onboarding.steps.city.title}
       legend={strings.onboarding.steps.city.legend}
-      error={error}
+      error={error ? strings.profile.checkFields : null}
       isPending={isPending}
       showBack
       onBack={goBack}
-      onSubmit={() => save()}
+      onSubmit={() =>
+        save(cityStepSchema, { city: canonicalizePreset(city, KZ_CITIES) })
+      }
     >
       <CityField value={city} onChange={setCity} submitted={attempted} />
     </StepForm>

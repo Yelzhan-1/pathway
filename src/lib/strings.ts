@@ -214,6 +214,7 @@ export const strings = {
     save: "Сохранить профиль",
     saved: "Профиль сохранён",
     saveError: "Не удалось сохранить профиль.",
+    checkFields: "Проверьте отмеченные поля",
     sections: {
       basics: "Основное",
       goals: "Цели",
@@ -279,6 +280,7 @@ export const strings = {
       examDateRequired: "Для сданного экзамена укажите дату.",
       examScoreInvalid: "Введите корректный балл.",
       examPending: "Добавьте экзамен или очистите незаполненные поля.",
+      examAddEmpty: "Выберите экзамен и укажите балл",
       examScoreRange: (label: string, min: number, max: number) =>
         `${label}: балл должен быть от ${min} до ${max}.`,
       ieltsStep: "IELTS: балл с шагом 0.5.",

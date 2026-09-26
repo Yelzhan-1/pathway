@@ -19,8 +19,9 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import type { ApplicantPath } from "@/lib/database.types";
 import { profileFormSchema } from "@/lib/profile/schemas";
+import { resolveOtherValue } from "@/lib/profile/presets";
 import type { EnglishLevel, ExamEntry, GpaScale, ProfileData } from "@/lib/profile/types";
-import { GRADUATE_GRADES, TRANSFER_YEARS } from "@/lib/profile/types";
+import { GRADUATE_GRADES, KZ_CITIES, MAJOR_OPTIONS, TRANSFER_YEARS } from "@/lib/profile/types";
 import { firstZodMessage } from "@/lib/profile/zod-error";
 import { strings } from "@/lib/strings";
 
@@ -44,8 +45,18 @@ export function ProfileForm({
   const [path, setPath] = useState<ApplicantPath | null>(profile.path);
   const [grade, setGrade] = useState(profile.grade_or_year);
   const [city, setCity] = useState(profile.city ?? "");
+  const [cityIsOther, setCityIsOther] = useState(
+    () =>
+      (profile.city ?? "").trim().length > 0 &&
+      !(KZ_CITIES as readonly string[]).includes(profile.city ?? ""),
+  );
   const [intakeYear, setIntakeYear] = useState<number | null>(profile.intake_year);
   const [major, setMajor] = useState(profile.intended_major ?? "");
+  const [majorIsOther, setMajorIsOther] = useState(
+    () =>
+      (profile.intended_major ?? "").trim().length > 0 &&
+      !(MAJOR_OPTIONS as readonly string[]).includes(profile.intended_major ?? ""),
+  );
   const [targetCountries, setTargetCountries] = useState(profile.target_countries);
   const [budgetUsd, setBudgetUsd] = useState<number | null>(profile.budget_usd);
   const [needsScholarship, setNeedsScholarship] = useState(profile.needs_scholarship);
@@ -63,12 +74,17 @@ export function ProfileForm({
       : 5,
   );
 
+  const cityResolved = resolveOtherValue(city, KZ_CITIES, cityIsOther);
+  const majorResolved = resolveOtherValue(major, MAJOR_OPTIONS, majorIsOther);
+
   const current = {
     full_name: fullName,
     path,
     grade_or_year: grade,
-    city,
-    intended_major: major.trim() ? major.trim() : null,
+    city: cityResolved.value,
+    city_is_other: cityResolved.isOther,
+    intended_major: majorResolved.value ? majorResolved.value : null,
+    major_is_other: majorResolved.isOther,
     target_countries: targetCountries,
     budget_usd: budgetUsd,
     needs_scholarship: needsScholarship,
@@ -91,7 +107,6 @@ export function ProfileForm({
         return parsed.success ? null : firstZodMessage(parsed.error);
       })()
     : null;
-  const error = clientError ?? serverError;
 
   useEffect(() => {
     if (!dirty) return;
@@ -114,10 +129,7 @@ export function ProfileForm({
   function onSubmit() {
     setAttempted(true);
     const pending = examsRef.current?.commitPending() ?? { ok: true as const, exams };
-    if (!pending.ok) {
-      setServerError(pending.error);
-      return;
-    }
+    if (!pending.ok) return;
     setExams(pending.exams);
     const payload = {
       ...current,
@@ -128,6 +140,10 @@ export function ProfileForm({
     if (!parsed.success) {
       return;
     }
+    if (cityResolved.value !== city) setCity(cityResolved.value);
+    if (cityResolved.isOther !== cityIsOther) setCityIsOther(cityResolved.isOther);
+    if (majorResolved.value !== major) setMajor(majorResolved.value);
+    if (majorResolved.isOther !== majorIsOther) setMajorIsOther(majorResolved.isOther);
     setServerError(null);
     startTransition(async () => {
       const result = await updateProfileAction(parsed.data);
@@ -151,7 +167,8 @@ export function ProfileForm({
       noValidate
     >
       <div aria-live="assertive">
-        <FieldError>{error}</FieldError>
+        {clientError ? <FieldError>{strings.profile.checkFields}</FieldError> : null}
+        {!clientError && serverError ? <FieldError>{serverError}</FieldError> : null}
       </div>
 
       <Card id="basics">
@@ -175,7 +192,13 @@ export function ProfileForm({
             onPathChange={handlePathChange}
             onGradeChange={setGrade}
           />
-          <CityField value={city} onChange={setCity} submitted={attempted} />
+          <CityField
+            value={city}
+            onChange={setCity}
+            submitted={attempted}
+            isOther={cityIsOther}
+            onIsOtherChange={setCityIsOther}
+          />
           <IntakeYearField value={intakeYear} onChange={setIntakeYear} />
         </CardContent>
       </Card>
@@ -185,7 +208,13 @@ export function ProfileForm({
           <CardTitle>{strings.profile.sections.goals}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-6">
-          <MajorField value={major} onChange={setMajor} submitted={attempted} />
+          <MajorField
+            value={major}
+            onChange={setMajor}
+            submitted={attempted}
+            isOther={majorIsOther}
+            onIsOtherChange={setMajorIsOther}
+          />
           <CountriesField
             countries={countries}
             value={targetCountries}

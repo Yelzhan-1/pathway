@@ -17,6 +17,7 @@ import { moveActivity, newActivityId } from "@/lib/profile/activities";
 import { useAutosave } from "@/lib/hooks/use-autosave";
 import { formatExamEntry } from "@/lib/profile/labels";
 import { ACTIVITY_TYPES, emptyCv, type Activity, type Cv, type ProfileData } from "@/lib/profile/types";
+import { cvLinkError } from "@/lib/profile/url";
 import { strings } from "@/lib/strings";
 
 function sanitizeCv(cv: Cv): Cv {
@@ -29,7 +30,9 @@ function sanitizeCv(cv: Cv): Cv {
       ...cv.contacts,
       phone: cv.contacts.phone.trim(),
       city: cv.contacts.city.trim(),
-      links: cv.contacts.links.filter((link) => link.url.trim()),
+      links: cv.contacts.links
+        .map((link) => ({ label: link.label.trim(), url: link.url.trim() }))
+        .filter((link) => link.url.length > 0 && cvLinkError(link.url) == null),
     },
     education: {
       institution: cv.education.institution.trim(),
@@ -64,9 +67,18 @@ export function CvBuilder({
   const [mobileTab, setMobileTab] = useState("editor");
   const [showPlannedExams, setShowPlannedExams] = useState(false);
 
-  const cvSave = useAutosave(cv, async (next) => saveCvAction(sanitizeCv(next)));
-  const activitiesSave = useAutosave(activities, async (next) =>
-    saveActivitiesAction(next),
+  const cvSave = useAutosave(
+    cv,
+    async (next) => saveCvAction(next),
+    {
+      prepare: sanitizeCv,
+      keepalive: { url: "/api/cv/autosave", kind: "cv" },
+    },
+  );
+  const activitiesSave = useAutosave(
+    activities,
+    async (next) => saveActivitiesAction(next),
+    { keepalive: { url: "/api/cv/autosave", kind: "activities" } },
   );
 
   const saveStatus =
@@ -133,12 +145,16 @@ export function CvBuilder({
           </div>
           <div className="flex flex-col gap-2">
             <p className="text-sm font-medium">{strings.cv.fields.links}</p>
-            {cv.contacts.links.map((link, index) => (
-              <div key={`link-${index}`} className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+            {cv.contacts.links.map((link, index) => {
+              const linkError = cvLinkError(link.url);
+              return (
+              <div key={`link-${index}`} className="flex flex-col gap-2">
+                <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
                 <Input
                   className="min-h-11"
                   placeholder={strings.cv.fields.linkLabel}
                   value={link.label}
+                  aria-invalid={Boolean(linkError)}
                   onChange={(event) => {
                     const links = cv.contacts.links.slice();
                     links[index] = { ...link, label: event.target.value };
@@ -149,6 +165,7 @@ export function CvBuilder({
                   className="min-h-11"
                   placeholder={strings.cv.fields.linkUrl}
                   value={link.url}
+                  aria-invalid={Boolean(linkError)}
                   onChange={(event) => {
                     const links = cv.contacts.links.slice();
                     links[index] = { ...link, url: event.target.value };
@@ -171,8 +188,15 @@ export function CvBuilder({
                 >
                   {strings.common.delete}
                 </Button>
+                </div>
+                {linkError ? (
+                  <p role="alert" className="text-sm text-destructive">
+                    {linkError}
+                  </p>
+                ) : null}
               </div>
-            ))}
+              );
+            })}
             <Button
               type="button"
               variant="outline"

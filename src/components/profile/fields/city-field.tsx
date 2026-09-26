@@ -17,14 +17,25 @@ export function CityField({
   value,
   onChange,
   submitted = false,
+  isOther: isOtherProp,
+  onIsOtherChange,
 }: {
   value: string;
   onChange: (city: string) => void;
   submitted?: boolean;
+  isOther?: boolean;
+  onIsOtherChange?: (next: boolean) => void;
 }) {
-  const [isOther, setIsOther] = useState(
+  const [uncontrolled, setUncontrolled] = useState(
     () => value.trim().length > 0 && !isPresetCity(value),
   );
+  const isOther = isOtherProp ?? uncontrolled;
+
+  function setOther(next: boolean) {
+    if (isOtherProp === undefined) setUncontrolled(next);
+    onIsOtherChange?.(next);
+  }
+
   const selected = isOther ? OTHER_CITY_VALUE : value;
 
   return (
@@ -39,7 +50,7 @@ export function CityField({
             key={city}
             selected={selected === city}
             onSelect={() => {
-              setIsOther(false);
+              setOther(false);
               onChange(city);
             }}
             title={city}
@@ -48,8 +59,9 @@ export function CityField({
         <OptionCard
           selected={isOther}
           onSelect={() => {
-            setIsOther(true);
-            if (isPresetCity(value)) onChange("");
+            const switchingOn = !isOther;
+            setOther(true);
+            if (switchingOn && isPresetCity(value)) onChange("");
           }}
           title={strings.common.other}
         />
@@ -60,7 +72,7 @@ export function CityField({
           <Input
             id="city-other"
             className="h-11 min-h-11"
-            value={isPresetCity(value) ? "" : value}
+            value={value}
             onChange={(event) => onChange(event.target.value)}
             placeholder={strings.onboarding.steps.city.otherPlaceholder}
             autoComplete="address-level2"

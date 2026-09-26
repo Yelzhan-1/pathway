@@ -17,14 +17,25 @@ export function MajorField({
   value,
   onChange,
   submitted = false,
+  isOther: isOtherProp,
+  onIsOtherChange,
 }: {
   value: string;
   onChange: (major: string) => void;
   submitted?: boolean;
+  isOther?: boolean;
+  onIsOtherChange?: (next: boolean) => void;
 }) {
-  const [isOther, setIsOther] = useState(
+  const [uncontrolled, setUncontrolled] = useState(
     () => value.trim().length > 0 && !isPresetMajor(value),
   );
+  const isOther = isOtherProp ?? uncontrolled;
+
+  function setOther(next: boolean) {
+    if (isOtherProp === undefined) setUncontrolled(next);
+    onIsOtherChange?.(next);
+  }
+
   const selected = isOther ? OTHER_MAJOR_VALUE : value;
 
   return (
@@ -39,7 +50,7 @@ export function MajorField({
             key={major}
             selected={selected === major}
             onSelect={() => {
-              setIsOther(false);
+              setOther(false);
               onChange(major);
             }}
             title={major}
@@ -48,8 +59,9 @@ export function MajorField({
         <OptionCard
           selected={isOther}
           onSelect={() => {
-            setIsOther(true);
-            if (isPresetMajor(value)) onChange("");
+            const switchingOn = !isOther;
+            setOther(true);
+            if (switchingOn && isPresetMajor(value)) onChange("");
           }}
           title={strings.common.other}
         />
@@ -60,7 +72,7 @@ export function MajorField({
           <Input
             id="major-other"
             className="h-11 min-h-11"
-            value={isPresetMajor(value) ? "" : value}
+            value={value}
             onChange={(event) => onChange(event.target.value)}
             placeholder={strings.onboarding.steps.major.otherPlaceholder}
             aria-invalid={submitted && value.trim().length === 0}

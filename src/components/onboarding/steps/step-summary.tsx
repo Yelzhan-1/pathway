@@ -88,11 +88,13 @@ export function StepSummary({ profile }: { profile: ProfileData }) {
         step={4}
       />
       <Row label={s.fields.budget} value={formatBudget(profile)} step={5} />
-      <Row
-        label={s.fields.scholarship}
-        value={profile.needs_scholarship ? s.yes : s.no}
-        step={5}
-      />
+      {profile.budget_usd === 0 ? null : (
+        <Row
+          label={s.fields.scholarship}
+          value={profile.needs_scholarship ? s.yes : s.no}
+          step={5}
+        />
+      )}
       <Row
         label={s.fields.english}
         value={getEnglishLevelLabel(profile.english_level)}
