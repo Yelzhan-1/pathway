@@ -126,6 +126,17 @@ export async function loadUniversity(
   return { item: withSources(data, toFitProfile(bundle.profile), day), error_ru: null };
 }
 
+export type UniversityCatalogEntry = { slug: string; name: string; country: string };
+
+/** Lightweight name-sorted catalog list — for pickers (e.g. /essay's university select), not the ranked catalog. */
+export async function loadUniversityCatalogList(
+  supabase: DbClient,
+): Promise<{ items: UniversityCatalogEntry[]; error_ru: string | null }> {
+  const { data, error } = await supabase.from("universities").select("slug, name, country").order("name");
+  if (error) return { items: [], error_ru: LOAD_ERROR };
+  return { items: data ?? [], error_ru: null };
+}
+
 export async function loadShortlist(
   supabase: DbClient,
   userId: string,

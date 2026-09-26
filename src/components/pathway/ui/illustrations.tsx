@@ -73,6 +73,18 @@ export function CalendarMark({ className = '' }: { className?: string }) {
   );
 }
 
+/** Envelope with a checkmark — for the essay/letter review feature. */
+export function Letter({ className = '' }: { className?: string }) {
+  return (
+    <svg aria-hidden viewBox="0 0 100 100" className={className} fill="none">
+      <rect x="14" y="28" width="72" height="50" rx="10" className="fill-card" stroke="currentColor" strokeWidth="3" />
+      <path d="M18 32l32 24 32-24" className="stroke-primary" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="76" cy="24" r="14" className="fill-honey" />
+      <path d="M70 24l4 4 8-8" className="stroke-[#3A2400]" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function Signpost({ className = '' }: { className?: string }) {
   return (
     <svg aria-hidden viewBox="0 0 100 84" className={className} fill="none">

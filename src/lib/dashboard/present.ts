@@ -277,7 +277,7 @@ function docsFor(profile: ProfileData): DocItem[] {
   const abroad = profile.target_countries.some(
     (country) => country !== "Kazakhstan" && country !== "KZ",
   );
-  if (abroad) docs.push({ id: "motivation", title: "Мотив. письмо", status: "todo" });
+  if (abroad) docs.push({ id: "motivation", title: "Мотив. письмо", status: "todo", href: "/essay" });
 
   return docs;
 }

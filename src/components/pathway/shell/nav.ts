@@ -1,4 +1,4 @@
-import { BarChart3, Building2, FileText, Heart, House, Leaf, ListTodo, MessagesSquare, NotebookPen, Route, Scale, Settings, Sparkles, Trophy, UserRound, type LucideIcon } from 'lucide-react';
+import { BarChart3, Building2, FileText, Heart, House, Leaf, ListTodo, MessagesSquare, NotebookPen, PenLine, Route, Scale, Settings, Sparkles, Trophy, UserRound, type LucideIcon } from 'lucide-react';
 import type { NavIcon, NavItem } from '@/types/pathway';
 
 export const NAV_ICON: Record<NavIcon, LucideIcon> = {
@@ -17,6 +17,7 @@ export const NAV_ICON: Record<NavIcon, LucideIcon> = {
   mentors: MessagesSquare,
   impact: BarChart3,
   settings: Settings,
+  essay: PenLine,
 };
 
 /**
@@ -39,6 +40,7 @@ export const DEFAULT_NAV: NavItem[] = [
   { id: 'exams', label: 'Экзамены', href: '/exams', icon: 'exams', tone: 'dream' },
   { id: 'opportunities', label: 'Возможности', href: '/opportunities', icon: 'opportunities', tone: 'honey' },
   { id: 'mentors', label: 'Наставники', href: '/mentors', icon: 'mentors', tone: 'mint' },
+  { id: 'essay', label: 'Письмо', href: '/essay', icon: 'essay', tone: 'sky' },
 ];
 
 /** Main IA: exactly these 5 (short labels) are the sidebar's top block + mobile bottom bar; everything else is «Ещё». */

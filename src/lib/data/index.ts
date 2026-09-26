@@ -16,6 +16,7 @@ import {
   loadTasks,
   loadUniversities,
   loadUniversity,
+  loadUniversityCatalogList,
 } from "./load";
 
 const SIGN_IN = "Войдите в аккаунт.";
@@ -36,6 +37,11 @@ export async function getUniversities(filters: UniversityFilters = {}) {
 export async function getUniversity(slug: string) {
   const { supabase, userId } = await session();
   return loadUniversity(supabase, userId, slug);
+}
+
+export async function getUniversityCatalogList() {
+  const { supabase } = await session();
+  return loadUniversityCatalogList(supabase);
 }
 
 export async function getShortlist() {

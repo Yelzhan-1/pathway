@@ -10,7 +10,7 @@ export type ChanceTier = 'safety' | 'target' | 'dream';
 export type Tone = 'forest' | 'mint' | 'honey' | 'coral' | 'dream' | 'sky';
 
 /* ---------- Shell ---------- */
-export type NavIcon = 'home' | 'profile' | 'unis' | 'favorites' | 'compare' | 'whatif' | 'docs' | 'roadmap' | 'tasks' | 'opportunities' | 'exams' | 'ai' | 'mentors' | 'impact' | 'settings';
+export type NavIcon = 'home' | 'profile' | 'unis' | 'favorites' | 'compare' | 'whatif' | 'docs' | 'roadmap' | 'tasks' | 'opportunities' | 'exams' | 'ai' | 'mentors' | 'impact' | 'settings' | 'essay';
 export type NavItem = { id: string; label: string; href: string; icon: NavIcon; tone: Tone; badge?: number; soon?: boolean };
 export type ShellUser = { name: string; city?: string | null; email?: string };
 export type ShellData = {

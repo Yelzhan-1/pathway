@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
+import { ArrowRight, PenLine } from "lucide-react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useChat } from "@ai-sdk/react";
 
@@ -61,6 +63,14 @@ export function AssistantChat({ initialMessages }: { initialMessages: UIMessage[
               ))}
             </div>
           </div>
+          <Link
+            href="/essay"
+            className="inline-flex min-h-9 items-center gap-1.5 self-start rounded-full bg-secondary px-3 text-[13px] font-bold text-foreground hover:bg-secondary/80"
+          >
+            <PenLine className="size-3.5" aria-hidden />
+            {strings.essay.assistantSuggestion}
+            <ArrowRight className="size-3.5" aria-hidden />
+          </Link>
         </div>
       ) : (
         <ul className="flex flex-col gap-3">
