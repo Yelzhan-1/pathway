@@ -33,7 +33,7 @@ export async function addToShortlist(input: unknown): Promise<ActionResult<{ uni
 
 export async function removeFromShortlist(
   input: unknown,
-): Promise<ActionResult<{ universityId: string }>> {
+): Promise<ActionResult<{ universityId: string; category: "dream" | "target" | "safety"; note: string | null }>> {
   const ctx = await getActionContext();
   if (!ctx.ok) return denied();
   const result = await removeFromShortlistForUser(ctx.supabase, ctx.userId, input);

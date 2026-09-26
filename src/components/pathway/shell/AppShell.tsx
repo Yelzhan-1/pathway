@@ -75,7 +75,14 @@ function Sidebar({ data, active, userId }: { data: ShellData; active: string; us
               className={cn('flex h-11 items-center gap-3 rounded-[16px] px-2 text-[14.5px] font-bold transition-colors', on ? 'bg-card shadow-chunky-soft ring-1 ring-border' : 'text-ink-2 hover:bg-card/60')}>
               <IconTile icon={NAV_ICON[n.icon]} tone={n.tone} />
               <span className="truncate">{n.label}</span>
-              {!!n.badge && <span className="ml-auto rounded-full bg-tone-coral-bg px-2 text-[12px] text-tone-coral-fg" aria-label={`${n.badge} новых`}>{n.badge}</span>}
+              {!!n.badge && (
+                <span
+                  className="ml-auto rounded-full bg-tone-coral-bg px-2 text-[12px] text-tone-coral-fg"
+                  aria-label={n.id === "favorites" ? strings.favorites.badge(n.badge) : `${n.badge} новых`}
+                >
+                  {n.badge}
+                </span>
+              )}
               {n.soon && !n.badge && <span className="ml-auto rounded-full bg-secondary px-2 text-[11px] font-bold text-muted-foreground">скоро</span>}
             </Link>
           );
@@ -181,7 +188,14 @@ function MoreSheet({ data, active, open, onClose, userId }: { data: ShellData; a
               {rest.map((n) => (
                 <li key={n.id}><Link href={n.href} aria-current={n.id === active ? 'page' : undefined} className="flex min-h-14 items-center gap-2.5 rounded-[18px] bg-card px-3 text-[14px] font-bold leading-tight shadow-chunky-soft ring-1 ring-border">
                   <IconTile icon={NAV_ICON[n.icon]} tone={n.tone} /><span className="min-w-0">{n.label}</span>
-                  {!!n.badge && <span className="ml-auto rounded-full bg-tone-coral-bg px-2 text-[12px] text-tone-coral-fg">{n.badge}</span>}
+                  {!!n.badge && (
+                    <span
+                      className="ml-auto rounded-full bg-tone-coral-bg px-2 text-[12px] text-tone-coral-fg"
+                      aria-label={n.id === "favorites" ? strings.favorites.badge(n.badge) : `${n.badge} новых`}
+                    >
+                      {n.badge}
+                    </span>
+                  )}
                 </Link></li>
               ))}
             </ul>

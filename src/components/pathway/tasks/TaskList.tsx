@@ -4,7 +4,7 @@ import { useTransition } from "react";
 import { toast } from "sonner";
 
 import { dayMonth } from "@/lib/format";
-import { deleteTask, updateTaskStatus } from "@/lib/actions/tasks";
+import { deleteTask, restoreTask, updateTaskStatus } from "@/lib/actions/tasks";
 import type { Database, TaskStatus } from "@/lib/database.types";
 import { toUtcDateString, utcWeekRange } from "@/lib/matching/dates";
 import { strings } from "@/lib/strings";
@@ -52,7 +52,34 @@ export function TaskList({ items }: { items: TaskRow[] }) {
                   <button
                     type="button"
                     disabled={pending}
-                    onClick={() => run(() => deleteTask({ taskId: task.id }))}
+                    onClick={() => {
+                      startTransition(async () => {
+                        const result = await deleteTask({ taskId: task.id });
+                        if (!result.ok) {
+                          toast.error(result.error_ru);
+                          return;
+                        }
+                        toast(strings.tasks.deleted, {
+                          action: {
+                            label: strings.common.undo,
+                            onClick: () => {
+                              void restoreTask({
+                                title: result.data.title,
+                                description: result.data.description,
+                                dueDate: result.data.dueDate?.slice(0, 10) ?? null,
+                                status: result.data.status,
+                                source: result.data.source,
+                                relatedType: result.data.relatedType,
+                                relatedId: result.data.relatedId,
+                                roadmapKey: result.data.roadmapKey,
+                              }).then((undo) => {
+                                if (!undo.ok) toast.error(undo.error_ru);
+                              });
+                            },
+                          },
+                        });
+                      });
+                    }}
                     className="inline-flex min-h-11 items-center rounded-full px-3 text-[13px] font-bold text-muted-foreground hover:bg-secondary disabled:opacity-60"
                   >
                     {strings.tasks.delete}

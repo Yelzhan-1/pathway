@@ -35,4 +35,12 @@ describe("display labels", () => {
     expect(strings.fit.check.unknown).toBe("Нет данных");
     expect(strings.fit.check.not_required).toBe("Нет требования");
   });
+
+  it("keeps free-only distinct from needs-scholarship and uses «Неделя 1»", () => {
+    expect(strings.preference.freeOnly).toBe("Только бесплатно / грант");
+    expect(strings.onboarding.steps.budget.scholarship).toBe("Нужна стипендия");
+    expect(strings.exams.week(1)).toBe("Неделя 1");
+    expect(strings.roadmap.title).toBe("Дорожная карта");
+    expect(strings.favorites.groupHeading("Мечта", 2)).toBe("Мечта · 2");
+  });
 });

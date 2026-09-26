@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/pathway/ui/tropa";
@@ -9,6 +9,7 @@ import { strings } from "@/lib/strings";
 
 export function TaskComposer() {
   const [pending, startTransition] = useTransition();
+  const [titleError, setTitleError] = useState<string | null>(null);
 
   return (
     <form
@@ -20,6 +21,11 @@ export function TaskComposer() {
         const title = String(data.get("title") ?? "").trim();
         const dueDate = String(data.get("dueDate") ?? "").trim();
         const description = String(data.get("description") ?? "").trim();
+        if (!title) {
+          setTitleError(strings.tasks.titleRequired);
+          return;
+        }
+        setTitleError(null);
         startTransition(async () => {
           const result = await createTask({
             title,
@@ -38,10 +44,11 @@ export function TaskComposer() {
         {strings.tasks.name}
         <input
           name="title"
-          required
           maxLength={200}
+          aria-invalid={titleError ? true : undefined}
           className="mt-1 h-11 w-full rounded-full bg-background px-4 text-[14px] font-medium ring-1 ring-border"
         />
+        {titleError ? <span className="mt-1 block text-[13px] font-semibold text-destructive">{titleError}</span> : null}
       </label>
       <label className="block text-[13px] font-bold">
         {strings.tasks.due}

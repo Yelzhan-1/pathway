@@ -30,6 +30,30 @@ export function ShortlistControls({
     });
   }
 
+  function remove() {
+    startTransition(async () => {
+      const result = await removeFromShortlist({ universityId });
+      if (!result.ok) {
+        toast.error(result.error_ru);
+        return;
+      }
+      toast(strings.universities.removed, {
+        action: {
+          label: strings.common.undo,
+          onClick: () => {
+            void addToShortlist({
+              universityId: result.data.universityId,
+              category: result.data.category,
+              note: result.data.note ?? undefined,
+            }).then((undo) => {
+              if (!undo.ok) toast.error(undo.error_ru);
+            });
+          },
+        },
+      });
+    });
+  }
+
   return (
     <div className="flex flex-wrap items-center gap-2">
       {CATEGORIES.map((category) => {
@@ -60,7 +84,7 @@ export function ShortlistControls({
         <button
           type="button"
           disabled={pending}
-          onClick={() => run(() => removeFromShortlist({ universityId }))}
+          onClick={remove}
           className="inline-flex min-h-11 items-center rounded-full px-3 text-[13px] font-bold text-muted-foreground hover:bg-secondary disabled:opacity-60"
         >
           {strings.universities.remove}

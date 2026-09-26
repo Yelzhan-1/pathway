@@ -18,6 +18,7 @@ import {
   mentorAnswerSchema,
   mentorQuestionSchema,
   removeShortlistSchema,
+  restoreTaskSchema,
   updateTaskStatusSchema,
   weeklyGoalSchema,
 } from "./schemas";
@@ -150,9 +151,17 @@ export async function removeFromShortlistForUser(
   supabase: DbClient,
   userId: string,
   input: unknown,
-): Promise<ActionResult<{ universityId: string }>> {
+): Promise<ActionResult<{ universityId: string; category: "dream" | "target" | "safety"; note: string | null }>> {
   const parsed = removeShortlistSchema.safeParse(input);
   if (!parsed.success) return fail(zodErrorRu(parsed.error));
+  const { data: row, error: readError } = await supabase
+    .from("shortlist")
+    .select("category, note")
+    .eq("user_id", userId)
+    .eq("university_id", parsed.data.universityId)
+    .maybeSingle();
+  if (readError) return fail("Не удалось убрать вуз из списка.");
+  if (!row) return fail("Этого вуза нет в списке.");
   const { error } = await supabase
     .from("shortlist")
     .delete()
@@ -160,7 +169,11 @@ export async function removeFromShortlistForUser(
     .eq("university_id", parsed.data.universityId);
   if (error) return fail("Не удалось убрать вуз из списка.");
   await markActivity(supabase, userId);
-  return ok({ universityId: parsed.data.universityId });
+  return ok({
+    universityId: parsed.data.universityId,
+    category: row.category,
+    note: row.note,
+  });
 }
 
 export async function changeShortlistCategoryForUser(
@@ -228,11 +241,23 @@ export async function updateTaskStatusForUser(
   return ok({ id: parsed.data.taskId });
 }
 
+export type DeletedTask = {
+  id: string;
+  title: string;
+  description: string | null;
+  dueDate: string | null;
+  status: Database["public"]["Tables"]["tasks"]["Row"]["status"];
+  source: TaskSource;
+  relatedType: Database["public"]["Tables"]["tasks"]["Row"]["related_type"];
+  relatedId: string | null;
+  roadmapKey: string | null;
+};
+
 export async function deleteTaskForUser(
   supabase: DbClient,
   userId: string,
   input: unknown,
-): Promise<ActionResult<{ id: string }>> {
+): Promise<ActionResult<DeletedTask>> {
   const parsed = deleteTaskSchema.safeParse(input);
   if (!parsed.success) return fail(zodErrorRu(parsed.error));
   const { data, error } = await supabase
@@ -240,11 +265,49 @@ export async function deleteTaskForUser(
     .delete()
     .eq("id", parsed.data.taskId)
     .eq("user_id", userId)
-    .select("id");
+    .select("id, title, description, due_date, status, source, related_type, related_id, roadmap_key");
   if (error) return fail("Не удалось удалить задачу.");
-  if (!data || data.length === 0) return fail("Задача не найдена.");
+  const row = data?.[0];
+  if (!row) return fail("Задача не найдена.");
   await markActivity(supabase, userId);
-  return ok({ id: parsed.data.taskId });
+  return ok({
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    dueDate: row.due_date,
+    status: row.status,
+    source: row.source,
+    relatedType: row.related_type,
+    relatedId: row.related_id,
+    roadmapKey: row.roadmap_key,
+  });
+}
+
+export async function restoreTaskForUser(
+  supabase: DbClient,
+  userId: string,
+  input: unknown,
+): Promise<ActionResult<{ id: string }>> {
+  const parsed = restoreTaskSchema.safeParse(input);
+  if (!parsed.success) return fail(zodErrorRu(parsed.error));
+  const { data, error } = await supabase
+    .from("tasks")
+    .insert({
+      user_id: userId,
+      title: parsed.data.title,
+      description: parsed.data.description ?? null,
+      due_date: parsed.data.dueDate ?? null,
+      status: parsed.data.status,
+      source: parsed.data.source,
+      related_type: parsed.data.relatedType ?? null,
+      related_id: parsed.data.relatedId ?? null,
+      roadmap_key: parsed.data.roadmapKey ?? null,
+    })
+    .select("id")
+    .single();
+  if (error || !data) return fail("Не удалось вернуть задачу.");
+  await markActivity(supabase, userId);
+  return ok({ id: data.id });
 }
 
 export async function syncRoadmapForUser(

@@ -24,15 +24,24 @@ export function WeeklyGoalForm({ weeklyGoal }: { weeklyGoal: number | null }) {
           const weekly = value ? Number(value) : null;
           startTransition(async () => {
             const result = await setWeeklyGoal({ weeklyGoal: Number.isFinite(weekly) ? weekly : null });
-            if (!result.ok) toast.error(result.error_ru);
+            if (!result.ok) {
+              toast.error(result.error_ru);
+              return;
+            }
+            toast.success(strings.dashboard.weeklyGoalSaved);
           });
         }}
       >
+        <label className="sr-only" htmlFor="weekly-goal">
+          {strings.dashboard.weeklyGoal}
+        </label>
         <input
+          id="weekly-goal"
           name="weeklyGoal"
           type="number"
           min={1}
           max={50}
+          aria-label={strings.dashboard.weeklyGoal}
           defaultValue={weeklyGoal ?? ""}
           className="h-11 w-24 rounded-full bg-background px-4 text-[14px] font-bold ring-1 ring-border"
         />
@@ -47,7 +56,11 @@ export function WeeklyGoalForm({ weeklyGoal }: { weeklyGoal: number | null }) {
           onClick={() => {
             startTransition(async () => {
               const result = await setWeeklyGoal({ weeklyGoal: null });
-              if (!result.ok) toast.error(result.error_ru);
+              if (!result.ok) {
+                toast.error(result.error_ru);
+                return;
+              }
+              toast.success(strings.dashboard.weeklyGoalSaved);
             });
           }}
         >

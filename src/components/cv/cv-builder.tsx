@@ -552,6 +552,7 @@ export function CvBuilder({
             <div key={`skill-${index}`} className="flex gap-2">
               <Input
                 className="min-h-11"
+                aria-label={`${strings.cv.fields.skill} ${index + 1}`}
                 value={skill}
                 onChange={(event) => {
                   const skills = cv.skills.slice();
@@ -592,6 +593,7 @@ export function CvBuilder({
               <Input
                 className="min-h-11"
                 placeholder={strings.cv.fields.languageName}
+                aria-label={strings.cv.fields.languageName}
                 value={language.name}
                 onChange={(event) => {
                   const languages = cv.languages.slice();
@@ -602,6 +604,7 @@ export function CvBuilder({
               <Input
                 className="min-h-11"
                 placeholder={strings.cv.fields.languageLevel}
+                aria-label={strings.cv.fields.languageLevel}
                 value={language.level}
                 onChange={(event) => {
                   const languages = cv.languages.slice();

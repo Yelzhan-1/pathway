@@ -38,7 +38,7 @@ export function PrepPlanList({ exams }: { exams: PrepExamPlan[] }) {
           <ol className="mt-4 space-y-2">
             {exam.milestones.map((step) => (
               <li key={`${exam.code}-${step.week}`} className="rounded-[14px] bg-secondary px-3 py-2 text-[14px] font-semibold">
-                {strings.exams.plan} {step.week}: {step.title_ru}
+                {strings.exams.week(step.week)}: {step.title_ru}
               </li>
             ))}
           </ol>

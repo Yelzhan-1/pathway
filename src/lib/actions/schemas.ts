@@ -39,6 +39,22 @@ export const deleteTaskSchema = z.object({
   taskId: z.uuid("Некорректная задача."),
 });
 
+export const restoreTaskSchema = z.object({
+  title: z.string().trim().min(1, "Введите название.").max(200, "Название слишком длинное."),
+  description: z.string().trim().max(4000, "Описание слишком длинное.").nullable().optional(),
+  dueDate: z
+    .union([
+      z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Дата должна быть в формате ГГГГ-ММ-ДД."),
+      z.null(),
+    ])
+    .optional(),
+  status: taskStatusSchema,
+  source: z.enum(["roadmap", "agent", "manual"]),
+  relatedType: z.enum(["university", "exam", "opportunity"]).nullable().optional(),
+  relatedId: z.union([z.uuid("Некорректная связь."), z.null()]).optional(),
+  roadmapKey: z.string().trim().max(120).nullable().optional(),
+});
+
 export const weeklyGoalSchema = z.object({
   weeklyGoal: z
     .number()

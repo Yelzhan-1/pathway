@@ -19,6 +19,7 @@ export default async function MentorsPage() {
         {strings.mentors.title}
       </Display>
       <MentorQuestionForm />
+      <p className="text-[13px] font-medium text-muted-foreground">{strings.mentors.answerNote}</p>
       {board.error_ru ? (
         <p role="alert" className="rounded-[20px] bg-danger-soft px-4 py-3 text-[14px] font-semibold text-destructive">
           {board.error_ru}

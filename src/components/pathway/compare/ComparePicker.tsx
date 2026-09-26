@@ -9,9 +9,11 @@ import { strings } from "@/lib/strings";
 export function ComparePicker({
   options,
   selectedIds,
+  onChange,
 }: {
   options: { id: string; name: string }[];
   selectedIds: string[];
+  onChange?: (ids: string[]) => void;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -43,9 +45,11 @@ export function ComparePicker({
                   checked={on}
                   disabled={blocked || pending}
                   onChange={() => {
-                    setPicked((current) =>
-                      on ? current.filter((id) => id !== option.id) : [...current, option.id],
-                    );
+                    setPicked((current) => {
+                      const next = on ? current.filter((id) => id !== option.id) : [...current, option.id];
+                      onChange?.(next);
+                      return next;
+                    });
                   }}
                   className="size-4 accent-primary"
                 />

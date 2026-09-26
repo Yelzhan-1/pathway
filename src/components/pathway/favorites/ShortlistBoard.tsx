@@ -26,8 +26,7 @@ export function ShortlistBoard({ items }: { items: Item[] }) {
         return (
           <section key={category} className="space-y-3">
             <Display as="h2" className="text-[18px]">
-              {strings.fit.category[category]}
-              <span className="ml-2 text-[14px] font-bold text-muted-foreground">{group.length}</span>
+              {strings.favorites.groupHeading(strings.fit.category[category], group.length)}
             </Display>
             {group.length === 0 ? (
               <p className="text-[14px] font-medium text-muted-foreground">{strings.favorites.emptyGroup}</p>

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 
-import { ComparePicker } from "@/components/pathway/compare/ComparePicker";
-import { CompareTable } from "@/components/pathway/compare/CompareTable";
+import { CompareLive } from "@/components/pathway/compare/CompareLive";
 import { Display, EmptyCta } from "@/components/pathway/ui/tropa";
 import { getShortlist } from "@/lib/data";
 import { toUtcDateString } from "@/lib/matching/dates";
@@ -44,19 +43,15 @@ export default async function ComparePage({
         <EmptyCta title={strings.compare.needTwo} cta={strings.favorites.emptyCta} href="/universities" />
       ) : (
         <>
-          <ComparePicker
+          <CompareLive
             options={items.map((item) => ({ id: item.university.id, name: item.university.name }))}
-            selectedIds={picked.map((item) => item.university.id)}
+            initialIds={picked.map((item) => item.university.id)}
+            items={items.map((item) => ({
+              category: item.category,
+              university: { ...item.university, fit: item.fit },
+            }))}
+            today={today}
           />
-          {picked.length >= 2 ? (
-            <CompareTable
-              items={picked.map((item) => ({
-                category: item.category,
-                university: { ...item.university, fit: item.fit },
-              }))}
-              today={today}
-            />
-          ) : null}
         </>
       )}
     </div>
