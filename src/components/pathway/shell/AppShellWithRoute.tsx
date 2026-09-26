@@ -16,7 +16,9 @@ export function AppShellWithRoute({
   children: ReactNode;
 }) {
   const path = usePathname();
-  const active = data.nav.find((item) => path === item.href || path.startsWith(`${item.href}/`))?.id ?? 'home';
+  // '' (no match) covers routes outside the nav list, e.g. /profile and /impact —
+  // reachable from the account menu — so we never wrongly highlight «Главная».
+  const active = data.nav.find((item) => path === item.href || path.startsWith(`${item.href}/`))?.id ?? '';
   return (
     <AppShell data={data} active={active} userId={userId}>
       {children}

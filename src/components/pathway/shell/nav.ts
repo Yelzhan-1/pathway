@@ -19,24 +19,33 @@ export const NAV_ICON: Record<NavIcon, LucideIcon> = {
   settings: Settings,
 };
 
-/** Default IA. Routes map to the app router. */
+/**
+ * Default IA. Routes map to the app router.
+ * First 5 ids are the primary nav (sidebar top + mobile tabs, see MOBILE_TABS below);
+ * the rest render in the collapsible «Ещё» group (sidebar disclosure + mobile sheet).
+ * «Профиль» and «Импакт» are intentionally not listed here: profile lives in the
+ * account menu (avatar), and impact is hidden from students while the route stays live.
+ */
 export const DEFAULT_NAV: NavItem[] = [
   { id: 'home', label: 'Главная', href: '/dashboard', icon: 'home', tone: 'forest' },
-  { id: 'profile', label: 'Профиль', href: '/profile', icon: 'profile', tone: 'mint' },
   { id: 'unis', label: 'Вузы', href: '/universities', icon: 'unis', tone: 'honey' },
+  { id: 'roadmap', label: 'План', href: '/roadmap', icon: 'roadmap', tone: 'mint' },
+  { id: 'docs', label: 'Документы', href: '/cv', icon: 'docs', tone: 'sky' },
+  { id: 'ai', label: 'Помощник', href: '/assistant', icon: 'ai', tone: 'forest' },
   { id: 'favorites', label: 'Избранное', href: '/favorites', icon: 'favorites', tone: 'coral' },
   { id: 'compare', label: 'Сравнение', href: '/compare', icon: 'compare', tone: 'dream' },
   { id: 'whatif', label: 'Что если', href: '/what-if', icon: 'whatif', tone: 'honey' },
-  { id: 'docs', label: 'Резюме и документы', href: '/cv', icon: 'docs', tone: 'sky' },
-  { id: 'roadmap', label: 'Дорожная карта', href: '/roadmap', icon: 'roadmap', tone: 'mint' },
   { id: 'tasks', label: 'Задачи', href: '/tasks', icon: 'tasks', tone: 'sky' },
-  { id: 'opportunities', label: 'Возможности', href: '/opportunities', icon: 'opportunities', tone: 'honey' },
   { id: 'exams', label: 'Экзамены', href: '/exams', icon: 'exams', tone: 'dream' },
-  { id: 'ai', label: 'AI-помощник', href: '/assistant', icon: 'ai', tone: 'forest' },
+  { id: 'opportunities', label: 'Возможности', href: '/opportunities', icon: 'opportunities', tone: 'honey' },
   { id: 'mentors', label: 'Наставники', href: '/mentors', icon: 'mentors', tone: 'mint' },
-  { id: 'impact', label: 'Импакт', href: '/impact', icon: 'impact', tone: 'coral' },
 ];
-/** Mobile bottom bar: exactly these 5 (short labels) + «Ещё» (sheet with the rest). */
+
+/** Main IA: exactly these 5 (short labels) are the sidebar's top block + mobile bottom bar; everything else is «Ещё». */
 export const MOBILE_TABS: { id: string; label: string }[] = [
-  { id: 'home', label: 'Главная' }, { id: 'unis', label: 'Вузы' }, { id: 'roadmap', label: 'План' }, { id: 'ai', label: 'AI' }, { id: 'profile', label: 'Профиль' },
+  { id: 'home', label: 'Главная' },
+  { id: 'unis', label: 'Вузы' },
+  { id: 'roadmap', label: 'План' },
+  { id: 'docs', label: 'Документы' },
+  { id: 'ai', label: 'Помощник' },
 ];

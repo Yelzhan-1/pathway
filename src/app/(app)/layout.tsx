@@ -3,7 +3,9 @@ import { redirect } from "next/navigation";
 import { AppShellWithRoute } from "@/components/pathway/shell/AppShellWithRoute";
 import { displayName } from "@/lib/dashboard/present";
 import { toUtcDateString } from "@/lib/matching/dates";
-import { computeStreak } from "@/lib/progress/readiness";
+import { computeProfileCompleteness } from "@/lib/profile/completeness";
+import { parseProfile } from "@/lib/profile/parse";
+import { computeStreak, cvCompleteness } from "@/lib/progress/readiness";
 import { buildShellData } from "@/lib/shell";
 import { createClient } from "@/lib/supabase/server";
 
@@ -27,11 +29,9 @@ export default async function AppLayout({
   }
 
   const [{ data: profile }, shortlist, activity] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("full_name, city, onboarding_completed, free_only")
-      .eq("id", user.id)
-      .maybeSingle(),
+    // Full row (same single-row query as elsewhere): lets the sidebar's
+    // next-step card use real completeness/CV signals with no extra query.
+    supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
     supabase
       .from("shortlist")
       .select("id", { count: "exact", head: true })
@@ -50,6 +50,8 @@ export default async function AppLayout({
         (activity.data ?? []).map((row) => row.day),
         toUtcDateString(new Date()),
       );
+  const profileData = parseProfile(profile);
+  const completeness = computeProfileCompleteness(profileData);
   const shell = buildShellData({
     name: fullName,
     city: profile.city,
@@ -57,6 +59,9 @@ export default async function AppLayout({
     shortlistCount: shortlist.error ? null : shortlist.count ?? 0,
     freeOnly: profile.free_only,
     streakDays,
+    profilePercent: completeness.percent,
+    profileFirstMissingHref: completeness.firstMissing?.href ?? null,
+    cvPercent: cvCompleteness(profileData.cv),
   });
 
   return (

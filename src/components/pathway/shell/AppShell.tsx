@@ -2,19 +2,20 @@
 import Link from 'next/link';
 import { useEffect, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { Bell, LogOut, MoreHorizontal, Search, X } from 'lucide-react';
+import { Bell, ChevronDown, MoreHorizontal, Search, X } from 'lucide-react';
 import type { ShellData } from '@/types/pathway';
-import { signOutAction } from '@/lib/actions/sign-out';
-import { initials } from '@/lib/format';
-import { clearBrowserCvDrafts } from '@/lib/hooks/autosave-patch';
 import { strings } from '@/lib/strings';
 import { cn } from '@/lib/utils';
 import { Flame } from '../primitives/Flame';
 import { Signpost } from '../ui/illustrations';
 import { Button, ExampleChip, IconTile, Logo } from '../ui/tropa';
+import { AccountMenu, AccountMenuItems } from './AccountMenu';
+import { Avatar } from './Avatar';
 import { FreeOnlyToggle } from './FreeOnlyToggle';
 import { ThemeToggle } from './ThemeToggle';
 import { MOBILE_TABS, NAV_ICON } from './nav';
+
+export { Avatar };
 
 /**
  * App shell «Тропа».
@@ -27,22 +28,12 @@ export function AppShell({ data, active, children, isExample, initialMoreOpen = 
     <div className="min-h-dvh max-w-[100vw] overflow-x-hidden bg-background text-foreground lg:flex">
       <Sidebar data={data} active={active} userId={userId} />
       <div className="min-w-0 flex-1">
-        <TopBar data={data} isExample={isExample} />
+        <TopBar data={data} isExample={isExample} userId={userId} />
         <main id="main" className="min-w-0 px-4 pb-[calc(8rem+env(safe-area-inset-bottom))] pt-2 sm:px-6 lg:pb-12 lg:pl-0 lg:pr-6">{children}</main>
       </div>
       <MobileNav data={data} active={active} onMore={() => setMore(true)} moreOpen={more} />
       <MoreSheet data={data} active={active} open={more} onClose={() => setMore(false)} userId={userId} />
     </div>
-  );
-}
-
-function SignOutControl({ userId }: { userId: string }) {
-  return (
-    <form action={signOutAction} onSubmit={() => clearBrowserCvDrafts(userId)}>
-      <button type="submit" aria-label="Выйти" className="grid size-11 place-items-center rounded-full text-muted-foreground hover:bg-card">
-        <LogOut className="size-[18px]" aria-hidden />
-      </button>
-    </form>
   );
 }
 
@@ -63,30 +54,43 @@ function NotificationsButton({ count }: { count: number }) {
   );
 }
 
+function NavRow({ n, on }: { n: ShellData['nav'][number]; on: boolean }) {
+  return (
+    <Link href={n.href} aria-current={on ? 'page' : undefined}
+      className={cn('flex h-11 items-center gap-3 rounded-[16px] px-2 text-[14.5px] font-bold transition-colors', on ? 'bg-card shadow-chunky-soft ring-1 ring-border' : 'text-ink-2 hover:bg-card/60')}>
+      <IconTile icon={NAV_ICON[n.icon]} tone={n.tone} />
+      <span className="truncate">{n.label}</span>
+      {!!n.badge && (
+        <span
+          className="ml-auto rounded-full bg-tone-coral-bg px-2 text-[12px] text-tone-coral-fg"
+          aria-label={n.id === "favorites" ? strings.favorites.badge(n.badge) : `${n.badge} новых`}
+        >
+          {n.badge}
+        </span>
+      )}
+      {n.soon && !n.badge && <span className="ml-auto rounded-full bg-secondary px-2 text-[11px] font-bold text-muted-foreground">скоро</span>}
+    </Link>
+  );
+}
+
 function Sidebar({ data, active, userId }: { data: ShellData; active: string; userId: string }) {
+  const mainIds = MOBILE_TABS.map((t) => t.id);
+  const main = data.nav.filter((n) => mainIds.includes(n.id));
+  const more = data.nav.filter((n) => !mainIds.includes(n.id));
+  const moreActive = more.some((n) => n.id === active);
+  const [moreOpen, setMoreOpen] = useState(moreActive);
   return (
     <aside data-shell className="sticky top-0 hidden h-dvh w-[252px] shrink-0 flex-col px-4 py-5 lg:flex" aria-label="Основная навигация">
       <Link href="/dashboard" className="rounded-[14px] px-2" aria-label="pathway — на главную"><Logo /></Link>
       <nav className="mt-6 min-h-0 flex-1 space-y-1 overflow-y-auto pb-3">
-        {data.nav.map((n) => {
-          const on = n.id === active;
-          return (
-            <Link key={n.id} href={n.href} aria-current={on ? 'page' : undefined}
-              className={cn('flex h-11 items-center gap-3 rounded-[16px] px-2 text-[14.5px] font-bold transition-colors', on ? 'bg-card shadow-chunky-soft ring-1 ring-border' : 'text-ink-2 hover:bg-card/60')}>
-              <IconTile icon={NAV_ICON[n.icon]} tone={n.tone} />
-              <span className="truncate">{n.label}</span>
-              {!!n.badge && (
-                <span
-                  className="ml-auto rounded-full bg-tone-coral-bg px-2 text-[12px] text-tone-coral-fg"
-                  aria-label={n.id === "favorites" ? strings.favorites.badge(n.badge) : `${n.badge} новых`}
-                >
-                  {n.badge}
-                </span>
-              )}
-              {n.soon && !n.badge && <span className="ml-auto rounded-full bg-secondary px-2 text-[11px] font-bold text-muted-foreground">скоро</span>}
-            </Link>
-          );
-        })}
+        {main.map((n) => <NavRow key={n.id} n={n} on={n.id === active} />)}
+        <button type="button" onClick={() => setMoreOpen((v) => !v)} aria-expanded={moreOpen}
+          className={cn('flex h-11 w-full items-center gap-3 rounded-[16px] px-2 text-[14.5px] font-bold transition-colors', moreActive ? 'text-foreground' : 'text-ink-2 hover:bg-card/60')}>
+          <IconTile icon={MoreHorizontal} tone="sky" />
+          <span className="truncate">Ещё</span>
+          <ChevronDown className={cn('ml-auto size-4 shrink-0 transition-transform', moreOpen && 'rotate-180')} aria-hidden />
+        </button>
+        {moreOpen && <div className="space-y-1 pl-1">{more.map((n) => <NavRow key={n.id} n={n} on={n.id === active} />)}</div>}
       </nav>
       {data.guide && (
         <div className="relative overflow-hidden rounded-[22px] bg-honey-soft p-4 ring-1 ring-[color-mix(in_oklab,var(--honey-600)_28%,transparent)]">
@@ -96,27 +100,18 @@ function Sidebar({ data, active, userId }: { data: ShellData; active: string; us
           <Button href={data.guide.href} size="sm" className="mt-3">{data.guide.cta}</Button>
         </div>
       )}
-      <div className="mt-3 flex items-center gap-2.5 px-1">
-        <Avatar name={data.user.name} />
-        <span className="min-w-0 flex-1"><span className="block truncate text-[14px] font-bold">{data.user.name}</span>{data.user.city && <span className="block text-[12.5px] text-muted-foreground">{data.user.city}</span>}</span>
-        <SignOutControl userId={userId} />
+      <div className="mt-3">
+        <AccountMenu data={data} userId={userId} />
       </div>
-      <Link href="/credits" className="mt-2 inline-flex min-h-11 items-center px-2 text-[12.5px] font-bold text-muted-foreground underline-offset-2 hover:underline">
-        {strings.credits.link}
-      </Link>
     </aside>
   );
-}
-
-export function Avatar({ name, size = 40, className }: { name: string; size?: number; className?: string }) {
-  return <span aria-hidden className={cn('grid shrink-0 place-items-center rounded-full bg-tone-mint-bg font-extrabold text-tone-mint-fg ring-2 ring-card', className)} style={{ width: size, height: size, fontSize: size * 0.35 }}>{initials(name)}</span>;
 }
 
 function StreakChip({ days }: { days: number }) {
   return <span className="inline-flex h-10 items-center gap-1.5 rounded-full bg-honey-soft px-3 text-[15px] font-extrabold text-honey-deep" aria-label={`Серия: ${days} дней подряд`}><Flame size={20} />{days}</span>;
 }
 
-function TopBar({ data, isExample }: { data: ShellData; isExample?: boolean }) {
+function TopBar({ data, isExample, userId }: { data: ShellData; isExample?: boolean; userId: string }) {
   return (
     <header data-shell className="sticky top-0 z-30 flex h-16 min-w-0 items-center gap-1 overflow-hidden bg-background/90 px-3 backdrop-blur-md sm:gap-2 sm:px-6 lg:static lg:h-[72px] lg:gap-3 lg:overflow-visible lg:bg-transparent lg:pl-0 lg:pr-6 lg:backdrop-blur-none">
       <Link href="/dashboard" className="shrink-0 lg:hidden" aria-label="pathway — на главную"><Logo /></Link>
@@ -133,7 +128,9 @@ function TopBar({ data, isExample }: { data: ShellData; isExample?: boolean }) {
         {isExample && <ExampleChip className="hidden sm:inline-flex" />}
         <ThemeToggle />
         <NotificationsButton count={data.notifications} />
-        <Link href="/profile" aria-label="Профиль" className="hidden lg:block"><Avatar name={data.user.name} className="bg-primary text-primary-foreground ring-0" /></Link>
+        <div className="hidden lg:block">
+          <AccountMenu data={data} userId={userId} variant="icon" />
+        </div>
       </div>
     </header>
   );
@@ -206,16 +203,11 @@ function MoreSheet({ data, active, open, onClose, userId }: { data: ShellData; a
                 <Button href={data.guide.href} size="sm">{data.guide.cta}</Button>
               </div>
             )}
-            <div className="mt-3"><FreeOnlyToggle freeOnly={data.freeOnly} /></div>
             <div className="mt-3 flex items-center gap-2.5 rounded-[20px] bg-card p-3 ring-1 ring-border">
               <Avatar name={data.user.name} />
               <span className="min-w-0 flex-1"><span className="block truncate text-[14px] font-bold">{data.user.name}</span>{data.user.city && <span className="block text-[12.5px] text-muted-foreground">{data.user.city}</span>}</span>
-              <ThemeToggle />
-              <SignOutControl userId={userId} />
             </div>
-            <Link href="/credits" className="mt-3 inline-flex min-h-11 items-center text-[13px] font-bold text-muted-foreground underline-offset-2 hover:underline">
-              {strings.credits.link}
-            </Link>
+            <div className="mt-2"><AccountMenuItems userId={userId} freeOnly={data.freeOnly} onNavigate={onClose} /></div>
           </motion.div>
         </div>
       )}
