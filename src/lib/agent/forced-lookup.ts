@@ -141,42 +141,110 @@ export type AgentProfileFacts = {
   budgetUsd: number | null;
   needsScholarship: boolean;
   exams: { code: string; score: string }[];
-  shortlist: { name: string; category: string }[];
 };
 
-export type AgentMatch = {
+export type RecommendationCard = {
   name: string;
   categoryRu: string;
   grantRu: string;
-  sourceUrl: string;
+  detailRu?: string | null;
 };
 
-/** Facts already stored for this user, plus the universities the matcher returned. */
-export function profileMatchContext(input: {
-  profile: AgentProfileFacts;
-  matches: readonly AgentMatch[];
+const EXTRA_MATCHES = 5;
+const MAX_UNIVERSITY_LINES = 10;
+
+/** Shortlist first, then up to five matches that are not already listed. */
+export function orderedRecommendations(
+  shortlist: readonly RecommendationCard[],
+  matches: readonly RecommendationCard[],
+): Array<RecommendationCard & { onShortlist: boolean }> {
+  const seen = new Set<string>();
+  const key = (name: string) => name.trim().toLocaleLowerCase("ru");
+  const first: Array<RecommendationCard & { onShortlist: boolean }> = [];
+  for (const item of shortlist) {
+    const id = key(item.name);
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    first.push({ ...item, onShortlist: true });
+  }
+  const rest: Array<RecommendationCard & { onShortlist: boolean }> = [];
+  for (const item of matches) {
+    const id = key(item.name);
+    if (!id || seen.has(id)) continue;
+    if (rest.length >= EXTRA_MATCHES) break;
+    if (first.length + rest.length >= MAX_UNIVERSITY_LINES) break;
+    seen.add(id);
+    rest.push({ ...item, onShortlist: false });
+  }
+  return [...first, ...rest];
+}
+
+/** A published English minimum wins. Otherwise the next real deadline. Nothing is invented. */
+export function cardDetailRu(input: { englishRu: string | null; deadlineRu: string | null }): string | null {
+  const english = input.englishRu?.trim();
+  if (english && english !== strings.fit.check.unknown) return english;
+  const deadline = input.deadlineRu?.trim();
+  return deadline || null;
+}
+
+function grantPhrase(grantRu: string): string {
+  const text = grantRu.trim();
+  if (!text) return "грант на карточке не указан";
+  return `грант — ${text.charAt(0).toLocaleLowerCase("ru")}${text.slice(1)}`;
+}
+
+function recommendationLine(card: RecommendationCard & { onShortlist: boolean }): string {
+  const listed = card.onShortlist ? ", из твоего списка" : "";
+  const detail = card.detailRu?.trim();
+  const extra = detail ? ` ${detail.endsWith(".") ? detail : `${detail}.`}` : "";
+  return `${card.name} — ${card.categoryRu}${listed}, ${grantPhrase(card.grantRu)}.${extra}`;
+}
+
+function openingSentence(
+  profile: Pick<AgentProfileFacts, "intendedMajor" | "budgetUsd" | "needsScholarship">,
+  grantOnly: boolean,
+): string {
+  const bits = [
+    profile.intendedMajor?.trim() ? `специальность «${profile.intendedMajor.trim()}»` : null,
+    profile.budgetUsd == null ? null : `бюджет ${formatMoneyUsd(profile.budgetUsd)}`,
+    profile.needsScholarship ? "нужна стипендия" : "стипендия не нужна",
+  ].filter((bit): bit is string => Boolean(bit));
+  const which = grantOnly ? "с грантом или бесплатным обучением" : "по этому профилю";
+  return `Смотрю профиль: ${bits.join(", ")}. Ниже вузы ${which}.`;
+}
+
+function closingSentence(cards: readonly RecommendationCard[]): string {
+  const english = cards.find((card) => card.detailRu && /IELTS|TOEFL|Duolingo|DET/i.test(card.detailRu));
+  if (english?.detailRu) {
+    return `Дальше закрой требование с карточки: ${english.detailRu}. Пошаговый план — в «Кратчайший путь».`;
+  }
+  return "Дальше открой «Кратчайший путь» на карточке вуза из списка.";
+}
+
+/** The reply itself: opening, shortlist, a few more matches, one next step. */
+export function recommendationAnswer(input: {
+  profile: Pick<AgentProfileFacts, "intendedMajor" | "budgetUsd" | "needsScholarship">;
+  shortlist: readonly RecommendationCard[];
+  matches: readonly RecommendationCard[];
   grantOnly: boolean;
 }): string {
-  const major = input.profile.intendedMajor?.trim() || "не указана";
-  const budget = input.profile.budgetUsd == null ? "не указан" : formatMoneyUsd(input.profile.budgetUsd);
-  const scholarship = input.profile.needsScholarship ? "нужна" : "не нужна";
-  const exams = input.profile.exams.length
-    ? input.profile.exams.map((exam) => `${exam.code} ${exam.score}`).join(", ")
-    : "нет";
-  const shortlist = input.profile.shortlist.length
-    ? input.profile.shortlist.map((item) => `${item.name} (${item.category})`).join("; ")
-    : "пуст";
-  const lines = input.matches
-    .slice(0, 6)
-    .map((item) => `${item.name}: ${item.categoryRu}. Грант: ${item.grantRu}. Источник: ${item.sourceUrl}`);
+  const cards = orderedRecommendations(input.shortlist, input.matches);
+  const lines = cards.map(recommendationLine);
+  return [openingSentence(input.profile, input.grantOnly), ...lines, closingSentence(cards)].join("\n");
+}
+
+/** Facts already stored for this user, written as the mentor reply. */
+export function profileMatchContext(input: {
+  profile: AgentProfileFacts;
+  shortlist: readonly RecommendationCard[];
+  matches: readonly RecommendationCard[];
+  grantOnly: boolean;
+}): string {
+  const answer = recommendationAnswer(input);
   return [
-    "Профиль уже загружен. Не спрашивай специальность, бюджет, стипендию, баллы и шортлист.",
-    `Специальность: ${major}. Бюджет: ${budget}. Стипендия: ${scholarship}. Баллы: ${exams}. Шортлист: ${shortlist}.`,
-    input.grantOnly
-      ? "Подборка вузов с грантом или бесплатным обучением:"
-      : "Подборка вузов по профилю:",
-    lines.length > 0 ? lines.join("\n") : "в подборке нет вузов.",
-    "Ответь только по-русски этими вузами: категория и грант. Не вызывай getUniversityDetails и не передавай список имён в инструмент.",
+    "Не спрашивай специальность, бюджет и стипендию — они уже в тексте. Не вызывай инструменты.",
+    "Ответь дословно:",
+    answer,
   ].join("\n");
 }
 

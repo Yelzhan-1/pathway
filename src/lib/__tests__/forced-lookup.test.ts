@@ -6,7 +6,9 @@ import {
   forcedToolChoice,
   historyForCurrentUniversity,
   generalQuestionStep,
+  orderedRecommendations,
   profileMatchContext,
+  recommendationAnswer,
   universityFactsContext,
   universityNamedInMessage,
   wantsGrantMatches,
@@ -127,14 +129,14 @@ describe("profile-backed university matches", () => {
         budgetUsd: 10000,
         needsScholarship: true,
         exams: [{ code: "IELTS", score: "6.5" }],
-        shortlist: [],
       },
-      matches: [{ name: "SDU", categoryRu: "Цель", grantRu: "С финансированием", sourceUrl: "https://sdu.edu.kz" }],
+      shortlist: [],
+      matches: [{ name: "SDU", categoryRu: "Цель", grantRu: "С финансированием" }],
     });
-    expect(context).toContain("SDU: Цель");
-    expect(context).toContain("Грант: С финансированием");
-    expect(context).toMatch(/по-русски/);
-    expect(context).toMatch(/Не вызывай getUniversityDetails/);
+    expect(context).toContain("SDU — Цель");
+    expect(context).toContain("грант — с финансированием");
+    expect(context).toMatch(/Ответь дословно/);
+    expect(context).toMatch(/Не спрашивай/);
     expect(universityNamesFromInput({ slug: "kaist" })).toEqual(["kaist"]);
     expect(universityNamesFromInput({ slug: ["sdu", "kbtu", "sdu"] })).toEqual(["sdu", "kbtu"]);
     expect(universityNamesFromInput({ names: ["MIT", "KAIST"] })).toEqual(["MIT", "KAIST"]);
@@ -149,22 +151,54 @@ describe("profile-backed university matches", () => {
         intendedMajor: "Компьютерные науки",
         budgetUsd: 10000,
         needsScholarship: true,
-        exams: [{ code: "IELTS", score: "6.5" }],
-        shortlist: [{ name: "KAIST", category: "Мечта" }],
+        exams: [],
       },
+      shortlist: [{ name: "KAIST", categoryRu: "Мечта", grantRu: "С финансированием" }],
       matches: [
-        { name: "SDU", categoryRu: "Цель", grantRu: "С финансированием", sourceUrl: "https://sdu.edu.kz" },
-        { name: "KBTU", categoryRu: "Запасной", grantRu: "грант не указан", sourceUrl: "https://kbtu.edu.kz" },
+        { name: "SDU", categoryRu: "Цель", grantRu: "С финансированием" },
+        { name: "KBTU", categoryRu: "Запасной", grantRu: "грант не указан" },
       ],
     });
     expect(context).toContain("Компьютерные науки");
     expect(context).toContain("10 000 $");
-    expect(context).toContain("нужна");
-    expect(context).toContain("IELTS 6.5");
-    expect(context).toContain("KAIST (Мечта)");
-    expect(context).toContain("SDU: Цель");
-    expect(context).toContain("KBTU: Запасной");
+    expect(context).toContain("нужна стипендия");
+    expect(context).toContain("KAIST — Мечта, из твоего списка");
+    expect(context).toContain("SDU — Цель");
+    expect(context).toContain("KBTU — Запасной");
     expect(context).toMatch(/Не спрашивай/);
+  });
+
+  it("lists shortlisted universities before other matches", () => {
+    const shortlist = [
+      { name: "KAIST", categoryRu: "Мечта", grantRu: "С финансированием", detailRu: "IELTS 6.5" },
+      { name: "TUM", categoryRu: "Цель", grantRu: "За успехи" },
+    ];
+    const matches = [
+      { name: "Bilkent University", categoryRu: "Запасной", grantRu: "За успехи" },
+      { name: "KAIST", categoryRu: "Запасной", grantRu: "другое" },
+      { name: "SDU", categoryRu: "Цель", grantRu: "С финансированием" },
+    ];
+    const ordered = orderedRecommendations(shortlist, matches);
+    expect(ordered.map((item) => item.name)).toEqual(["KAIST", "TUM", "Bilkent University", "SDU"]);
+    expect(ordered[0]).toMatchObject({ onShortlist: true, categoryRu: "Мечта" });
+    expect(ordered[2].onShortlist).toBe(false);
+
+    const answer = recommendationAnswer({
+      grantOnly: true,
+      profile: { intendedMajor: "Компьютерные науки", budgetUsd: 10000, needsScholarship: true },
+      shortlist,
+      matches,
+    });
+    const kaist = answer.indexOf("KAIST");
+    const tum = answer.indexOf("TUM");
+    const bilkent = answer.indexOf("Bilkent University");
+    expect(kaist).toBeGreaterThanOrEqual(0);
+    expect(kaist).toBeLessThan(tum);
+    expect(tum).toBeLessThan(bilkent);
+    expect(answer).toContain("из твоего списка");
+    expect(answer).toContain("IELTS 6.5");
+    expect(answer).toContain("Кратчайший путь");
+    expect(answer.split("\n").length).toBeLessThanOrEqual(12);
   });
 });
 

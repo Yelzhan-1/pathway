@@ -10,6 +10,7 @@ import { agentErrorText, logAgentError } from "@/lib/agent/errors";
 import { agentModelId } from "@/lib/agent/model";
 import {
   asksForUniversityMatches,
+  cardDetailRu,
   fitCategoryRu,
   forcedToolChoice,
   generalQuestionStep,
@@ -22,8 +23,10 @@ import {
 import { historyForModel, partsToJson, textFromParts } from "@/lib/agent/messages";
 import { AGENT_SYSTEM_PROMPT } from "@/lib/agent/prompt";
 import { englishRequirementLabel } from "@/lib/agent/university-facts";
-import { aidLabel } from "@/lib/labels/display";
+import { aidLabel, roundLabel } from "@/lib/labels/display";
 import { loadShortlist, loadUniversities, loadUniversity } from "@/lib/data/load";
+import { toUtcDateString } from "@/lib/matching/dates";
+import { earliestUpcoming } from "@/lib/matching/deadlines";
 import { parseProfile } from "@/lib/profile/parse";
 import {
   AGENT_RATE_LIMIT_MESSAGE_RU,
@@ -137,6 +140,20 @@ export async function POST(request: Request) {
       loadUniversities(supabase, user.id, grantOnly ? { freeOrGrantOnly: true } : {}),
     ]);
     const profile = profileRow.data ? parseProfile(profileRow.data) : null;
+    const today = toUtcDateString(new Date());
+    const detailFor = (
+      fit: Parameters<typeof englishRequirementLabel>[0],
+      deadlines: Parameters<typeof earliestUpcoming>[0],
+    ) =>
+      cardDetailRu({
+        englishRu: englishRequirementLabel(fit),
+        deadlineRu: (() => {
+          const next = earliestUpcoming(deadlines, today);
+          return next ? `дедлайн ${roundLabel(next.round)} ${next.date}` : null;
+        })(),
+      });
+    const grantFor = (aid: string | null, tuition: number | null) =>
+      aidLabel(aid) ?? (tuition === 0 ? "бесплатное обучение" : "грант не указан");
     system = `${AGENT_SYSTEM_PROMPT}\n\n${profileMatchContext({
       grantOnly,
       profile: {
@@ -146,18 +163,18 @@ export async function POST(request: Request) {
         exams: (profile?.exams ?? [])
           .filter((exam) => exam.status === "taken")
           .map((exam) => ({ code: exam.code, score: String(exam.score) })),
-        shortlist: shortlist.items.map((item) => ({
-          name: item.university.name,
-          category: fitCategoryRu(item.category),
-        })),
       },
-      matches: universities.items.slice(0, 6).map((item) => ({
+      shortlist: shortlist.items.map((item) => ({
+        name: item.university.name,
+        categoryRu: fitCategoryRu(item.category),
+        grantRu: grantFor(item.university.aid_for_internationals, item.university.tuition_usd_per_year),
+        detailRu: detailFor(item.fit, item.university.deadlines),
+      })),
+      matches: universities.items.map((item) => ({
         name: item.name,
         categoryRu: fitCategoryRu(item.fit.suggestedCategory),
-        grantRu:
-          aidLabel(item.aid_for_internationals) ??
-          (item.tuition_usd_per_year === 0 ? "бесплатное обучение" : "грант не указан"),
-        sourceUrl: item.source_url,
+        grantRu: grantFor(item.aid_for_internationals, item.tuition_usd_per_year),
+        detailRu: detailFor(item.fit, item.deadlines),
       })),
     })}`;
   }
