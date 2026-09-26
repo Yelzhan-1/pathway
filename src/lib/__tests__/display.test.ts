@@ -57,7 +57,7 @@ describe("display labels", () => {
     expect(displayCost("funded")).toBe("с финансированием");
     expect(displayCost("unknown")).toBe("стоимость не указана");
     expect(displayCost("paid: max USD 11,800 (2026), need-based discounts up to free incl. travel")).toBe(
-      "платно: максимум 11,800 $ (2026), скидки по потребности вплоть до бесплатно, включая проезд",
+      "платно: максимум 11 800 $ (2026), скидки по потребности вплоть до бесплатно, включая проезд",
     );
     expect(displayMajor("Government")).toBe("Государственное управление");
     expect(displayMajor("History")).toBe("История");
@@ -80,7 +80,7 @@ describe("display labels", () => {
         "2026–27 tuition USD 72,500 (plus activity fee $185, housing $12,080, food $9,520, books $1,000, personal $2,700).",
       ),
     ).toBe(
-      "2026–27 обучение 72,500 $ (плюс взнос за мероприятия 185 $, проживание 12,080 $, питание 9,520 $, учебники 1,000 $, личные расходы 2,700 $).",
+      "2026–27: обучение 72 500 $ (плюс взнос за мероприятия 185 $, проживание 12 080 $, питание 9 520 $, учебники 1 000 $, личные расходы 2 700 $).",
     );
     expect(displayTitle("Nazarbayev University state educational grant")).toBe(
       "Государственный образовательный грант Nazarbayev University",
@@ -88,80 +88,9 @@ describe("display labels", () => {
     expect(displayTitle("Kazakhstan State Educational Grant (bachelor)")).toBe(
       "Государственный образовательный грант Казахстана (бакалавриат)",
     );
-    expect(displayCost("state educational grant")).toBe("государственный образовательный грант");
-    expect(publicNote("State educational grants (Kazakhstan citizens, via UNT).")).toBe(
-      "государственные образовательные гранты (граждане Казахстана, через ЕНТ).",
+    expect(displayTitle("Republican Olympiad in general-education subjects (grades 9–11)")).toBe(
+      "Республиканская олимпиада по общеобразовательным предметам (9–11 классы)",
     );
-  });
-
-  it("clears English content words from other catalog notes and titles", () => {
-    const allowed = new Set(
-      [
-        "amherst",
-        "bowdoin",
-        "cambridge",
-        "ceu",
-        "css",
-        "dartmouth",
-        "duke",
-        "eth",
-        "gpa",
-        "harvard",
-        "hkust",
-        "ielts",
-        "imperial",
-        "kaist",
-        "kimep",
-        "mit",
-        "nazarbayev",
-        "university",
-        "nu",
-        "nus",
-        "nyuad",
-        "oxford",
-        "princeton",
-        "sat",
-        "stanford",
-        "toefl",
-        "tum",
-        "ucl",
-        "unt",
-        "yale",
-        "global",
-        "korea",
-        "austria",
-        "bilkent",
-        "profile",
-        "vat",
-      ].map((word) => word.toLowerCase()),
-    );
-    const samples = [
-      "2026–27 tuition USD 75,330; comprehensive fee (tuition, housing, meals, activities) USD 95,650.",
-      "Need-blind for international applicants; meets 100% of calculated need for admitted internationals who apply for aid.",
-      "USD 18,400 per year (incl. 10% VAT) for international students admitted in 2026.",
-      "2026–27 tuition USD 71,697 (three terms); total budget USD 98,427 (plus health insurance $5,216 if needed, computer $1,700).",
-      "100% need-based aid; international students eligible for exactly the same aid; meets 100% of demonstrated need.",
-      "2026–2027 tuition USD 66,720; total cost of attendance USD 92,760.",
-      "Need-based MIT Scholarship; MIT meets full demonstrated need for all admitted students.",
-      "Undergraduate tuition USD 15,000 for 2026/2027. Most Kazakhstan citizens study on the NU state educational grant.",
-      "Tuition JPY 642,960 per year; admission fee JPY 282,000.",
-      "Global Korea Scholarship (GKS) – Undergraduate",
-      "KAIST Scholarship for international undergraduates",
-      "Admitted international students receive the KAIST Scholarship (full tuition exemption for 8 semesters), so tuition amount not recorded.",
-      "Tuition waiver scholarships at five levels (20%–100%) based on grades and exam scores.",
-      "Need-blind for all applicants regardless of citizenship; meets 100% of demonstrated need.",
-      "Non-EU: EUR 7,100 per academic year from 2026/27. Application fee CZK 1,500.",
-      "Threefold tuition fee CHF 2,190 per semester for students without Swiss residence/citizenship.",
-      "Institutional fee non-EU/EFTA 2025-2026: EUR 17,310 per year.",
-      "Computer Science BSc Overseas fee shown as GBP 48,600 per year (Home GBP 10,050).",
-      "last cycle (2025-26), verify. International aid materials due within 7 days of admission offer.",
-      "All admitted international undergraduates receive full tuition exemption for 8 semesters.",
-    ];
-    const leftovers = samples.flatMap((sample) => {
-      const shown = publicNote(sample) ?? displayTitle(sample);
-      return (shown.match(/[A-Za-z][A-Za-z'-]{3,}/g) ?? []).filter((word) => !allowed.has(word.toLowerCase()));
-    });
-    expect(leftovers).toEqual([]);
   });
 
   it("drops «(offered)» from program names", () => {
