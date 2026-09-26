@@ -46,7 +46,9 @@ export function FitBreakdown({ fit }: { fit: FitResult }) {
               return (
                 <li key={`${gap.key}-${gap.message_ru}`} className="rounded-[18px] bg-honey-soft p-3">
                   <p className="text-[14px] font-bold">{gap.message_ru}</p>
-                  {gap.delta ? <p className="mt-0.5 text-[13px] font-medium text-ink-2">{gap.delta}</p> : null}
+                  {gap.delta && gap.delta !== gap.message_ru ? (
+                    <p className="mt-0.5 text-[13px] font-medium text-ink-2">{gap.delta}</p>
+                  ) : null}
                   <Link href={step.href} className="mt-2 inline-flex min-h-11 items-center text-[13px] font-bold text-primary">
                     {step.label_ru}
                   </Link>

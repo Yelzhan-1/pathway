@@ -157,4 +157,24 @@ describe("roadmap sync", () => {
     expect(plan.some((task) => task.roadmapKey === "exam-register:IELTS")).toBe(false);
     expect(plan.every((task) => task.dueDate == null || task.dueDate >= TODAY)).toBe(true);
   });
+
+  it("does not create a TOEFL registration when IELTS already qualifies", () => {
+    const profile: FitProfile = {
+      target_countries: [],
+      intended_major: null,
+      budget_usd: null,
+      needs_scholarship: false,
+      gpa: null,
+      gpa_scale: null,
+      exams: [{ code: "IELTS", score: 7, status: "taken" }],
+    };
+    const plan = buildRoadmap(
+      [university({ ielts_min: 6.5, toefl_min: 100 })],
+      [],
+      TODAY,
+      profile,
+    );
+    expect(plan.some((task) => task.roadmapKey === "exam-register:TOEFL_IBT")).toBe(false);
+    expect(plan.some((task) => task.title.includes("TOEFL"))).toBe(false);
+  });
 });

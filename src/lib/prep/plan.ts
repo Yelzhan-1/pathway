@@ -82,11 +82,33 @@ const REQUIREMENTS: RequirementSpec[] = [
   },
 ];
 
-export function selectExamTargets(universities: FitUniversity[]): ExamTarget[] {
+const LANGUAGE_CODES = new Set(["IELTS", "TOEFL_IBT", "DET"]);
+
+function languageRequirementMet(profile: FitProfile, university: FitUniversity): boolean {
+  const options = [
+    { code: "IELTS", min: university.ielts_min },
+    { code: "TOEFL_IBT", min: university.toefl_min },
+    { code: "DET", min: university.duolingo_min },
+  ].filter((option) => option.min != null);
+  if (options.length === 0) return true;
+  return options.some((option) => {
+    const score = takenScore(profile, option.code);
+    return score != null && option.min != null && score + 1e-9 >= option.min;
+  });
+}
+
+export function selectExamTargets(
+  universities: FitUniversity[],
+  profile: FitProfile | null = null,
+): ExamTarget[] {
   const targets: ExamTarget[] = [];
   for (const spec of REQUIREMENTS) {
+    const source =
+      profile && LANGUAGE_CODES.has(spec.code)
+        ? universities.filter((university) => !languageRequirementMet(profile, university))
+        : universities;
     let best: ExamTarget | null = null;
-    for (const university of universities) {
+    for (const university of source) {
       const value = spec.read(university);
       if (value == null) continue;
       if (
@@ -177,7 +199,7 @@ export function prepPlan(
 ): PrepPlan {
   const day = toUtcDateString(today);
   const catalog = new Map(exams.map((exam) => [exam.code, exam]));
-  const plans = selectExamTargets(shortlistUniversities)
+  const plans = selectExamTargets(shortlistUniversities, profile)
     .filter((target) => !examAlreadyMet(profile, target.code, target.target))
     .map((target) => {
     const current = takenScore(profile, target.code);

@@ -113,4 +113,14 @@ describe("prepPlan", () => {
     );
     expect(plan.exams.some((item) => item.code === "IELTS")).toBe(false);
   });
+
+  it("does not keep a TOEFL plan when IELTS already meets the university", () => {
+    const plan = prepPlan(
+      { ...profile, exams: [{ code: "IELTS", score: 7, status: "taken" }] },
+      [university({ ielts_min: 6.5, toefl_min: 90 })],
+      [],
+      TODAY,
+    );
+    expect(plan.exams.some((item) => item.code === "TOEFL_IBT" || item.code === "IELTS")).toBe(false);
+  });
 });

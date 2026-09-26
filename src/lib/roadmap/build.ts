@@ -103,11 +103,11 @@ export function buildRoadmap(
     ) ?? shortlistUniversities[0];
   const anchorUrl = anchorOwner?.source_url ?? "";
 
-  for (const target of selectExamTargets(shortlistUniversities)) {
+  for (const target of selectExamTargets(shortlistUniversities, profile)) {
     if (profile && examAlreadyMet(profile, target.code, target.target)) continue;
     const requiring = shortlistUniversities.filter((university) =>
       university.id === target.universityId ||
-      selectExamTargets([university]).some((item) => item.code === target.code),
+      selectExamTargets([university], profile).some((item) => item.code === target.code),
     );
     const deadlines = requiring.flatMap((university) => university.deadlines);
     const upcoming = earliestFuture(deadlines, day);
