@@ -15,6 +15,8 @@ import {
 } from "@/lib/agent/forced-lookup";
 import { NOT_IN_DATABASE_RU } from "@/lib/agent/prompt";
 import { universityLookupInputSchema, universityNamesFromInput } from "@/lib/agent/schemas";
+import { CATALOG_SNAPSHOT } from "@/data/catalog-snapshot";
+import { matchesRussianAlias, RU_UNIVERSITY_ALIASES } from "@/lib/universities/ru-aliases";
 
 const CATALOG = [
   { slug: "kaist", name: "KAIST" },
@@ -199,6 +201,55 @@ describe("profile-backed university matches", () => {
     expect(answer).toContain("IELTS 6.5");
     expect(answer).toContain("Кратчайший путь");
     expect(answer.split("\n").length).toBeLessThanOrEqual(12);
+  });
+});
+
+const FULL_CATALOG = CATALOG_SNAPSHOT.map((row) => ({ slug: row.slug, name: row.name }));
+
+describe("Russian university names", () => {
+  it("covers every catalog university and keeps aliases unambiguous", () => {
+    expect(Object.keys(RU_UNIVERSITY_ALIASES).sort()).toEqual(FULL_CATALOG.map((row) => row.slug).sort());
+    for (const [slug, aliases] of Object.entries(RU_UNIVERSITY_ALIASES)) {
+      for (const alias of aliases) {
+        const hits = Object.keys(RU_UNIVERSITY_ALIASES).filter((other) => matchesRussianAlias(alias, other));
+        expect(hits, alias).toEqual([slug]);
+      }
+    }
+  });
+
+  it.each([
+    ["Какой IELTS нужен в Назарбаев Университете?", "nazarbayev-university"],
+    ["Расскажи про Назарбаева", "nazarbayev-university"],
+    ["Что нужно для НУ?", "nazarbayev-university"],
+    ["Назарбаев Университета", "nazarbayev-university"],
+    ["Какой SAT в Гарварде?", "harvard"],
+    ["Дедлайн Стэнфорда", "stanford"],
+    ["требования Оксфорда", "oxford"],
+    ["Как поступить в Имперский колледж?", "imperial"],
+    ["Стипендия КАИСТ", "kaist"],
+    ["Бакалавриат Цинхуа", "tsinghua"],
+    ["ETH Цюрих стоимость", "eth-zurich"],
+    ["в ЕТН Цюрихе", "eth-zurich"],
+    ["Грант в СДУ", "sdu-university"],
+    ["Проходной КБТУ", "kbtu"],
+    ["Стоимость КИМЭП", "kimep-university"],
+    ["Факультеты КазНУ", "kaznu-al-farabi"],
+    ["ЕНУ в Астане", "enu-gumilyov"],
+    ["Университет Сатпаева", "satbayev-university"],
+    ["МУИТ или AITU", "astana-it-university"],
+    ["Стипендия Билкента", "bilkent"],
+    ["Делфт компьютерные науки", "tu-delft"],
+    ["Мюнхенский технический дедлайн", "tum"],
+    ["хочу в Кембридж", "cambridge"],
+  ])("resolves %s to %s", (message, slug) => {
+    expect(universityNamedInMessage(message, FULL_CATALOG)?.slug).toBe(slug);
+  });
+
+  it("keeps a generic university question on the general branch", () => {
+    const message = "Какие университеты мне подходят с грантом?";
+    expect(universityNamedInMessage(message, FULL_CATALOG)).toBeNull();
+    expect(asksForUniversityMatches(message, FULL_CATALOG)).toBe(true);
+    expect(asksForUniversityMatches("Какой грант в Назарбаев Университете?", FULL_CATALOG)).toBe(false);
   });
 });
 

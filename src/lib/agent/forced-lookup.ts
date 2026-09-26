@@ -1,6 +1,11 @@
 import { formatMoneyUsd } from "@/lib/labels/display";
 import { strings } from "@/lib/strings";
+import { matchesRussianAlias } from "@/lib/universities/ru-aliases";
 import { matchesUniversityIdentity } from "@/lib/universities/search";
+
+function namesUniversity(phrase: string, item: UniversityName): boolean {
+  return matchesUniversityIdentity(phrase, item) || matchesRussianAlias(phrase, item.slug);
+}
 
 export type UniversityName = { slug: string; name: string };
 
@@ -18,7 +23,7 @@ export function universityNamedInMessage(
     const limit = Math.min(MAX_NAME_WORDS, words.length - start);
     for (let length = limit; length >= 1; length -= 1) {
       const phrase = words.slice(start, start + length).join(" ");
-      const row = catalog.find((item) => matchesUniversityIdentity(phrase, item));
+      const row = catalog.find((item) => namesUniversity(phrase, item));
       if (!row) continue;
       if (!best || start < best.start || (start === best.start && length > best.length)) {
         best = { start, length, row };
@@ -43,7 +48,7 @@ export function universitiesNamedInMessage(
     let matched: { length: number; row: UniversityName } | null = null;
     for (let length = limit; length >= 1; length -= 1) {
       const phrase = words.slice(start, start + length).join(" ");
-      const row = catalog.find((item) => matchesUniversityIdentity(phrase, item));
+      const row = catalog.find((item) => namesUniversity(phrase, item));
       if (!row) continue;
       matched = { length, row };
       break;
