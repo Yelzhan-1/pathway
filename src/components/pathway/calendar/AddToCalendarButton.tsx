@@ -1,0 +1,51 @@
+"use client";
+
+import { CalendarPlus } from "lucide-react";
+
+import { Button } from "@/components/pathway/ui/tropa";
+import { buildIcsCalendar, type IcsEvent } from "@/lib/calendar/ics";
+import { strings } from "@/lib/strings";
+
+function downloadIcs(filename: string, events: readonly IcsEvent[]) {
+  const content = buildIcsCalendar(events);
+  const blob = new Blob([content], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/** «Добавить в календарь» — downloads a .ics file for one deadline or a whole batch. No server round-trip. */
+export function AddToCalendarButton({
+  events,
+  filename,
+  label,
+  variant = "soft",
+  size = "sm",
+  className,
+}: {
+  events: readonly IcsEvent[];
+  filename: string;
+  label?: string;
+  variant?: "primary" | "honey" | "soft" | "ghost" | "inverse";
+  size?: "sm" | "md" | "lg";
+  className?: string;
+}) {
+  if (events.length === 0) return null;
+  return (
+    <Button
+      type="button"
+      variant={variant}
+      size={size}
+      className={className}
+      onClick={() => downloadIcs(filename, events)}
+    >
+      <CalendarPlus className="size-4" aria-hidden />
+      {label ?? strings.calendar.add}
+    </Button>
+  );
+}

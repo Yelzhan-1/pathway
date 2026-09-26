@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { CalendarClock } from 'lucide-react';
 import type { DeadlineTicket } from '@/types/pathway';
+import { AddToCalendarButton } from '@/components/pathway/calendar/AddToCalendarButton';
 import { dayMonth, daysBetween, plural } from '@/lib/format';
+import { strings } from '@/lib/strings';
 import { cn } from '@/lib/utils';
 import { EmptyCta, TCard, WidgetHeader, WidgetSkeleton } from '../ui/tropa';
 
@@ -10,7 +12,22 @@ export function DeadlinesTickets({ items, today, loading }: { items: DeadlineTic
   if (loading) return <WidgetSkeleton />;
   return (
     <TCard labelledBy="dl-h" className="min-w-0">
-      <WidgetHeader id="dl-h" title="Дедлайны" />
+      <WidgetHeader
+        id="dl-h"
+        title="Дедлайны"
+        right={
+          items?.length ? (
+            <AddToCalendarButton
+              events={items.map((d) => ({ uid: d.id, title: d.title, date: d.date, url: d.href }))}
+              filename="pathway-deadlines.ics"
+              label={strings.calendar.addAll}
+              variant="ghost"
+              size="sm"
+              className="px-2 text-[12.5px]"
+            />
+          ) : undefined
+        }
+      />
       {!items?.length ? (
         <EmptyCta art={<span className="grid size-11 place-items-center rounded-[14px] bg-tone-coral-bg text-tone-coral-fg" aria-hidden><CalendarClock className="size-6" /></span>} title="Дедлайнов пока нет" text="Выбери вузы — и мы сами соберём все сроки подачи." cta="Выбрать вузы" href="/universities" />
       ) : (
