@@ -64,6 +64,11 @@ export const weeklyGoalSchema = z.object({
     .nullable(),
 });
 
+export const addPathPlanSchema = z.object({
+  universityId: z.uuid("Некорректный вуз."),
+  comboIndex: z.number().int().min(0).max(2),
+});
+
 export const freeOnlySchema = z.object({
   freeOnly: z.boolean(),
 });

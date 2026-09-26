@@ -1,15 +1,17 @@
 import type { Database } from "@/lib/database.types";
 import { toFitProfile, toFitUniversity } from "@/lib/data/map";
-import { toUtcDateString } from "@/lib/matching/dates";
+import { toUtcDateString, shiftUtcDays } from "@/lib/matching/dates";
 import type { FitProfile, FitUniversity } from "@/lib/matching/types";
 import { parseProfile } from "@/lib/profile/parse";
 import type { ExamCatalogItem } from "@/lib/prep/plan";
+import { shortestPath } from "@/lib/matching/path";
 import { buildRoadmap } from "@/lib/roadmap/build";
 import { applyRoadmapSync, type RoadmapStore } from "@/lib/roadmap/sync";
 
 import { markActivity, type DbClient } from "./activity";
 import { fail, ok, zodErrorRu, type ActionResult } from "./result";
 import {
+  addPathPlanSchema,
   addShortlistSchema,
   changeShortlistCategorySchema,
   createTaskSchema,
@@ -329,6 +331,60 @@ export async function syncRoadmapForUser(
     console.error("syncRoadmap", error);
     return fail("Не удалось обновить дорожную карту.");
   }
+}
+
+export async function addPathPlanForUser(
+  supabase: DbClient,
+  userId: string,
+  input: unknown,
+  today: Date | string = new Date(),
+): Promise<ActionResult<{ inserted: number; unchanged: number }>> {
+  const parsed = addPathPlanSchema.safeParse(input);
+  if (!parsed.success) return fail(zodErrorRu(parsed.error));
+  const profile = await loadFitProfile(supabase, userId);
+  if (!profile) return fail("Сначала заполните профиль.");
+  const { data: row, error } = await supabase
+    .from("universities")
+    .select("*")
+    .eq("id", parsed.data.universityId)
+    .maybeSingle();
+  if (error) return fail("Не удалось загрузить вуз.");
+  if (!row) return fail("Вуз не найден.");
+  const university = toFitUniversity(row);
+  const path = shortestPath(profile, university, today);
+  const combo = path.combos[parsed.data.comboIndex];
+  if (!combo) return fail(path.reason_ru ?? "Нет пути, который можно добавить в план.");
+  const day = toUtcDateString(today);
+  const keys = combo.levers.map((lever) => `path:${university.id}:${lever.id}`);
+  const { data: existing, error: existingError } = await supabase
+    .from("tasks")
+    .select("roadmap_key")
+    .eq("user_id", userId)
+    .in("roadmap_key", keys);
+  if (existingError) return fail("Не удалось проверить план.");
+  const have = new Set((existing ?? []).map((item) => item.roadmap_key).filter(Boolean));
+  let inserted = 0;
+  let elapsed = 0;
+  for (const lever of combo.levers) {
+    const roadmapKey = `path:${university.id}:${lever.id}`;
+    if (have.has(roadmapKey)) continue;
+    elapsed += lever.weeks;
+    const { error: insertError } = await supabase.from("tasks").insert({
+      user_id: userId,
+      title: lever.label_ru,
+      description: `${university.name}\n${university.source_url}`,
+      due_date: shiftUtcDays(day, Math.max(1, elapsed * 7)),
+      status: "todo",
+      source: "manual",
+      related_type: "university",
+      related_id: university.id,
+      roadmap_key: roadmapKey,
+    });
+    if (insertError) return fail("Не удалось добавить задачи в план.");
+    inserted += 1;
+  }
+  await markActivity(supabase, userId, day);
+  return ok({ inserted, unchanged: combo.levers.length - inserted });
 }
 
 export async function setWeeklyGoalForUser(

@@ -3,18 +3,22 @@ import { notFound } from "next/navigation";
 
 import { DeadlineList } from "@/components/pathway/universities/DeadlineList";
 import { FitBreakdown } from "@/components/pathway/universities/FitBreakdown";
+import { ShortestPathCard } from "@/components/pathway/universities/ShortestPathCard";
 import { ShortlistControls } from "@/components/pathway/universities/ShortlistControls";
 import { FitBadge } from "@/components/pathway/fit/FitBadge";
 import { Flag } from "@/components/pathway/ui/Flag";
 import { Display, TCard } from "@/components/pathway/ui/tropa";
 import { UniMonogram } from "@/components/pathway/ui/UniMonogram";
 import { getShortlist, getUniversity } from "@/lib/data";
+import { toFitProfile } from "@/lib/data/map";
 import { toCountryCode } from "@/lib/dashboard/present";
 import { initials } from "@/lib/format";
 import { isGrantAid } from "@/lib/matching/budget";
 import { toUtcDateString } from "@/lib/matching/dates";
 import { aidLabel, formatMoneyUsd, publicNote } from "@/lib/labels/display";
+import { shortestPath } from "@/lib/matching/path";
 import { getCountryLabel } from "@/lib/profile/types";
+import { getCurrentProfile } from "@/lib/profile/queries";
 import { strings } from "@/lib/strings";
 
 export async function generateMetadata({
@@ -36,7 +40,11 @@ export default async function UniversityDetailPage({
 }) {
   const { slug } = await params;
   const today = toUtcDateString(new Date());
-  const [{ item, error_ru }, shortlist] = await Promise.all([getUniversity(slug), getShortlist()]);
+  const [{ item, error_ru }, shortlist, { profile }] = await Promise.all([
+    getUniversity(slug),
+    getShortlist(),
+    getCurrentProfile(),
+  ]);
 
   if (!item && !error_ru) notFound();
   if (!item) {
@@ -109,6 +117,8 @@ export default async function UniversityDetailPage({
           <FitBreakdown fit={item.fit} />
         </div>
       </TCard>
+
+      <ShortestPathCard universityId={item.id} path={shortestPath(toFitProfile(profile), item, today)} />
 
       <TCard labelledBy="dl-h">
         <Display as="h2" id="dl-h" className="text-[18px]">

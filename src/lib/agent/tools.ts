@@ -16,7 +16,9 @@ import {
   loadUniversities,
   loadUniversity,
 } from "@/lib/data/load";
+import { toFitProfile } from "@/lib/data/map";
 import { toUtcDateString } from "@/lib/matching/dates";
+import { shortestPath } from "@/lib/matching/path";
 import { isLastCycleNote } from "@/lib/matching/deadlines";
 import type { FitResult } from "@/lib/matching/types";
 import { parseCv, parseProfile } from "@/lib/profile/parse";
@@ -148,6 +150,38 @@ export function createAgentTools(supabase: DbClient, userId: string) {
           name: item.name,
           source_url: item.source_url,
           fit: fitPayload(item.fit),
+        };
+      },
+    }),
+    shortest_path: tool({
+      description:
+        "Кратчайший путь в вуз: какие баллы поднять, чтобы категория стала на шаг лучше (Мечта → Цель или Цель → Запасной). Не шанс поступления.",
+      inputSchema: universitySlugInputSchema,
+      execute: async ({ slug }) => {
+        const { item, error_ru } = await loadUniversity(supabase, userId, slug, today);
+        if (error_ru) return { found: false, message_ru: error_ru };
+        if (!item) return { found: false, message_ru: NOT_IN_DATABASE_RU };
+        const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
+        if (error || !data) return { found: false, message_ru: NOT_IN_DATABASE_RU };
+        const path = shortestPath(toFitProfile(parseProfile(data)), item, today);
+        return {
+          found: true,
+          name: item.name,
+          slug: item.slug,
+          from: path.from,
+          goal: path.goal,
+          reason_ru: path.reason_ru,
+          combos: path.combos.map((combo) => ({
+            weeks: combo.weeks,
+            category: combo.category,
+            score: combo.score,
+            levers: combo.levers.map((lever) => ({
+              label_ru: lever.label_ru,
+              from: lever.from,
+              to: lever.to,
+              weeks: lever.weeks,
+            })),
+          })),
         };
       },
     }),

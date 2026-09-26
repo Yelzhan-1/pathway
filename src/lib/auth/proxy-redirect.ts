@@ -6,6 +6,7 @@ const PROTECTED_PATHS = [
   "/universities",
   "/favorites",
   "/compare",
+  "/what-if",
   "/opportunities",
   "/exams",
   "/roadmap",

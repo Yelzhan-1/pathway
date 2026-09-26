@@ -165,6 +165,18 @@ export const strings = {
     badge: (count: number) => `${count} в избранном`,
     toCompare: "Сравнить",
   },
+  whatIf: {
+    title: "Что если",
+    hint: "Двигай баллы — профиль не сохраняется. Смотрим, как меняется категория.",
+    gpa: "GPA",
+    scale: "шкала",
+    improved: (n: number) => `Категория лучше у ${n} вузов`,
+    grants: (n: number) => `Грантовых вузов с закрытыми требованиями: +${n}`,
+    none: "По этим баллам категории не меняются.",
+    fromTo: (from: string, to: string) => `${from} → ${to}`,
+    shortlist: "Избранное",
+    catalog: "Каталог",
+  },
   compare: {
     title: "Сравнение",
     pick: "Выбери 2–4 вуза из списка",
@@ -223,6 +235,13 @@ export const strings = {
       funded: "С финансированием",
     },
     hintCategory: "подсказка движка",
+    pathTitle: "Кратчайший путь сюда",
+    pathEmpty: "Уже лучшая категория по известным требованиям.",
+    pathAdd: "Добавить в план",
+    pathAdded: (inserted: number, unchanged: number) =>
+      inserted > 0 ? `Добавлено ${inserted}, уже было ${unchanged}.` : "Эти шаги уже в плане.",
+    pathWeeks: (n: number) => `${n} нед.`,
+    pathAlt: "Другие варианты",
     checks: {
       english: "Английский",
       unt: "ЕНТ",
@@ -373,6 +392,11 @@ export const strings = {
         href: "/universities",
         title: "Кратчайший путь",
         text: "Открой вуз: что подтянуть, чтобы шагнуть в следующую категорию.",
+      },
+      {
+        href: "/what-if",
+        title: "Что если",
+        text: "Подвинь баллы без сохранения — как меняются категории вузов.",
       },
       {
         href: "/roadmap",

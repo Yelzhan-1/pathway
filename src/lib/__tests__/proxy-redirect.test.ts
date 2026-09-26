@@ -38,7 +38,7 @@ describe("decideProxyRedirect", () => {
       }),
     ).toBe("/login");
     expect(
-      decideProxyRedirect("/mentors", {
+      decideProxyRedirect("/what-if", {
         claimsAuthenticated: false,
         serverUser: null,
       }),

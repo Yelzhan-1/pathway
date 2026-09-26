@@ -1,4 +1,4 @@
-import { BarChart3, Building2, FileText, Heart, House, Leaf, ListTodo, MessagesSquare, NotebookPen, Route, Scale, Settings, Trophy, UserRound, type LucideIcon } from 'lucide-react';
+import { BarChart3, Building2, FileText, Heart, House, Leaf, ListTodo, MessagesSquare, NotebookPen, Route, Scale, Settings, Sparkles, Trophy, UserRound, type LucideIcon } from 'lucide-react';
 import type { NavIcon, NavItem } from '@/types/pathway';
 
 export const NAV_ICON: Record<NavIcon, LucideIcon> = {
@@ -7,6 +7,7 @@ export const NAV_ICON: Record<NavIcon, LucideIcon> = {
   unis: Building2,
   favorites: Heart,
   compare: Scale,
+  whatif: Sparkles,
   docs: FileText,
   roadmap: Route,
   tasks: ListTodo,
@@ -25,6 +26,7 @@ export const DEFAULT_NAV: NavItem[] = [
   { id: 'unis', label: 'Вузы', href: '/universities', icon: 'unis', tone: 'honey' },
   { id: 'favorites', label: 'Избранное', href: '/favorites', icon: 'favorites', tone: 'coral' },
   { id: 'compare', label: 'Сравнение', href: '/compare', icon: 'compare', tone: 'dream' },
+  { id: 'whatif', label: 'Что если', href: '/what-if', icon: 'whatif', tone: 'honey' },
   { id: 'docs', label: 'Резюме и документы', href: '/cv', icon: 'docs', tone: 'sky' },
   { id: 'roadmap', label: 'Дорожная карта', href: '/roadmap', icon: 'roadmap', tone: 'mint' },
   { id: 'tasks', label: 'Задачи', href: '/tasks', icon: 'tasks', tone: 'sky' },

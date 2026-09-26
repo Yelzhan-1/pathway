@@ -19,7 +19,7 @@ describe("buildShellData", () => {
     expect(data.nav.map((item) => item.id)).toEqual(DEFAULT_NAV.map((item) => item.id));
     expect(data.nav.some((item) => item.id === "tasks")).toBe(true);
     expect(data.nav.some((item) => item.id === "mentors")).toBe(true);
-    expect(data.nav.some((item) => item.id === "impact")).toBe(true);
+    expect(data.nav.some((item) => item.id === "whatif")).toBe(true);
     expect(data.nav.find((item) => item.id === "favorites")?.badge).toBe(2);
   });
 });
