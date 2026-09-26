@@ -23,6 +23,7 @@ export function ComparePicker({
 
   return (
     <form
+      aria-label={strings.compare.pick}
       className="rounded-[var(--radius-card)] bg-card p-4 shadow-card ring-1 ring-border"
       onSubmit={(event) => {
         event.preventDefault();
@@ -32,8 +33,7 @@ export function ComparePicker({
         startTransition(() => router.push(`/compare?${params.toString()}`));
       }}
     >
-      <p className="text-[14px] font-bold">{strings.compare.pick}</p>
-      <ul className="mt-3 space-y-1">
+      <ul className="space-y-1">
         {options.map((option) => {
           const on = picked.includes(option.id);
           const blocked = !on && picked.length >= 4;

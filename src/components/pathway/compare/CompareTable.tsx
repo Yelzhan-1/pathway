@@ -7,6 +7,7 @@ import { aidLabel, formatMoneyUsd, roundLabel } from "@/lib/labels/display";
 import { FIT_CHECK_KEYS, type FitCategory, type FitResult, type FitUniversity } from "@/lib/matching/types";
 import { getCountryLabel } from "@/lib/profile/types";
 import { strings } from "@/lib/strings";
+import { cn } from "@/lib/utils";
 
 type CompareUni = FitUniversity & { fit: FitResult };
 
@@ -35,7 +36,20 @@ function grants(university: CompareUni): string {
   return aidLabel(university.aid_for_internationals) ?? "—";
 }
 
+/** True when the compared universities differ on this metric — used to highlight the row. */
+function differs(values: string[]): boolean {
+  return values.some((value) => value !== values[0]);
+}
+
+const DIFF_ROW = "bg-honey-soft/60";
+
 export function CompareTable({ items, today }: { items: CompareItem[]; today: string }) {
+  const categoryValues = items.map((item) => strings.fit.category[item.category]);
+  const countryValues = items.map((item) => getCountryLabel(item.university.country));
+  const deadlineValues = items.map((item) => nextDeadline(item.university, today));
+  const costValues = items.map((item) => cost(item.university));
+  const grantValues = items.map((item) => grants(item.university));
+
   return (
     <>
       <div className="hidden overflow-x-auto md:block">
@@ -53,7 +67,7 @@ export function CompareTable({ items, today }: { items: CompareItem[]; today: st
             </tr>
           </thead>
           <tbody>
-            <tr className="odd:bg-card">
+            <tr className={cn("odd:bg-card", differs(categoryValues) && DIFF_ROW)}>
               <th className="sticky left-0 bg-inherit p-3 font-bold">{strings.compare.list}</th>
               {items.map((item) => (
                 <td key={item.university.id} className="p-3 font-semibold">
@@ -73,7 +87,7 @@ export function CompareTable({ items, today }: { items: CompareItem[]; today: st
                 </td>
               ))}
             </tr>
-            <tr className="odd:bg-card">
+            <tr className={cn("odd:bg-card", differs(countryValues) && DIFF_ROW)}>
               <th className="sticky left-0 bg-inherit p-3 font-bold">{strings.universities.country}</th>
               {items.map((item) => (
                 <td key={item.university.id} className="p-3 font-semibold">
@@ -103,7 +117,7 @@ export function CompareTable({ items, today }: { items: CompareItem[]; today: st
                 })}
               </tr>
             ))}
-            <tr>
+            <tr className={cn(differs(deadlineValues) && DIFF_ROW)}>
               <th className="sticky left-0 bg-background p-3 font-bold">{strings.universities.deadlinesTitle}</th>
               {items.map((item) => (
                 <td key={item.university.id} className="p-3 font-semibold">
@@ -111,7 +125,7 @@ export function CompareTable({ items, today }: { items: CompareItem[]; today: st
                 </td>
               ))}
             </tr>
-            <tr className="odd:bg-card">
+            <tr className={cn("odd:bg-card", differs(costValues) && DIFF_ROW)}>
               <th className="sticky left-0 bg-inherit p-3 font-bold">{strings.universities.cost}</th>
               {items.map((item) => (
                 <td key={item.university.id} className="p-3 font-semibold">
@@ -119,7 +133,7 @@ export function CompareTable({ items, today }: { items: CompareItem[]; today: st
                 </td>
               ))}
             </tr>
-            <tr>
+            <tr className={cn(differs(grantValues) && DIFF_ROW)}>
               <th className="sticky left-0 bg-background p-3 font-bold">{strings.universities.grants}</th>
               {items.map((item) => (
                 <td key={item.university.id} className="p-3 font-semibold">

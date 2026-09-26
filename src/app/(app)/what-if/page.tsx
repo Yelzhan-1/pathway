@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 
 import { FeedbackWidget } from "@/components/pathway/feedback/FeedbackWidget";
 import { WhatIfScreen, type WhatIfRow } from "@/components/pathway/what-if/WhatIfScreen";
+import { Compass } from "@/components/pathway/ui/illustrations";
+import { PageHeader } from "@/components/pathway/ui/tropa";
 import { getShortlist, getUniversities } from "@/lib/data";
 import { toFitProfile } from "@/lib/data/map";
 import { toUtcDateString } from "@/lib/matching/dates";
@@ -43,6 +45,7 @@ export default async function WhatIfPage() {
 
   return (
     <div className="flex min-w-0 flex-col gap-4">
+      <PageHeader title={strings.whatIf.title} subtitle={strings.whatIf.hint} illustration={<Compass className="w-full" />} />
       <WhatIfScreen profile={fitProfile} rows={rows} today={today} />
       <FeedbackWidget page="what-if" />
     </div>

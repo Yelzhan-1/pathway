@@ -182,6 +182,7 @@ export const strings = {
   whatIf: {
     title: "Что если",
     hint: "Двигай баллы — профиль не сохраняется. Смотрим, как меняется категория.",
+    sliders: "Твои баллы",
     gpa: "GPA",
     scale: "шкала",
     improved: (n: number) => `Категория лучше у ${n} вузов`,
@@ -191,6 +192,7 @@ export const strings = {
     fromTo: (from: string, to: string) => `${from} → ${to}`,
     shortlist: "Избранное",
     catalog: "Каталог",
+    grantUnlocked: "Открылся грант",
   },
   compare: {
     title: "Сравнение",

@@ -83,16 +83,9 @@ export function WhatIfScreen({
 
   return (
     <div className="flex min-w-0 flex-col gap-4">
-      <div className="min-w-0">
-        <Display as="h1" className="text-[28px] font-bold sm:text-[32px]">
-          {strings.whatIf.title}
-        </Display>
-        <p className="mt-2 text-[14px] font-medium leading-snug text-ink-2">{strings.whatIf.hint}</p>
-      </div>
-
       <TCard labelledBy="what-if-controls" className="min-w-0">
         <Display as="h2" id="what-if-controls" className="text-[16px]">
-          {strings.whatIf.title}
+          {strings.whatIf.sliders}
         </Display>
         <div className="mt-3 grid min-w-0 gap-4">
           {SLIDER_EXAMS.map((code) => {
@@ -171,6 +164,11 @@ export function WhatIfScreen({
                             row.before ? strings.fit.category[row.before] : strings.universities.littleData,
                             row.after ? strings.fit.category[row.after] : strings.universities.littleData,
                           )}
+                        </span>
+                      ) : null}
+                      {row.grantUnlocked ? (
+                        <span className="mt-1 inline-flex h-6 items-center rounded-full bg-tone-mint-bg px-2 text-[11px] font-extrabold text-tone-mint-fg">
+                          {strings.whatIf.grantUnlocked}
                         </span>
                       ) : null}
                     </span>

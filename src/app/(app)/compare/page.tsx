@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 
 import { CompareLive } from "@/components/pathway/compare/CompareLive";
-import { Display, EmptyCta } from "@/components/pathway/ui/tropa";
+import { Signpost } from "@/components/pathway/ui/illustrations";
+import { EmptyCta, PageHeader } from "@/components/pathway/ui/tropa";
 import { getShortlist } from "@/lib/data";
 import { toUtcDateString } from "@/lib/matching/dates";
 import { strings } from "@/lib/strings";
@@ -32,9 +33,7 @@ export default async function ComparePage({
 
   return (
     <div className="flex flex-col gap-4">
-      <Display as="h1" className="text-[28px] font-bold sm:text-[32px]">
-        {strings.compare.title}
-      </Display>
+      <PageHeader title={strings.compare.title} subtitle={strings.compare.pick} illustration={<Signpost className="w-full" />} />
       {error_ru ? (
         <p role="alert" className="rounded-[20px] bg-danger-soft px-4 py-3 text-[14px] font-semibold text-destructive">
           {error_ru}
