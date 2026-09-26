@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { CATALOG_RU } from "@/data/catalog-ru";
-import { displayCost, displayTitle, publicNote } from "@/lib/labels/display";
+import { displayCost, displayTitle, publicNote, roundLabel } from "@/lib/labels/display";
 
 /** Proper names and acronyms may stay. Three other Latin words in a row may not. */
 const ALLOWED = new Set(
@@ -80,6 +80,34 @@ describe("catalog Russian sentences", () => {
       return run ? [`${run} ← ${source.slice(0, 80)}`] : [];
     });
     expect(offenders).toEqual([]);
+  });
+
+  it("translates deadline round labels, including SDU intakes", () => {
+    const rounds = [
+      "international – spring intake",
+      "international - fall intake",
+      "state grant applications",
+      "paid tuition applications",
+    ];
+    expect(roundLabel("international – spring intake")).toBe("иностранцы — весенний набор");
+    expect(roundLabel("state grant applications")).toBe("заявки на госгрант");
+    expect(roundLabel("paid tuition applications")).toBe("заявки на платное обучение");
+    expect(roundLabel("international – fall intake")).toBe("иностранцы — осенний набор");
+    const offenders = rounds.flatMap((round) => {
+      const run = threeLatinWords(roundLabel(round));
+      return run ? [run] : [];
+    });
+    expect(offenders).toEqual([]);
+    expect(
+      publicNote(
+        "Non-EU tuition for B.Sc. Informatics: EUR 3,000 per semester (programme page), plus semester (student union) fee EUR 97.00 listed on programme page. TUM bachelor tuition for non-EU is usually EUR 2,000 or 3,000 per semester.",
+      ),
+    ).toMatch(/информатике/);
+    expect(
+      publicNote(
+        "Tuition-fee waiver scholarships for academic performance or financial need; TUM scholarship for international students: one-time grant of EUR 500–1,800 per semester (TUM tuition page).",
+      ),
+    ).toMatch(/Стипендии за успеваемость или по финансовой нужде/);
   });
 
   it("writes dollar amounts with a space between thousands", () => {

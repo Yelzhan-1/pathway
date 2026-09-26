@@ -55,6 +55,8 @@ describe("display labels", () => {
       "ограниченный ранний приём (без обязательства); баллы нужны до конца ноября (лучше до конца октября).",
     );
     expect(roundLabel("SCEA")).toBe("Единственный ранний приём");
+    expect(roundLabel("international – spring intake")).toBe("иностранцы — весенний набор");
+    expect(roundLabel("paid tuition applications")).toBe("заявки на платное обучение");
     expect(publicNote("Single-choice early action (non-binding). Financial aid application due 9 Nov.")).toBe(
       "единственный ранний приём (без обязательства). заявка на помощь до 9 ноя.",
     );

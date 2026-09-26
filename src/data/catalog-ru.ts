@@ -60,7 +60,7 @@ export const CATALOG_RU: Record<string, string> = {
   "Institutional fee non-EU/EFTA 2025-2026: EUR 17,310 per year (CSE tuition page). 2027-28 fee not yet shown.":
     "Институциональный взнос для студентов не из ЕС/ЕАСТ на 2025–2026: 17 310 € в год (страница обучения CSE). Взнос 2027–28 ещё не показан.",
   "Non-EU tuition for B.Sc. Informatics: EUR 3,000 per semester (programme page), plus semester (student union) fee EUR 97.00 listed on programme page. TUM bachelor tuition for non-EU is usually EUR 2,000 or 3,000 per semester.":
-    "Обучение информатики для студентов не из ЕС: 3 000 € за семестр плюс семестровый взнос студенческого союза 97 €. Обычно бакалавриат TUM для студентов не из ЕС стоит 2 000 или 3 000 € за семестр.",
+    "Обучение информатике для студентов не из ЕС: 3 000 € за семестр плюс семестровый взнос студенческого союза 97 €. Обычно бакалавриат TUM для студентов не из ЕС стоит 2 000 или 3 000 € за семестр.",
   "Computer Science BSc Overseas fee shown as GBP 48,600 per year (Home GBP 10,050). Not converted.":
     "Взнос для иностранцев на бакалавриате компьютерных наук указан как 48 600 £ в год (для местных 10 050 £). В доллары не пересчитано.",
   "Tuition JPY 642,960 per year; admission fee JPY 282,000 (as of 2026). First-year housing required (JPY 82,300/month).":
@@ -118,7 +118,7 @@ export const CATALOG_RU: Record<string, string> = {
   "For international citizens, a financial aid request is a factor in admission (need-aware) but Stanford meets full demonstrated need of all admitted students. Internationals who do not apply for aid at admission cannot apply later. No merit scholarships (except limited athletic).":
     "Для иностранных граждан запрос помощи влияет на приём, но Stanford покрывает всю подтверждённую потребность всех принятых. Иностранцы, которые не подали на помощь при поступлении, не смогут подать позже. Стипендий за заслуги нет, кроме ограниченной спортивной.",
   "Tuition-fee waiver scholarships for academic performance or financial need; TUM scholarship for international students: one-time grant of EUR 500–1,800 per semester (TUM tuition page).":
-    "Стипендии с освобождением от платы за учёбу или за потребность; стипендия TUM для иностранных студентов: разовый грант 500–1 800 € за семестр.",
+    "Стипендии за успеваемость или по финансовой нужде; стипендия TUM для иностранных студентов: разовый грант 500–1 800 € за семестр.",
   "UTokyo Design Scholarship: need-based JPY 2,400,000/year + admission-fee equivalent + one-way travel (max 5 years); merit-based JPY 600,000/year.":
     "Стипендия UTokyo Design: по потребности 2 400 000 иен в год плюс эквивалент вступительного взноса и билет в одну сторону (максимум 5 лет); за заслуги 600 000 иен в год.",
   "Need-blind for all applicants regardless of citizenship; meets 100% of demonstrated need; international aid includes allowances for housing, meals and two round trips per year.":

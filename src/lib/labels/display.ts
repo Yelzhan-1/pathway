@@ -23,6 +23,10 @@ const ROUND_LABELS: Record<string, string> = {
   "single-choice early action": "Единственный ранний приём",
   "single choice early action": "Единственный ранний приём",
   ra: "Основной",
+  "international - spring intake": "иностранцы — весенний набор",
+  "international - fall intake": "иностранцы — осенний набор",
+  "state grant applications": "заявки на госгрант",
+  "paid tuition applications": "заявки на платное обучение",
 };
 
 const AID_LABELS: Record<string, string> = {
@@ -64,7 +68,7 @@ export function aidLabel(value: string | null | undefined): string | null {
 }
 
 export function roundLabel(round: string): string {
-  const key = round.trim().toLowerCase().replace(/\s+/g, " ");
+  const key = round.trim().toLowerCase().replace(/[–—]/g, "-").replace(/\s+/g, " ");
   return ROUND_LABELS[key] ?? round.replace(/\s*\(offered\)\s*/gi, "").trim();
 }
 
