@@ -140,6 +140,18 @@ export const strings = {
     title: "Избранное",
     count: (count: number, word: string) => `В шортлисте ${count} ${word}.`,
     unavailable: "Не удалось загрузить шортлист.",
+    empty: "Пока нет вузов в списке.",
+    emptyCta: "Выбрать вузы",
+    emptyGroup: "Пока пусто в этой группе.",
+    toCompare: "Сравнить",
+  },
+  compare: {
+    title: "Сравнение",
+    pick: "Выбери 2–4 вуза из списка",
+    show: "Сравнить",
+    needTwo: "Добавь хотя бы два вуза в избранное, чтобы сравнить.",
+    metric: "Параметр",
+    list: "В списке",
   },
   universities: {
     title: "Вузы",
