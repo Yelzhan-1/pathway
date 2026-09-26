@@ -58,6 +58,13 @@ export type DashboardData = {
   opportunities: Opportunity[] | null; // block 4
   docs: DocItem[] | null;              // block 2 NOW (CV status + profile-derived list)
   ai: AiBuddy | null;                  // block 5
+  weeklyGoal?: number | null;
+  progress?: {
+    readinessPercent: number | null;
+    parts: { key: string; label: string; percent: number | null }[];
+    achievements: { id: string; title: string; unlocked: boolean }[];
+    weeklyGoal: { goal: number | null; due: number; done: number };
+  } | null;
   isExample?: boolean;                 // shows the «пример данных» chip (fixtures only)
 };
 

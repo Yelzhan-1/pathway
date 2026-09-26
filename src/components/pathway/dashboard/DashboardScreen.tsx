@@ -6,12 +6,14 @@ import { StatTiles } from './StatTiles';
 import { ProfileStrengthRing } from './ProfileStrengthRing';
 import { StreakCard } from './StreakCard';
 import { PopularUniversities } from './PopularUniversities';
-import { CheckChancesForm } from './CheckChancesForm';
+import { DashboardCheckForm } from './DashboardCheckForm';
 import { ChancesColumns } from './ChancesColumns';
 import { DeadlinesTickets } from './DeadlinesTickets';
 import { OpportunitiesList } from './OpportunitiesList';
 import { DocumentsBackpack } from './DocumentsBackpack';
 import { AiBuddyCard } from './AiBuddyCard';
+import { ProgressPanel } from './ProgressPanel';
+import { WeeklyGoalForm } from './WeeklyGoalForm';
 
 /**
  * Dashboard «Тропа» (content only — wrap in <AppShell active="home">).
@@ -38,7 +40,7 @@ export function DashboardScreen({ data }: { data: DashboardData }) {
 
         <div className="contents lg:grid lg:grid-cols-[1.25fr_1fr] lg:gap-4">
           <div className="order-4 min-w-0 lg:order-none"><PopularUniversities unis={data.popular} total={data.popularTotal} /></div>
-          <div className="order-3 lg:order-none"><CheckChancesForm options={data.checkOptions} /></div>
+          <div className="order-3 lg:order-none"><DashboardCheckForm options={data.checkOptions} /></div>
         </div>
         <div className="contents lg:grid lg:grid-cols-3 lg:gap-4">
           <div className="order-6 lg:order-none"><ChancesColumns data={data.chances} /></div>
@@ -50,6 +52,8 @@ export function DashboardScreen({ data }: { data: DashboardData }) {
       <div className="contents lg:flex lg:flex-col lg:gap-4">
         <div className="order-2 lg:order-none"><ProfileStrengthRing data={data.strength} /></div>
         <div className="order-5 lg:order-none"><StreakCard data={data.streak} /></div>
+        <div className="order-5 lg:order-none"><WeeklyGoalForm weeklyGoal={data.weeklyGoal ?? null} /></div>
+        {data.progress ? <div className="order-5 lg:order-none"><ProgressPanel data={data.progress} /></div> : null}
         <div className="order-9 lg:order-none"><AiBuddyCard data={data.ai} /></div>
         <div className="order-8 lg:order-none"><DocumentsBackpack docs={data.docs} /></div>
       </div>

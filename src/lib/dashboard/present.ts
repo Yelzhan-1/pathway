@@ -1,5 +1,22 @@
-import type { CountryCode, DashboardData, DocItem, DocStatus, RoadStep, UniCard } from "@/types/pathway";
-import { plural, initials } from "@/lib/format";
+import type {
+  CheckChancesOptions,
+  CountryCode,
+  DashboardData,
+  DeadlineTicket,
+  DocItem,
+  DocStatus,
+  Opportunity,
+  OpportunityKind,
+  RoadStep,
+  StatTile,
+  StreakData,
+  UniCard,
+} from "@/types/pathway";
+import { classifyDeadlines } from "@/lib/matching/deadlines";
+import { shiftUtcDays, utcWeekRange } from "@/lib/matching/dates";
+import type { FitCategory, FitUniversity } from "@/lib/matching/types";
+import type { ProgressReport } from "@/lib/progress/readiness";
+import { dayMonth, plural, initials } from "@/lib/format";
 import {
   computeProfileCompleteness,
   PROFILE_COMPLETENESS_WEIGHTS,
@@ -139,7 +156,7 @@ export function roadSteps(input: {
       status: unisStatus,
       href: "/universities",
     },
-    { id: "exams", title: "Экзамены", status: "locked", href: "/exams" },
+    { id: "exams", title: "Экзамены", status: unisDone ? "current" : "locked", href: "/exams" },
     { id: "apply", title: "Заявки", status: "locked" },
   ];
 }
@@ -161,13 +178,14 @@ export function toCountryCode(country: string): string {
 
 export type UniversityRow = {
   id: string;
+  slug: string;
   name: string;
   country: string;
   city: string | null;
   majors: string[] | null;
 };
 
-export function toUniCards(rows: UniversityRow[]): UniCard[] {
+export function toUniCards(rows: UniversityRow[], savedIds: Set<string> = new Set()): UniCard[] {
   return rows.map((row) => {
     const tags = (row.majors ?? []).filter(Boolean).slice(0, 2);
     return {
@@ -177,8 +195,8 @@ export function toUniCards(rows: UniversityRow[]): UniCard[] {
       city: row.city?.trim() || getCountryLabel(row.country),
       country: toCountryCode(row.country),
       tags: tags.length > 0 ? tags : [getCountryLabel(row.country)],
-      saved: false,
-      href: `/universities?q=${encodeURIComponent(row.name)}`,
+      saved: savedIds.has(row.id),
+      href: `/universities/${row.slug}`,
     };
   });
 }
@@ -212,6 +230,105 @@ function docsFor(profile: ProfileData): DocItem[] {
   return docs;
 }
 
+const WEEKDAY_LABELS = ["пн", "вт", "ср", "чт", "пт", "сб", "вс"];
+
+export function streakWeek(activityDays: string[], today: string): StreakData["week"] {
+  const set = new Set(activityDays.map((day) => day.slice(0, 10)));
+  const { start } = utcWeekRange(today);
+  return Array.from({ length: 7 }, (_, index) => {
+    const day = shiftUtcDays(start, index);
+    if (day > today) return "todo";
+    if (day === today) return set.has(day) ? "done" : "today";
+    return set.has(day) ? "done" : "todo";
+  });
+}
+
+function asCountry(code: string): CountryCode | undefined {
+  const value = toCountryCode(code);
+  return value.length === 2 ? (value as CountryCode) : undefined;
+}
+
+function checkOptionsFrom(rows: UniversityRow[], profile: ProfileData): CheckChancesOptions {
+  const programs = new Map<string, { value: string; label: string }>();
+  const countries = new Map<string, { value: string; label: string; country?: CountryCode }>();
+  const universities = rows.map((row) => ({
+    value: row.slug,
+    label: row.name,
+    country: asCountry(row.country),
+  }));
+  for (const row of rows) {
+    countries.set(row.country, {
+      value: row.country,
+      label: getCountryLabel(row.country),
+      country: asCountry(row.country),
+    });
+    for (const major of row.majors ?? []) {
+      const label = major.trim();
+      if (label) programs.set(label, { value: label, label });
+    }
+  }
+  const byLabel = (a: { label: string }, b: { label: string }) => a.label.localeCompare(b.label, "ru");
+  return {
+    programs: [...programs.values()].sort(byLabel),
+    countries: [...countries.values()].sort(byLabel),
+    universities: universities.sort(byLabel),
+    defaults: {
+      program: profile.intended_major ?? undefined,
+      country: profile.target_countries[0],
+    },
+  };
+}
+
+function opportunityKind(type: string): OpportunityKind {
+  if (type === "olympiad") return "olympiad";
+  if (type === "scholarship") return "grant";
+  if (type === "competition") return "contest";
+  return "program";
+}
+
+function presentOpportunities(
+  rows: Array<{
+    id: string;
+    type: string;
+    title: string;
+    deadline: string | null;
+    url: string | null;
+    source_url: string;
+  }>,
+): Opportunity[] {
+  return rows.slice(0, 3).map((row) => {
+    const typeLabel =
+      row.type in strings.opportunities.types
+        ? strings.opportunities.types[row.type as keyof typeof strings.opportunities.types]
+        : row.type;
+    return {
+      id: row.id,
+      kind: opportunityKind(row.type),
+      title: row.title,
+      meta: row.deadline ? `${typeLabel} · ${dayMonth(row.deadline.slice(0, 10))}` : typeLabel,
+      href: row.url || row.source_url,
+    };
+  });
+}
+
+function presentDeadlines(
+  items: Array<{ university: Pick<FitUniversity, "id" | "slug" | "name" | "deadlines"> }>,
+  today: string,
+): DeadlineTicket[] {
+  const tickets: DeadlineTicket[] = [];
+  for (const item of items) {
+    for (const entry of classifyDeadlines(item.university.deadlines, today).upcoming) {
+      tickets.push({
+        id: `${item.university.id}-${entry.round}-${entry.date}`,
+        title: `${item.university.name} · ${entry.round}`,
+        date: entry.date,
+        href: `/universities/${item.university.slug}`,
+      });
+    }
+  }
+  return tickets.sort((a, b) => a.date.localeCompare(b.date)).slice(0, 5);
+}
+
 export function presentDashboard(input: {
   today: string;
   profile: ProfileData;
@@ -219,6 +336,20 @@ export function presentDashboard(input: {
   shortlistCount: number | null;
   universities: UniversityRow[] | null;
   universityTotal: number | null;
+  shortlistItems?: Array<{
+    category: FitCategory;
+    university: Pick<FitUniversity, "id" | "slug" | "name" | "deadlines">;
+  }> | null;
+  opportunities?: Array<{
+    id: string;
+    type: string;
+    title: string;
+    deadline: string | null;
+    url: string | null;
+    source_url: string;
+  }> | null;
+  activityDays?: string[] | null;
+  progress?: ProgressReport | null;
 }): DashboardData {
   const completeness = computeProfileCompleteness(input.profile);
   const started = cvStarted(input.profile);
@@ -229,6 +360,33 @@ export function presentDashboard(input: {
     href: `/profile#${item.field}`,
   }));
   const gap = plural(missing.length, "поле", "поля", "полей");
+  const savedIds = new Set((input.shortlistItems ?? []).map((item) => item.university.id));
+  const catalog = input.universities ?? [];
+  const shortlist = input.shortlistItems ?? [];
+  const chancesTotal = shortlist.length;
+  const stats: StatTile[] | null =
+    input.shortlistCount == null
+      ? null
+      : [
+          {
+            id: "favorites",
+            label: strings.dashboard.favoritesTile,
+            value: input.shortlistCount,
+            href: "/favorites",
+          },
+        ];
+  const weekly = input.progress?.weeklyGoal;
+  const streak: StreakData | null = input.progress
+    ? {
+        days: input.progress.streak ?? 0,
+        week: streakWeek(input.activityDays ?? [], input.today),
+        weekdayLabels: WEEKDAY_LABELS,
+        quest:
+          weekly?.goal != null
+            ? { title: strings.dashboard.quest, done: weekly.done, total: weekly.goal }
+            : null,
+      }
+    : null;
 
   return {
     today: input.today,
@@ -244,7 +402,7 @@ export function presentDashboard(input: {
       shortlistCount: input.shortlistCount,
     }),
     roadFinish: completeness.percent >= 80 ? "Финиш · подача заявок" : null,
-    stats: null,
+    stats,
     strength: {
       percent: completeness.percent,
       levelLabel: missing.length
@@ -252,15 +410,43 @@ export function presentDashboard(input: {
         : strings.dashboard.levelReady,
       missing,
     },
-    streak: null,
-    popular: input.universities && input.universities.length > 0 ? toUniCards(input.universities) : null,
+    streak,
+    popular: catalog.length > 0 ? toUniCards(catalog.slice(0, 3), savedIds) : null,
     popularTotal: input.universityTotal ?? undefined,
-    checkOptions: null,
-    chances: null,
-    deadlines: null,
-    opportunities: null,
+    checkOptions: catalog.length > 0 ? checkOptionsFrom(catalog, input.profile) : null,
+    chances: chancesTotal
+      ? {
+          dream: shortlist.filter((item) => item.category === "dream").length,
+          target: shortlist.filter((item) => item.category === "target").length,
+          safety: shortlist.filter((item) => item.category === "safety").length,
+          href: "/favorites",
+        }
+      : null,
+    deadlines: shortlist.length > 0 ? presentDeadlines(shortlist, input.today) : null,
+    opportunities: input.opportunities?.length ? presentOpportunities(input.opportunities) : null,
     docs: docsFor(input.profile),
-    ai: null,
+    ai: {
+      message: strings.dashboard.aiMessage,
+      primary: { label: strings.dashboard.aiCta, href: "/assistant" },
+      secondary: { label: strings.dashboard.aiTasks, href: "/tasks" },
+    },
+    weeklyGoal: input.progress?.weeklyGoal.goal ?? null,
+    progress: input.progress
+      ? {
+          readinessPercent: input.progress.readiness.percent,
+          parts: Object.values(input.progress.readiness.parts).map((part) => ({
+            key: part.key,
+            label: part.label_ru,
+            percent: part.percent,
+          })),
+          achievements: input.progress.achievements.map((item) => ({
+            id: item.id,
+            title: item.title_ru,
+            unlocked: item.unlocked,
+          })),
+          weeklyGoal: input.progress.weeklyGoal,
+        }
+      : null,
   };
 }
 
