@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { StepForm } from "@/components/onboarding/step-form";
 import { useOnboardingStep } from "@/components/onboarding/use-onboarding-step";
+import { getBudgetLabel, getEnglishLevelLabel, formatExamEntry } from "@/lib/profile/labels";
 import { getCountryLabel } from "@/lib/profile/types";
 import type { ProfileData } from "@/lib/profile/types";
 import { strings } from "@/lib/strings";
@@ -36,19 +37,17 @@ function Row({
 function formatExams(profile: ProfileData): string {
   if (profile.exams.length === 0) return "";
   return profile.exams
-    .map((exam) => {
-      const subject = exam.subject ? ` ${exam.subject}` : "";
-      return `${exam.code}${subject} ${exam.score}`;
-    })
+    .map((exam) =>
+      formatExamEntry(
+        exam,
+        exam.status === "planned" ? strings.cv.plannedSuffix : undefined,
+      ),
+    )
     .join(", ");
 }
 
 function formatBudget(profile: ProfileData): string {
-  if (profile.budget_usd == null) return "";
-  if (profile.budget_usd === 0) {
-    return strings.onboarding.steps.budget.ranges.zero;
-  }
-  return `$${profile.budget_usd}`;
+  return getBudgetLabel(profile.budget_usd);
 }
 
 function formatGpa(profile: ProfileData): string {
@@ -94,7 +93,11 @@ export function StepSummary({ profile }: { profile: ProfileData }) {
         value={profile.needs_scholarship ? s.yes : s.no}
         step={5}
       />
-      <Row label={s.fields.english} value={profile.english_level ?? ""} step={6} />
+      <Row
+        label={s.fields.english}
+        value={getEnglishLevelLabel(profile.english_level)}
+        step={6}
+      />
       <Row label={s.fields.exams} value={formatExams(profile)} step={7} />
       <Row label={s.fields.gpa} value={formatGpa(profile)} step={8} />
       <Row

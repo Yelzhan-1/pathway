@@ -1,13 +1,10 @@
 "use client";
 
 import { OptionCard } from "@/components/onboarding/option-card";
-import { INTAKE_YEAR_MAX, INTAKE_YEAR_MIN } from "@/lib/profile/types";
+import { intakeYearOptions } from "@/lib/profile/types";
 import { strings } from "@/lib/strings";
 
-const YEARS = Array.from(
-  { length: INTAKE_YEAR_MAX - INTAKE_YEAR_MIN + 1 },
-  (_, index) => INTAKE_YEAR_MIN + index,
-);
+const YEARS = intakeYearOptions();
 
 export function IntakeYearField({
   value,

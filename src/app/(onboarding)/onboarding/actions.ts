@@ -12,7 +12,8 @@ import {
   nextOnboardingCursor,
   TOTAL_ONBOARDING_STEPS,
 } from "@/lib/profile/onboarding-steps";
-import { mergeExams, parseExams } from "@/lib/profile/parse";
+import { ACADEMIC_EXAM_CODES, LANGUAGE_EXAM_CODES } from "@/lib/profile/exam-ranges";
+import { parseExams, replaceExamGroup } from "@/lib/profile/parse";
 import {
   budgetStepSchema,
   cityStepSchema,
@@ -106,18 +107,20 @@ export async function saveOnboardingStepAction(
       const parsed = englishStepSchema.safeParse(raw);
       if (!parsed.success) return { error: firstZodMessage(parsed.error) };
       patch.english_level = parsed.data.english_level;
-      patch.exams = mergeExams(
+      patch.exams = replaceExamGroup(
         profile.exams,
         parseExams(parsed.data.exams as Json),
+        LANGUAGE_EXAM_CODES,
       ) as Json;
       break;
     }
     case 7: {
       const parsed = examsStepSchema.safeParse(raw);
       if (!parsed.success) return { error: firstZodMessage(parsed.error) };
-      patch.exams = mergeExams(
+      patch.exams = replaceExamGroup(
         profile.exams,
         parseExams(parsed.data.exams as Json),
+        ACADEMIC_EXAM_CODES,
       ) as Json;
       break;
     }

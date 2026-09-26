@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import type { ZodType } from "zod";
 
 import {
   completeOnboardingAction,
@@ -9,46 +10,72 @@ import {
   skipOnboardingStepAction,
 } from "@/app/(onboarding)/onboarding/actions";
 import { firstZodMessage } from "@/lib/profile/zod-error";
-import type { ZodType } from "zod";
 
-export function useOnboardingStep(step: number) {
+export function useOnboardingStep(
+  step: number,
+  schema?: ZodType,
+  values?: unknown,
+) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [attempted, setAttempted] = useState(false);
+  const serialized = JSON.stringify(values ?? null);
+
+  const clientError =
+    attempted && schema
+      ? (() => {
+          const parsed = schema.safeParse(JSON.parse(serialized) as unknown);
+          return parsed.success ? null : firstZodMessage(parsed.error);
+        })()
+      : null;
+  const error = clientError ?? serverError;
 
   function goBack() {
     if (step <= 1) return;
     router.push(`/onboarding?step=${step - 1}`);
   }
 
-  function save<T>(schema: ZodType<T>, values: unknown) {
-    const parsed = schema.safeParse(values);
+  function save<T>(nextSchema?: ZodType<T>, nextValues?: unknown) {
+    const activeSchema = nextSchema ?? schema;
+    const activeValues = nextValues ?? values;
+    if (!activeSchema) return;
+    setAttempted(true);
+    const parsed = activeSchema.safeParse(activeValues);
     if (!parsed.success) {
-      setError(firstZodMessage(parsed.error));
       return;
     }
-    setError(null);
+    setServerError(null);
     startTransition(async () => {
       const result = await saveOnboardingStepAction(step, parsed.data);
-      if (result?.error) setError(result.error);
+      if (result?.error) setServerError(result.error);
     });
   }
 
   function skip() {
-    setError(null);
+    setServerError(null);
     startTransition(async () => {
       const result = await skipOnboardingStepAction(step);
-      if (result?.error) setError(result.error);
+      if (result?.error) setServerError(result.error);
     });
   }
 
   function complete() {
-    setError(null);
+    setServerError(null);
     startTransition(async () => {
       const result = await completeOnboardingAction();
-      if (result?.error) setError(result.error);
+      if (result?.error) setServerError(result.error);
     });
   }
 
-  return { isPending, error, setError, goBack, save, skip, complete };
+  return {
+    isPending,
+    error,
+    setError: setServerError,
+    attempted,
+    goBack,
+    save,
+    skip,
+    complete,
+  };
 }

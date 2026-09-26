@@ -23,7 +23,7 @@ export function GpaField({
         <Label htmlFor="gpa">{strings.onboarding.steps.gpa.gpaLabel}</Label>
         <Input
           id="gpa"
-          className="min-h-11"
+          className="h-11 min-h-11"
           type="number"
           inputMode="decimal"
           min={0}

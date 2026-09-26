@@ -40,7 +40,6 @@ export function CountriesField({
               <Checkbox
                 id={id}
                 checked={checked}
-                aria-label={getCountryLabel(country)}
                 onCheckedChange={(next) => toggle(country, next === true)}
               />
               <span>{getCountryLabel(country)}</span>

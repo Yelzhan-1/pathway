@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { strings } from "@/lib/strings";
 
+import "./zod-ru";
 import {
   A_LEVEL_GRADES,
   EXAM_CODES,
@@ -10,6 +11,7 @@ import {
   type ExamCode,
   type NumericExamCode,
 } from "./exam-ranges";
+import { getExamCodeLabel } from "./labels";
 import {
   ACTIVITY_TYPES,
   ENGLISH_LEVELS,
@@ -19,10 +21,11 @@ import {
   INTAKE_YEAR_MIN,
   TRANSFER_YEARS,
 } from "./types";
+import { isSafeHttpUrl } from "./url";
 
 const isoDate = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, strings.profile.errors.invalidDate)
+  .string({ error: strings.profile.errors.invalidDate })
+  .regex(/^\d{4}-\d{2}-\d{2}$/, { error: strings.profile.errors.invalidDate })
   .nullable()
   .optional();
 
@@ -36,11 +39,21 @@ function scoreMatchesIeltsStep(score: number): boolean {
 
 export const examEntrySchema = z
   .object({
-    code: z.enum(EXAM_CODES),
-    status: z.enum(["taken", "planned"]),
+    code: z.enum(EXAM_CODES, { error: strings.profile.errors.examScoreInvalid }),
+    status: z.enum(["taken", "planned"], {
+      error: strings.profile.errors.examScoreInvalid,
+    }),
     date: isoDate,
-    subject: z.string().trim().max(80).nullable().optional(),
-    score: z.union([z.number(), z.string()]),
+    subject: z
+      .string({ error: strings.profile.errors.invalidType })
+      .trim()
+      .max(80, { error: strings.profile.errors.tooBig })
+      .nullable()
+      .optional(),
+    score: z.union([
+      z.number({ error: strings.profile.errors.examScoreInvalid }),
+      z.string({ error: strings.profile.errors.examScoreInvalid }),
+    ]),
   })
   .superRefine((value, ctx) => {
     const date = value.date ?? null;
@@ -90,7 +103,7 @@ export const examEntrySchema = z
         code: "custom",
         path: ["score"],
         message: strings.profile.errors.examScoreRange(
-          value.code,
+          getExamCodeLabel(value.code),
           range.min,
           range.max,
         ),
@@ -118,7 +131,9 @@ export const examEntrySchema = z
     }
   });
 
-export const examsArraySchema = z.array(examEntrySchema).max(30);
+export const examsArraySchema = z
+  .array(examEntrySchema, { error: strings.profile.errors.invalidType })
+  .max(30, { error: strings.profile.errors.tooBig });
 
 export const pathSchema = z.enum(["graduate", "transfer"], {
   error: strings.profile.errors.pathRequired,
@@ -127,7 +142,10 @@ export const pathSchema = z.enum(["graduate", "transfer"], {
 export const statusStepSchema = z
   .object({
     path: pathSchema,
-    grade_or_year: z.string().trim().min(1, strings.profile.errors.gradeRequired),
+    grade_or_year: z
+      .string({ error: strings.profile.errors.gradeRequired })
+      .trim()
+      .min(1, { error: strings.profile.errors.gradeRequired }),
   })
   .superRefine((value, ctx) => {
     const allowed =
@@ -142,27 +160,36 @@ export const statusStepSchema = z
   });
 
 export const cityStepSchema = z.object({
-  city: z.string().trim().min(1, strings.profile.errors.cityRequired).max(80),
+  city: z
+    .string({ error: strings.profile.errors.cityRequired })
+    .trim()
+    .min(1, { error: strings.profile.errors.cityRequired })
+    .max(80, { error: strings.profile.errors.tooBig }),
 });
 
 export const majorStepSchema = z.object({
   intended_major: z
-    .string()
+    .string({ error: strings.profile.errors.majorRequired })
     .trim()
-    .min(1, strings.profile.errors.majorRequired)
-    .max(120),
+    .min(1, { error: strings.profile.errors.majorRequired })
+    .max(120, { error: strings.profile.errors.tooBig }),
 });
 
 export const countriesStepSchema = z.object({
   target_countries: z
-    .array(z.string().trim().min(1))
-    .min(1, strings.profile.errors.countriesRequired)
-    .max(20),
+    .array(z.string({ error: strings.profile.errors.invalidType }).trim().min(1, {
+      error: strings.profile.errors.countriesRequired,
+    }))
+    .min(1, { error: strings.profile.errors.countriesRequired })
+    .max(20, { error: strings.profile.errors.tooBig }),
 });
 
 export const budgetStepSchema = z.object({
-  budget_usd: z.number().int().min(0, strings.profile.errors.budgetInvalid),
-  needs_scholarship: z.boolean(),
+  budget_usd: z
+    .number({ error: strings.profile.errors.budgetInvalid })
+    .int({ error: strings.profile.errors.budgetInvalid })
+    .min(0, { error: strings.profile.errors.budgetInvalid }),
+  needs_scholarship: z.boolean({ error: strings.profile.errors.invalidType }),
 });
 
 export const englishLevelSchema = z.enum(ENGLISH_LEVELS, {
@@ -187,7 +214,9 @@ export const gpaScaleSchema = z.union([
 
 export const gpaStepSchema = z
   .object({
-    gpa: z.number().min(0, strings.profile.errors.gpaInvalid),
+    gpa: z
+      .number({ error: strings.profile.errors.gpaInvalid })
+      .min(0, { error: strings.profile.errors.gpaInvalid }),
     gpa_scale: gpaScaleSchema,
   })
   .superRefine((value, ctx) => {
@@ -209,73 +238,158 @@ export const gpaStepSchema = z
 
 export const intakeYearStepSchema = z.object({
   intake_year: z
-    .number()
-    .int()
-    .min(INTAKE_YEAR_MIN, strings.profile.errors.intakeYearRange)
-    .max(INTAKE_YEAR_MAX, strings.profile.errors.intakeYearRange),
+    .number({ error: strings.profile.errors.intakeYearRange })
+    .int({ error: strings.profile.errors.intakeYearRange })
+    .min(INTAKE_YEAR_MIN, { error: strings.profile.errors.intakeYearRange })
+    .max(INTAKE_YEAR_MAX, { error: strings.profile.errors.intakeYearRange }),
 });
 
 export const activitySchema = z.object({
-  id: z.string().min(1).max(80),
-  type: z.enum(ACTIVITY_TYPES),
-  title: z.string().trim().max(160),
-  role: z.string().trim().max(120),
-  organization: z.string().trim().max(160),
-  description: z.string().trim().max(2000),
+  id: z
+    .string({ error: strings.profile.errors.invalidType })
+    .min(1, { error: strings.profile.errors.tooSmall })
+    .max(80, { error: strings.profile.errors.tooBig }),
+  type: z.enum(ACTIVITY_TYPES, { error: strings.profile.errors.invalidType }),
+  title: z
+    .string({ error: strings.profile.errors.invalidType })
+    .trim()
+    .max(160, { error: strings.profile.errors.tooBig }),
+  role: z
+    .string({ error: strings.profile.errors.invalidType })
+    .trim()
+    .max(120, { error: strings.profile.errors.tooBig }),
+  organization: z
+    .string({ error: strings.profile.errors.invalidType })
+    .trim()
+    .max(160, { error: strings.profile.errors.tooBig }),
+  description: z
+    .string({ error: strings.profile.errors.invalidType })
+    .trim()
+    .max(2000, { error: strings.profile.errors.tooBig }),
   start_date: isoDate,
   end_date: isoDate,
-  achievement: z.string().trim().max(400),
+  achievement: z
+    .string({ error: strings.profile.errors.invalidType })
+    .trim()
+    .max(400, { error: strings.profile.errors.tooBig }),
 });
 
-export const activitiesSchema = z.array(activitySchema).max(50);
+export const activitiesSchema = z
+  .array(activitySchema, { error: strings.profile.errors.invalidType })
+  .max(50, { error: strings.profile.errors.tooBig });
 
 export const cvLinkSchema = z.object({
-  label: z.string().trim().max(80),
-  url: z.string().trim().max(300),
+  label: z
+    .string({ error: strings.profile.errors.invalidType })
+    .trim()
+    .max(80, { error: strings.profile.errors.tooBig }),
+  url: z
+    .string({ error: strings.cv.errors.invalidUrl })
+    .trim()
+    .max(200, { error: strings.cv.errors.urlTooLong })
+    .refine((value) => value === "" || isSafeHttpUrl(value), {
+      error: strings.cv.errors.invalidUrl,
+    }),
 });
 
 export const cvSchema = z.object({
-  summary: z.string().max(3000),
-  skills: z.array(z.string().trim().min(1).max(60)).max(40),
+  summary: z
+    .string({ error: strings.profile.errors.invalidType })
+    .max(3000, { error: strings.profile.errors.tooBig }),
+  skills: z
+    .array(
+      z
+        .string({ error: strings.profile.errors.invalidType })
+        .trim()
+        .min(1, { error: strings.profile.errors.tooSmall })
+        .max(60, { error: strings.profile.errors.tooBig }),
+    )
+    .max(40, { error: strings.profile.errors.tooBig }),
   languages: z
     .array(
       z.object({
-        name: z.string().trim().min(1).max(60),
-        level: z.string().trim().max(40),
+        name: z
+          .string({ error: strings.profile.errors.invalidType })
+          .trim()
+          .min(1, { error: strings.profile.errors.tooSmall })
+          .max(60, { error: strings.profile.errors.tooBig }),
+        level: z
+          .string({ error: strings.profile.errors.invalidType })
+          .trim()
+          .max(40, { error: strings.profile.errors.tooBig }),
       }),
     )
-    .max(20),
+    .max(20, { error: strings.profile.errors.tooBig }),
   contacts: z.object({
-    phone: z.string().trim().max(40),
-    city: z.string().trim().max(80),
-    links: z.array(cvLinkSchema).max(10),
+    phone: z
+      .string({ error: strings.profile.errors.invalidType })
+      .trim()
+      .max(40, { error: strings.profile.errors.tooBig }),
+    city: z
+      .string({ error: strings.profile.errors.invalidType })
+      .trim()
+      .max(80, { error: strings.profile.errors.tooBig }),
+    links: z.array(cvLinkSchema).max(10, { error: strings.profile.errors.tooBig }),
   }),
   education: z.object({
-    institution: z.string().trim().max(160),
+    institution: z
+      .string({ error: strings.profile.errors.invalidType })
+      .trim()
+      .max(160, { error: strings.profile.errors.tooBig }),
   }),
-  headingsLang: z.enum(["ru", "en"]),
+  headingsLang: z.enum(["ru", "en"], {
+    error: strings.profile.errors.invalidType,
+  }),
 });
 
 export const profileFormSchema = z
   .object({
-    full_name: z.string().trim().min(1, strings.auth.errors.fullNameRequired).max(120),
+    full_name: z
+      .string({ error: strings.auth.errors.fullNameRequired })
+      .trim()
+      .min(1, { error: strings.auth.errors.fullNameRequired })
+      .max(120, { error: strings.profile.errors.tooBig }),
     path: pathSchema,
-    grade_or_year: z.string().trim().min(1, strings.profile.errors.gradeRequired),
-    city: z.string().trim().min(1, strings.profile.errors.cityRequired).max(80),
-    intended_major: z.string().trim().max(120).nullable(),
-    target_countries: z.array(z.string().trim().min(1)).max(20),
-    budget_usd: z.number().int().min(0).nullable(),
-    needs_scholarship: z.boolean(),
-    english_level: englishLevelSchema.nullable(),
+    grade_or_year: z
+      .string({ error: strings.profile.errors.gradeRequired })
+      .trim()
+      .min(1, { error: strings.profile.errors.gradeRequired }),
+    city: z
+      .string({ error: strings.profile.errors.cityRequired })
+      .trim()
+      .min(1, { error: strings.profile.errors.cityRequired })
+      .max(80, { error: strings.profile.errors.tooBig }),
+    intended_major: z
+      .string({ error: strings.profile.errors.invalidType })
+      .trim()
+      .max(120, { error: strings.profile.errors.tooBig })
+      .nullable(),
+    target_countries: z
+      .array(
+        z
+          .string({ error: strings.profile.errors.invalidType })
+          .trim()
+          .min(1, { error: strings.profile.errors.tooSmall }),
+      )
+      .max(20, { error: strings.profile.errors.tooBig }),
+    budget_usd: z
+      .number({ error: strings.profile.errors.budgetInvalid })
+      .int({ error: strings.profile.errors.budgetInvalid })
+      .min(0, { error: strings.profile.errors.budgetInvalid })
+      .nullable(),
+    needs_scholarship: z.boolean({ error: strings.profile.errors.invalidType }),
+    english_level: englishLevelSchema,
     exams: examsArraySchema,
-    gpa: z.number().min(0).nullable(),
+    gpa: z
+      .number({ error: strings.profile.errors.gpaInvalid })
+      .min(0, { error: strings.profile.errors.gpaInvalid })
+      .nullable(),
     gpa_scale: gpaScaleSchema.nullable(),
     intake_year: z
-      .number()
-      .int()
-      .min(INTAKE_YEAR_MIN)
-      .max(INTAKE_YEAR_MAX)
-      .nullable(),
+      .number({ error: strings.profile.errors.intakeYearRange })
+      .int({ error: strings.profile.errors.intakeYearRange })
+      .min(INTAKE_YEAR_MIN, { error: strings.profile.errors.intakeYearRange })
+      .max(INTAKE_YEAR_MAX, { error: strings.profile.errors.intakeYearRange }),
   })
   .superRefine((value, ctx) => {
     const allowed =

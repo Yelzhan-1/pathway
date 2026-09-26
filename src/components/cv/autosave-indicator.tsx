@@ -18,12 +18,11 @@ export function AutosaveIndicator({
           ? error ?? strings.cv.saveError
           : "";
 
-  if (!label) return <span className="sr-only">{strings.cv.saved}</span>;
-
   return (
     <p
       aria-live="polite"
-      className={`text-sm ${status === "error" ? "text-destructive" : "text-muted-foreground"}`}
+      aria-atomic="true"
+      className={`min-h-5 text-sm ${status === "error" ? "text-destructive" : "text-muted-foreground"}`}
     >
       {label}
     </p>

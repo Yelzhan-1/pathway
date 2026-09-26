@@ -1,5 +1,7 @@
+import { formatExamEntry } from "@/lib/profile/labels";
 import { strings } from "@/lib/strings";
 import type { Activity, Cv, ExamEntry, ProfileData } from "@/lib/profile/types";
+import { isSafeHttpUrl } from "@/lib/profile/url";
 
 export function cvHeading(
   lang: Cv["headingsLang"],
@@ -15,6 +17,7 @@ export function CvDocument({
   cv,
   exams,
   activities,
+  showPlannedExams = false,
 }: {
   fullName: string;
   email: string;
@@ -22,6 +25,7 @@ export function CvDocument({
   cv: Cv;
   exams: ExamEntry[];
   activities: Activity[];
+  showPlannedExams?: boolean;
 }) {
   const lang = cv.headingsLang;
   const city = cv.contacts.city || profile.city || "";
@@ -29,6 +33,11 @@ export function CvDocument({
     profile.gpa != null && profile.gpa_scale != null
       ? `${profile.gpa} / ${profile.gpa_scale}`
       : "";
+  const visibleExams = showPlannedExams
+    ? exams
+    : exams.filter((exam) => exam.status === "taken");
+  const plannedLabel =
+    lang === "en" ? strings.cv.plannedSuffixEn : strings.cv.plannedSuffix;
 
   return (
     <article className="cv-document mx-auto max-w-[210mm] bg-background p-6 text-foreground shadow-sm ring-1 ring-foreground/10 print:max-w-none print:p-0 print:shadow-none print:ring-0">
@@ -41,12 +50,21 @@ export function CvDocument({
           <ul className="mt-2 flex flex-col gap-1 text-sm">
             {cv.contacts.links
               .filter((link) => link.url)
-              .map((link) => (
-                <li key={`${link.label}-${link.url}`}>
-                  {link.label ? `${link.label}: ` : ""}
-                  {link.url}
-                </li>
-              ))}
+              .map((link) => {
+                const url = link.url.trim();
+                return (
+                  <li key={`${link.label}-${url}`}>
+                    {link.label ? `${link.label}: ` : ""}
+                    {isSafeHttpUrl(url) ? (
+                      <a href={url} rel="noopener noreferrer" target="_blank">
+                        {url}
+                      </a>
+                    ) : (
+                      url
+                    )}
+                  </li>
+                );
+              })}
           </ul>
         ) : null}
       </header>
@@ -72,16 +90,18 @@ export function CvDocument({
         </section>
       ) : null}
 
-      {exams.length > 0 ? (
+      {visibleExams.length > 0 ? (
         <section className="mb-5">
           <h2 className="mb-2 text-sm font-semibold tracking-wide uppercase">
             {cvHeading(lang, "exams")}
           </h2>
           <ul className="flex flex-col gap-1 text-sm">
-            {exams.map((exam) => (
+            {visibleExams.map((exam) => (
               <li key={`${exam.code}-${exam.subject ?? ""}-${exam.date ?? ""}`}>
-                {strings.profile.exam.names[exam.code]}
-                {exam.subject ? ` (${exam.subject})` : ""}: {exam.score}
+                {formatExamEntry(
+                  exam,
+                  exam.status === "planned" ? plannedLabel : undefined,
+                )}
                 {exam.date ? ` · ${exam.date}` : ""}
               </li>
             ))}
@@ -151,7 +171,7 @@ export function CvDocument({
 
       {!cv.summary &&
       !cv.education.institution &&
-      exams.length === 0 &&
+      visibleExams.length === 0 &&
       activities.every((item) => !item.title.trim()) &&
       cv.skills.length === 0 &&
       cv.languages.every((item) => !item.name.trim()) ? (

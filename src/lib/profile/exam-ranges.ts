@@ -57,3 +57,17 @@ export const EXAMS_WITH_OPTIONAL_SUBJECT: ReadonlySet<ExamCode> = new Set([
   "AP",
   "A_LEVEL",
 ]);
+
+export const LANGUAGE_EXAM_CODES = ["IELTS", "TOEFL_IBT", "DET"] as const;
+export type LanguageExamCode = (typeof LANGUAGE_EXAM_CODES)[number];
+
+export const ACADEMIC_EXAM_CODES = [
+  "UNT",
+  "SAT",
+  "ACT",
+  "AP",
+  "IB_DP",
+  "A_LEVEL",
+  "NUET",
+] as const;
+export type AcademicExamCode = (typeof ACADEMIC_EXAM_CODES)[number];

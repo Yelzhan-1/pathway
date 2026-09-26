@@ -10,7 +10,6 @@ import type { GpaScale, ProfileData } from "@/lib/profile/types";
 import { strings } from "@/lib/strings";
 
 export function StepGpa({ profile, step }: { profile: ProfileData; step: number }) {
-  const { isPending, error, goBack, save, skip } = useOnboardingStep(step);
   const [gpa, setGpa] = useState<number | null>(profile.gpa);
   const [scale, setScale] = useState<GpaScale | null>(
     profile.gpa_scale === 4 ||
@@ -19,6 +18,11 @@ export function StepGpa({ profile, step }: { profile: ProfileData; step: number 
       profile.gpa_scale === 100
       ? profile.gpa_scale
       : 5,
+  );
+  const { isPending, error, goBack, save, skip } = useOnboardingStep(
+    step,
+    gpaStepSchema,
+    { gpa, gpa_scale: scale },
   );
 
   return (
@@ -31,7 +35,7 @@ export function StepGpa({ profile, step }: { profile: ProfileData; step: number 
       skippable
       onBack={goBack}
       onSkip={skip}
-      onSubmit={() => save(gpaStepSchema, { gpa, gpa_scale: scale })}
+      onSubmit={() => save()}
     >
       <GpaField
         gpa={gpa}

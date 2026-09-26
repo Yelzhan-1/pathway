@@ -1,22 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { StepForm } from "@/components/onboarding/step-form";
 import { useOnboardingStep } from "@/components/onboarding/use-onboarding-step";
-import { ExamsField } from "@/components/profile/fields/exams-field";
+import { ExamsField, type ExamsFieldHandle } from "@/components/profile/fields/exams-field";
+import { ACADEMIC_EXAM_CODES } from "@/lib/profile/exam-ranges";
 import { examsStepSchema } from "@/lib/profile/schemas";
 import type { ExamEntry, ProfileData } from "@/lib/profile/types";
 import { strings } from "@/lib/strings";
 
-const ACADEMIC_CODES = ["UNT", "SAT", "ACT", "AP", "IB_DP", "A_LEVEL", "NUET"] as const;
-
 export function StepExams({ profile, step }: { profile: ProfileData; step: number }) {
-  const { isPending, error, goBack, save, skip } = useOnboardingStep(step);
+  const examsRef = useRef<ExamsFieldHandle>(null);
   const [exams, setExams] = useState<ExamEntry[]>(
     profile.exams.filter((exam) =>
-      ACADEMIC_CODES.includes(exam.code as (typeof ACADEMIC_CODES)[number]),
+      (ACADEMIC_EXAM_CODES as readonly string[]).includes(exam.code),
     ),
+  );
+  const { isPending, error, setError, goBack, save, skip } = useOnboardingStep(
+    step,
+    examsStepSchema,
+    { exams },
   );
 
   return (
@@ -29,10 +33,23 @@ export function StepExams({ profile, step }: { profile: ProfileData; step: numbe
       skippable
       onBack={goBack}
       onSkip={skip}
-      onSubmit={() => save(examsStepSchema, { exams })}
+      onSubmit={() => {
+        const pending = examsRef.current?.commitPending() ?? { ok: true as const, exams };
+        if (!pending.ok) {
+          setError(pending.error);
+          return;
+        }
+        setExams(pending.exams);
+        save(examsStepSchema, { exams: pending.exams });
+      }}
     >
       <p className="text-sm text-muted-foreground">{strings.onboarding.steps.exams.hint}</p>
-      <ExamsField value={exams} onChange={setExams} allowedCodes={ACADEMIC_CODES} />
+      <ExamsField
+        ref={examsRef}
+        value={exams}
+        onChange={setExams}
+        allowedCodes={ACADEMIC_EXAM_CODES}
+      />
     </StepForm>
   );
 }

@@ -10,8 +10,12 @@ import type { ProfileData } from "@/lib/profile/types";
 import { strings } from "@/lib/strings";
 
 export function StepMajor({ profile, step }: { profile: ProfileData; step: number }) {
-  const { isPending, error, goBack, save, skip } = useOnboardingStep(step);
   const [major, setMajor] = useState(profile.intended_major ?? "");
+  const { isPending, error, attempted, goBack, save, skip } = useOnboardingStep(
+    step,
+    majorStepSchema,
+    { intended_major: major },
+  );
 
   return (
     <StepForm
@@ -23,9 +27,9 @@ export function StepMajor({ profile, step }: { profile: ProfileData; step: numbe
       skippable
       onBack={goBack}
       onSkip={skip}
-      onSubmit={() => save(majorStepSchema, { intended_major: major })}
+      onSubmit={() => save()}
     >
-      <MajorField value={major} onChange={setMajor} />
+      <MajorField value={major} onChange={setMajor} submitted={attempted} />
     </StepForm>
   );
 }

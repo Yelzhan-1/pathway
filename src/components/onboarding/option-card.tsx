@@ -33,7 +33,14 @@ export function OptionCard({
     >
       <span className="font-medium">{title}</span>
       {description ? (
-        <span className="text-sm text-muted-foreground">{description}</span>
+        <span
+          className={cn(
+            "text-sm",
+            selected ? "text-accent-foreground" : "text-muted-foreground",
+          )}
+        >
+          {description}
+        </span>
       ) : null}
     </button>
   );

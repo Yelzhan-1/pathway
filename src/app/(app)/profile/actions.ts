@@ -33,7 +33,7 @@ export async function updateProfileAction(
       english_level: parsed.data.english_level,
       exams: parsed.data.exams as Json,
       gpa: parsed.data.gpa,
-      gpa_scale: parsed.data.gpa_scale,
+      gpa_scale: parsed.data.gpa == null ? null : parsed.data.gpa_scale,
       intake_year: parsed.data.intake_year,
     })
     .eq("id", user.id);

@@ -12,9 +12,12 @@ import { GRADUATE_GRADES, TRANSFER_YEARS } from "@/lib/profile/types";
 import { strings } from "@/lib/strings";
 
 export function StepStatus({ profile, step }: { profile: ProfileData; step: number }) {
-  const { isPending, error, save } = useOnboardingStep(step);
   const [path, setPath] = useState<ApplicantPath | null>(profile.path);
   const [grade, setGrade] = useState(profile.grade_or_year);
+  const { isPending, error, save } = useOnboardingStep(step, statusStepSchema, {
+    path,
+    grade_or_year: grade,
+  });
 
   function handlePathChange(next: ApplicantPath) {
     setPath(next);
@@ -31,7 +34,7 @@ export function StepStatus({ profile, step }: { profile: ProfileData; step: numb
       error={error}
       isPending={isPending}
       showBack={false}
-      onSubmit={() => save(statusStepSchema, { path, grade_or_year: grade })}
+      onSubmit={() => save()}
     >
       <StatusField
         path={path}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { updateProfileAction } from "@/app/(app)/profile/actions";
@@ -8,7 +8,7 @@ import { BudgetField } from "@/components/profile/fields/budget-field";
 import { CityField } from "@/components/profile/fields/city-field";
 import { CountriesField } from "@/components/profile/fields/countries-field";
 import { EnglishLevelField } from "@/components/profile/fields/english-field";
-import { ExamsField } from "@/components/profile/fields/exams-field";
+import { ExamsField, type ExamsFieldHandle } from "@/components/profile/fields/exams-field";
 import { GpaField } from "@/components/profile/fields/gpa-field";
 import { IntakeYearField } from "@/components/profile/fields/intake-year-field";
 import { MajorField } from "@/components/profile/fields/major-field";
@@ -35,8 +35,10 @@ export function ProfileForm({
   profile: ProfileData;
   countries: string[];
 }) {
+  const examsRef = useRef<ExamsFieldHandle>(null);
   const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [attempted, setAttempted] = useState(false);
 
   const [fullName, setFullName] = useState(profile.full_name ?? "");
   const [path, setPath] = useState<ApplicantPath | null>(profile.path);
@@ -66,19 +68,30 @@ export function ProfileForm({
     path,
     grade_or_year: grade,
     city,
-    intake_year: intakeYear,
-    intended_major: major,
+    intended_major: major.trim() ? major.trim() : null,
     target_countries: targetCountries,
     budget_usd: budgetUsd,
     needs_scholarship: needsScholarship,
     english_level: englishLevel,
     exams,
     gpa,
-    gpa_scale: gpaScale,
+    gpa_scale: gpa == null ? null : gpaScale,
+    intake_year: intakeYear,
   };
 
-  const [baseline, setBaseline] = useState(() => snapshot(current));
-  const dirty = snapshot(current) !== baseline;
+  const serialized = snapshot(current);
+  const [baseline, setBaseline] = useState(() => serialized);
+  const dirty = serialized !== baseline;
+
+  const clientError = attempted
+    ? (() => {
+        const parsed = profileFormSchema.safeParse(
+          JSON.parse(serialized) as unknown,
+        );
+        return parsed.success ? null : firstZodMessage(parsed.error);
+      })()
+    : null;
+  const error = clientError ?? serverError;
 
   useEffect(() => {
     if (!dirty) return;
@@ -99,35 +112,32 @@ export function ProfileForm({
   }
 
   function onSubmit() {
-    const parsed = profileFormSchema.safeParse({
-      full_name: fullName,
-      path,
-      grade_or_year: grade,
-      city,
-      intended_major: major.trim() ? major.trim() : null,
-      target_countries: targetCountries,
-      budget_usd: budgetUsd,
-      needs_scholarship: needsScholarship,
-      english_level: englishLevel,
-      exams,
-      gpa,
-      gpa_scale: gpa == null ? gpaScale : gpaScale,
-      intake_year: intakeYear,
-    });
-    if (!parsed.success) {
-      setError(firstZodMessage(parsed.error));
+    setAttempted(true);
+    const pending = examsRef.current?.commitPending() ?? { ok: true as const, exams };
+    if (!pending.ok) {
+      setServerError(pending.error);
       return;
     }
-    setError(null);
+    setExams(pending.exams);
+    const payload = {
+      ...current,
+      exams: pending.exams,
+      gpa_scale: gpa == null ? null : gpaScale,
+    };
+    const parsed = profileFormSchema.safeParse(payload);
+    if (!parsed.success) {
+      return;
+    }
+    setServerError(null);
     startTransition(async () => {
       const result = await updateProfileAction(parsed.data);
       if (result.error) {
-        setError(result.error);
+        setServerError(result.error);
         toast.error(result.error);
         return;
       }
       toast.success(strings.profile.saved);
-      setBaseline(snapshot(current));
+      setBaseline(snapshot(payload));
     });
   }
 
@@ -153,7 +163,7 @@ export function ProfileForm({
             <FieldLabel htmlFor="fullName">{strings.profile.fields.fullName}</FieldLabel>
             <Input
               id="fullName"
-              className="min-h-11"
+              className="h-11 min-h-11"
               value={fullName}
               onChange={(event) => setFullName(event.target.value)}
               autoComplete="name"
@@ -165,7 +175,7 @@ export function ProfileForm({
             onPathChange={handlePathChange}
             onGradeChange={setGrade}
           />
-          <CityField value={city} onChange={setCity} />
+          <CityField value={city} onChange={setCity} submitted={attempted} />
           <IntakeYearField value={intakeYear} onChange={setIntakeYear} />
         </CardContent>
       </Card>
@@ -175,7 +185,7 @@ export function ProfileForm({
           <CardTitle>{strings.profile.sections.goals}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-6">
-          <MajorField value={major} onChange={setMajor} />
+          <MajorField value={major} onChange={setMajor} submitted={attempted} />
           <CountriesField
             countries={countries}
             value={targetCountries}
@@ -204,7 +214,7 @@ export function ProfileForm({
         </CardHeader>
         <CardContent className="flex flex-col gap-6">
           <EnglishLevelField value={englishLevel} onChange={setEnglishLevel} />
-          <ExamsField value={exams} onChange={setExams} />
+          <ExamsField ref={examsRef} value={exams} onChange={setExams} />
         </CardContent>
       </Card>
 

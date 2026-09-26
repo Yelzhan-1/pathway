@@ -1,6 +1,9 @@
 "use client";
 
+import { useState } from "react";
+
 import { OptionCard } from "@/components/onboarding/option-card";
+import { FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { KZ_CITIES, OTHER_CITY_VALUE } from "@/lib/profile/types";
@@ -13,12 +16,16 @@ function isPresetCity(city: string): boolean {
 export function CityField({
   value,
   onChange,
+  submitted = false,
 }: {
   value: string;
   onChange: (city: string) => void;
+  submitted?: boolean;
 }) {
-  const usingOther = value.length > 0 && !isPresetCity(value);
-  const selected = usingOther ? OTHER_CITY_VALUE : value;
+  const [isOther, setIsOther] = useState(
+    () => value.trim().length > 0 && !isPresetCity(value),
+  );
+  const selected = isOther ? OTHER_CITY_VALUE : value;
 
   return (
     <div className="flex flex-col gap-3">
@@ -31,27 +38,37 @@ export function CityField({
           <OptionCard
             key={city}
             selected={selected === city}
-            onSelect={() => onChange(city)}
+            onSelect={() => {
+              setIsOther(false);
+              onChange(city);
+            }}
             title={city}
           />
         ))}
         <OptionCard
-          selected={selected === OTHER_CITY_VALUE}
-          onSelect={() => onChange(usingOther ? value : "")}
+          selected={isOther}
+          onSelect={() => {
+            setIsOther(true);
+            if (isPresetCity(value)) onChange("");
+          }}
           title={strings.common.other}
         />
       </div>
-      {selected === OTHER_CITY_VALUE ? (
+      {isOther ? (
         <div className="flex flex-col gap-2">
           <Label htmlFor="city-other">{strings.onboarding.steps.city.otherLabel}</Label>
           <Input
             id="city-other"
-            className="min-h-11"
-            value={usingOther ? value : ""}
+            className="h-11 min-h-11"
+            value={isPresetCity(value) ? "" : value}
             onChange={(event) => onChange(event.target.value)}
             placeholder={strings.onboarding.steps.city.otherPlaceholder}
             autoComplete="address-level2"
+            aria-invalid={submitted && value.trim().length === 0}
           />
+          {submitted && isOther && value.trim().length === 0 ? (
+            <FieldError>{strings.profile.errors.cityOtherRequired}</FieldError>
+          ) : null}
         </div>
       ) : null}
     </div>

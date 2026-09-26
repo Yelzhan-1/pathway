@@ -11,9 +11,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { moveActivity, newActivityId } from "@/lib/profile/activities";
 import { useAutosave } from "@/lib/hooks/use-autosave";
+import { formatExamEntry } from "@/lib/profile/labels";
 import { ACTIVITY_TYPES, emptyCv, type Activity, type Cv, type ProfileData } from "@/lib/profile/types";
 import { strings } from "@/lib/strings";
 
@@ -60,6 +62,7 @@ export function CvBuilder({
   });
   const [activities, setActivities] = useState<Activity[]>(profile.activities);
   const [mobileTab, setMobileTab] = useState("editor");
+  const [showPlannedExams, setShowPlannedExams] = useState(false);
 
   const cvSave = useAutosave(cv, async (next) => saveCvAction(sanitizeCv(next)));
   const activitiesSave = useAutosave(activities, async (next) =>
@@ -84,6 +87,7 @@ export function CvBuilder({
       cv={sanitizeCv(cv)}
       exams={profile.exams}
       activities={activities}
+      showPlannedExams={showPlannedExams}
     />
   );
 
@@ -241,15 +245,27 @@ export function CvBuilder({
         <CardHeader>
           <CardTitle>{strings.cv.sections.exams}</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-col gap-3">
+          <div className="flex min-h-11 items-center justify-between gap-3">
+            <Label htmlFor="cv-show-planned" className="text-sm leading-snug">
+              {strings.cv.showPlannedExams}
+            </Label>
+            <Switch
+              id="cv-show-planned"
+              checked={showPlannedExams}
+              onCheckedChange={(checked) => setShowPlannedExams(Boolean(checked))}
+            />
+          </div>
           {profile.exams.length === 0 ? (
             <p className="text-sm text-muted-foreground">{strings.onboarding.steps.summary.empty}</p>
           ) : (
             <ul className="flex flex-col gap-2 text-sm">
               {profile.exams.map((exam) => (
                 <li key={`${exam.code}-${exam.subject ?? ""}`}>
-                  {strings.profile.exam.names[exam.code]}
-                  {exam.subject ? ` (${exam.subject})` : ""}: {exam.score}
+                  {formatExamEntry(
+                    exam,
+                    exam.status === "planned" ? strings.cv.plannedSuffix : undefined,
+                  )}
                 </li>
               ))}
             </ul>

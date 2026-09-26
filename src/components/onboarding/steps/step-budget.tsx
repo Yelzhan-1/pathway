@@ -10,9 +10,13 @@ import type { ProfileData } from "@/lib/profile/types";
 import { strings } from "@/lib/strings";
 
 export function StepBudget({ profile, step }: { profile: ProfileData; step: number }) {
-  const { isPending, error, goBack, save, skip } = useOnboardingStep(step);
   const [budget, setBudget] = useState<number | null>(profile.budget_usd);
   const [needsScholarship, setNeedsScholarship] = useState(profile.needs_scholarship);
+  const { isPending, error, goBack, save, skip } = useOnboardingStep(
+    step,
+    budgetStepSchema,
+    { budget_usd: budget, needs_scholarship: needsScholarship },
+  );
 
   return (
     <StepForm
@@ -24,12 +28,7 @@ export function StepBudget({ profile, step }: { profile: ProfileData; step: numb
       skippable
       onBack={goBack}
       onSkip={skip}
-      onSubmit={() =>
-        save(budgetStepSchema, {
-          budget_usd: budget,
-          needs_scholarship: needsScholarship,
-        })
-      }
+      onSubmit={() => save()}
     >
       <BudgetField
         budgetUsd={budget}

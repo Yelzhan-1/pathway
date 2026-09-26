@@ -18,8 +18,12 @@ export function StepCountries({
   step: number;
   countries: string[];
 }) {
-  const { isPending, error, goBack, save, skip } = useOnboardingStep(step);
   const [selected, setSelected] = useState<string[]>(profile.target_countries);
+  const { isPending, error, goBack, save, skip } = useOnboardingStep(
+    step,
+    countriesStepSchema,
+    { target_countries: selected },
+  );
 
   return (
     <StepForm
@@ -31,7 +35,7 @@ export function StepCountries({
       skippable
       onBack={goBack}
       onSkip={skip}
-      onSubmit={() => save(countriesStepSchema, { target_countries: selected })}
+      onSubmit={() => save()}
     >
       <CountriesField countries={countries} value={selected} onChange={setSelected} />
     </StepForm>

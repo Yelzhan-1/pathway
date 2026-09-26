@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { forwardRef, useImperativeHandle, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { A_LEVEL_GRADES, EXAM_CODES, EXAMS_WITH_OPTIONAL_SUBJECT, type ExamCode } from "@/lib/profile/exam-ranges";
-import { examEntrySchema } from "@/lib/profile/schemas";
+import { formatExamEntry, getExamCodeLabel } from "@/lib/profile/labels";
+import { commitPendingExam } from "@/lib/profile/pending-exam";
 import type { ExamEntry, ExamStatus } from "@/lib/profile/types";
-import { firstZodMessage } from "@/lib/profile/zod-error";
 import { strings } from "@/lib/strings";
 
 const STATUS_OPTIONS: { value: ExamStatus; label: string }[] = [
@@ -16,24 +16,23 @@ const STATUS_OPTIONS: { value: ExamStatus; label: string }[] = [
   { value: "planned", label: strings.profile.exam.planned },
 ];
 
-function examLabel(code: ExamCode): string {
-  return strings.profile.exam.names[code];
-}
+export type ExamsFieldHandle = {
+  commitPending: () =>
+    | { ok: true; exams: ExamEntry[] }
+    | { ok: false; error: string };
+};
 
-function formatExam(entry: ExamEntry): string {
-  const subject = entry.subject ? ` (${entry.subject})` : "";
-  return `${examLabel(entry.code)}${subject}: ${entry.score}`;
-}
-
-export function ExamsField({
-  value,
-  onChange,
-  allowedCodes = EXAM_CODES,
-}: {
-  value: ExamEntry[];
-  onChange: (exams: ExamEntry[]) => void;
-  allowedCodes?: readonly ExamCode[];
-}) {
+export const ExamsField = forwardRef<
+  ExamsFieldHandle,
+  {
+    value: ExamEntry[];
+    onChange: (exams: ExamEntry[]) => void;
+    allowedCodes?: readonly ExamCode[];
+  }
+>(function ExamsField(
+  { value, onChange, allowedCodes = EXAM_CODES },
+  ref,
+) {
   const [code, setCode] = useState<ExamCode>(allowedCodes[0] ?? "UNT");
   const [score, setScore] = useState("");
   const [status, setStatus] = useState<ExamStatus>("planned");
@@ -44,25 +43,48 @@ export function ExamsField({
   const needsSubject = EXAMS_WITH_OPTIONAL_SUBJECT.has(code);
   const isALevel = code === "A_LEVEL";
 
-  function addExam() {
-    const parsedScore = isALevel ? score : Number(score);
-    const parsed = examEntrySchema.safeParse({
-      code,
-      score: parsedScore,
-      status,
-      date: date || null,
-      subject: needsSubject ? subject || null : null,
-    });
-    if (!parsed.success) {
-      setFormError(firstZodMessage(parsed.error));
-      return;
+  function applyCommit(
+    result: { ok: true; exams: ExamEntry[] } | { ok: false; error: string },
+  ) {
+    if (!result.ok) {
+      setFormError(result.error);
+      return result;
     }
     setFormError(null);
-    onChange([...value, parsed.data as ExamEntry]);
-    setScore("");
-    setSubject("");
-    setDate("");
-    setStatus("planned");
+    if (result.exams !== value) {
+      onChange(result.exams);
+      setScore("");
+      setSubject("");
+      setDate("");
+      setStatus("planned");
+    }
+    return result;
+  }
+
+  useImperativeHandle(ref, () => ({
+    commitPending() {
+      return applyCommit(
+        commitPendingExam(value, {
+          code,
+          scoreRaw: score,
+          status,
+          date,
+          subject,
+        }),
+      );
+    },
+  }));
+
+  function addExam() {
+    applyCommit(
+      commitPendingExam(value, {
+        code,
+        scoreRaw: score,
+        status,
+        date,
+        subject,
+      }),
+    );
   }
 
   function removeAt(index: number) {
@@ -83,7 +105,10 @@ export function ExamsField({
                 className="flex min-h-11 items-center justify-between gap-3 rounded-xl border px-3 py-2"
               >
                 <span className="text-sm">
-                  {formatExam(entry)} · {entry.status === "taken" ? strings.profile.exam.taken : strings.profile.exam.planned}
+                  {formatExamEntry(entry)} ·{" "}
+                  {entry.status === "taken"
+                    ? strings.profile.exam.taken
+                    : strings.profile.exam.planned}
                   {entry.date ? ` · ${entry.date}` : ""}
                 </span>
                 <Button
@@ -105,7 +130,7 @@ export function ExamsField({
           <Label htmlFor="exam-code">{strings.profile.exam.code}</Label>
           <select
             id="exam-code"
-            className="min-h-11 w-full rounded-lg border border-input bg-transparent px-2.5 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="h-11 min-h-11 w-full rounded-lg border border-input bg-transparent px-2.5 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             value={code}
             onChange={(event) => {
               setCode(event.target.value as ExamCode);
@@ -114,7 +139,7 @@ export function ExamsField({
           >
             {allowedCodes.map((item) => (
               <option key={item} value={item}>
-                {examLabel(item)}
+                {getExamCodeLabel(item)}
               </option>
             ))}
           </select>
@@ -125,7 +150,7 @@ export function ExamsField({
             <Label htmlFor="exam-grade">{strings.profile.exam.grade}</Label>
             <select
               id="exam-grade"
-              className="min-h-11 w-full rounded-lg border border-input bg-transparent px-2.5 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="h-11 min-h-11 w-full rounded-lg border border-input bg-transparent px-2.5 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               value={score}
               onChange={(event) => setScore(event.target.value)}
             >
@@ -142,7 +167,7 @@ export function ExamsField({
             <Label htmlFor="exam-score">{strings.profile.exam.score}</Label>
             <Input
               id="exam-score"
-              className="min-h-11"
+              className="h-11 min-h-11"
               type="number"
               inputMode="decimal"
               value={score}
@@ -156,7 +181,7 @@ export function ExamsField({
             <Label htmlFor="exam-subject">{strings.profile.exam.subject}</Label>
             <Input
               id="exam-subject"
-              className="min-h-11"
+              className="h-11 min-h-11"
               value={subject}
               onChange={(event) => setSubject(event.target.value)}
             />
@@ -188,7 +213,7 @@ export function ExamsField({
           <Label htmlFor="exam-date">{strings.profile.exam.date}</Label>
           <Input
             id="exam-date"
-            className="min-h-11"
+            className="h-11 min-h-11"
             type="date"
             value={date}
             onChange={(event) => setDate(event.target.value)}
@@ -207,4 +232,4 @@ export function ExamsField({
       </div>
     </div>
   );
-}
+});

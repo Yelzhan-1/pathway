@@ -16,8 +16,12 @@ export function StepIntakeYear({
   profile: ProfileData;
   step: number;
 }) {
-  const { isPending, error, goBack, save } = useOnboardingStep(step);
   const [year, setYear] = useState<number | null>(profile.intake_year);
+  const { isPending, error, goBack, save } = useOnboardingStep(
+    step,
+    intakeYearStepSchema,
+    { intake_year: year },
+  );
 
   return (
     <StepForm
@@ -27,7 +31,7 @@ export function StepIntakeYear({
       isPending={isPending}
       showBack
       onBack={goBack}
-      onSubmit={() => save(intakeYearStepSchema, { intake_year: year })}
+      onSubmit={() => save()}
     >
       <IntakeYearField value={year} onChange={setYear} />
     </StepForm>

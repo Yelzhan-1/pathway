@@ -10,8 +10,10 @@ import type { ProfileData } from "@/lib/profile/types";
 import { strings } from "@/lib/strings";
 
 export function StepCity({ profile, step }: { profile: ProfileData; step: number }) {
-  const { isPending, error, goBack, save } = useOnboardingStep(step);
   const [city, setCity] = useState(profile.city ?? "");
+  const { isPending, error, attempted, goBack, save } = useOnboardingStep(step, cityStepSchema, {
+    city,
+  });
 
   return (
     <StepForm
@@ -21,9 +23,9 @@ export function StepCity({ profile, step }: { profile: ProfileData; step: number
       isPending={isPending}
       showBack
       onBack={goBack}
-      onSubmit={() => save(cityStepSchema, { city })}
+      onSubmit={() => save()}
     >
-      <CityField value={city} onChange={setCity} />
+      <CityField value={city} onChange={setCity} submitted={attempted} />
     </StepForm>
   );
 }

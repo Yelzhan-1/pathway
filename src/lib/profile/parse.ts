@@ -205,6 +205,18 @@ export function mergeExams(
   return [...map.values()];
 }
 
+/** Replace one exam group (language or academic) and keep the other untouched. */
+export function replaceExamGroup(
+  existing: ExamEntry[],
+  incoming: ExamEntry[],
+  group: readonly string[],
+): ExamEntry[] {
+  const codes = new Set(group);
+  const kept = existing.filter((entry) => !codes.has(entry.code));
+  const next = incoming.filter((entry) => codes.has(entry.code));
+  return [...kept, ...next];
+}
+
 export function isKnownExamCode(value: string): value is ExamCode {
   return (EXAM_CODES as readonly string[]).includes(value);
 }

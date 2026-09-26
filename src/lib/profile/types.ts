@@ -146,8 +146,20 @@ export const MAJOR_OPTIONS = [
 
 export const OTHER_MAJOR_VALUE = "Другое";
 
-export const INTAKE_YEAR_MIN = 2025;
+export const INTAKE_YEAR_MIN = 2026;
 export const INTAKE_YEAR_MAX = 2035;
+
+/** Current calendar year … +9, never before 2026 and never after 2035. */
+export function intakeYearOptions(now = new Date()): number[] {
+  const start = Math.max(now.getFullYear(), INTAKE_YEAR_MIN);
+  const years: number[] = [];
+  for (let offset = 0; offset <= 9; offset++) {
+    const year = start + offset;
+    if (year > INTAKE_YEAR_MAX) break;
+    years.push(year);
+  }
+  return years;
+}
 
 export const BUDGET_OPTIONS = [
   { value: 0, labelKey: "zero" as const },
