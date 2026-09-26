@@ -1,7 +1,7 @@
 /**
- * Hand-written Supabase database types for the existing Pathway schema.
- * The database itself (tables, RLS, triggers) is managed outside this app —
- * do not add migrations here. Keep this file in sync with the real schema.
+ * Hand-written Supabase database types for the Pathway schema.
+ * Additive columns and tables for the logic layer are declared in
+ * supabase/migrations/20260926140000_logic.sql. Keep this file in sync.
  */
 
 export type Json =
@@ -58,6 +58,9 @@ export interface Database {
           english_level: string | null;
           created_at: string;
           updated_at: string;
+          weekly_goal: number | null;
+          free_only: boolean;
+          is_mentor: boolean;
         };
         Insert: {
           id: string;
@@ -80,6 +83,9 @@ export interface Database {
           english_level?: string | null;
           created_at?: string;
           updated_at?: string;
+          weekly_goal?: number | null;
+          free_only?: boolean;
+          is_mentor?: boolean;
         };
         Update: {
           id?: string;
@@ -102,6 +108,9 @@ export interface Database {
           english_level?: string | null;
           created_at?: string;
           updated_at?: string;
+          weekly_goal?: number | null;
+          free_only?: boolean;
+          is_mentor?: boolean;
         };
         Relationships: [];
       };
@@ -357,6 +366,7 @@ export interface Database {
           related_id: string | null;
           created_at: string;
           updated_at: string;
+          roadmap_key: string | null;
         };
         Insert: {
           id?: string;
@@ -370,6 +380,7 @@ export interface Database {
           related_id?: string | null;
           created_at?: string;
           updated_at?: string;
+          roadmap_key?: string | null;
         };
         Update: {
           id?: string;
@@ -383,6 +394,7 @@ export interface Database {
           related_id?: string | null;
           created_at?: string;
           updated_at?: string;
+          roadmap_key?: string | null;
         };
         Relationships: [];
       };
@@ -413,9 +425,101 @@ export interface Database {
         };
         Relationships: [];
       };
+      activity_days: {
+        Row: {
+          user_id: string;
+          day: string;
+        };
+        Insert: {
+          user_id: string;
+          day: string;
+        };
+        Update: {
+          user_id?: string;
+          day?: string;
+        };
+        Relationships: [];
+      };
+      mentor_questions: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          body: string;
+          tags: string[];
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          body: string;
+          tags?: string[];
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          body?: string;
+          tags?: string[];
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      mentor_answers: {
+        Row: {
+          id: string;
+          question_id: string;
+          user_id: string;
+          body: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          question_id: string;
+          user_id: string;
+          body: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          question_id?: string;
+          user_id?: string;
+          body?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "mentor_answers_question_id_fkey";
+            columns: ["question_id"];
+            isOneToOne: false;
+            referencedRelation: "mentor_questions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      impact_stats: {
+        Args: Record<string, never>;
+        Returns: {
+          users: number;
+          onboarding_completed: number;
+          shortlisted_items: number;
+          roadmap_tasks_done: number;
+          cvs_filled: number;
+          questions_answered: number;
+          readiness_inputs: {
+            profiles_with_gpa: number;
+            profiles_with_exams: number;
+            profiles_with_shortlist: number;
+            profiles_with_cv: number;
+          };
+        };
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };
