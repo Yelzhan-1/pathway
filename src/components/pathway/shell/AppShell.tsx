@@ -2,9 +2,10 @@
 import Link from 'next/link';
 import { useEffect, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { Bell, ChevronDown, MoreHorizontal, Search, X } from 'lucide-react';
+import { Bell, ChevronDown, HelpCircle, MoreHorizontal, Search, X } from 'lucide-react';
 import type { ShellData } from '@/types/pathway';
 import { strings } from '@/lib/strings';
+import { reopenTour } from '@/lib/tour/storage';
 import { cn } from '@/lib/utils';
 import { Flame } from '../primitives/Flame';
 import { Signpost } from '../ui/illustrations';
@@ -13,6 +14,7 @@ import { AccountMenu, AccountMenuItems } from './AccountMenu';
 import { Avatar } from './Avatar';
 import { FreeOnlyToggle } from './FreeOnlyToggle';
 import { ThemeToggle } from './ThemeToggle';
+import { WelcomeTour } from './WelcomeTour';
 import { MOBILE_TABS, NAV_ICON } from './nav';
 
 export { Avatar };
@@ -33,7 +35,21 @@ export function AppShell({ data, active, children, isExample, initialMoreOpen = 
       </div>
       <MobileNav data={data} active={active} onMore={() => setMore(true)} moreOpen={more} />
       <MoreSheet data={data} active={active} open={more} onClose={() => setMore(false)} userId={userId} />
+      <WelcomeTour />
     </div>
+  );
+}
+
+function HelpButton() {
+  return (
+    <button
+      type="button"
+      aria-label={strings.tour.reopen}
+      onClick={() => reopenTour()}
+      className="grid size-11 place-items-center rounded-full bg-card ring-1 ring-border"
+    >
+      <HelpCircle className="size-[18px]" aria-hidden />
+    </button>
   );
 }
 
@@ -126,6 +142,7 @@ function TopBar({ data, isExample, userId }: { data: ShellData; isExample?: bool
       <div className="ml-auto flex min-w-0 shrink-0 items-center gap-1 sm:gap-2">
         {data.streakDays != null && data.streakDays > 0 && <StreakChip days={data.streakDays} />}
         {isExample && <ExampleChip className="hidden sm:inline-flex" />}
+        <HelpButton />
         <ThemeToggle />
         <NotificationsButton count={data.notifications} />
         <div className="hidden lg:block">

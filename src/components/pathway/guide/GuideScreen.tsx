@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
+import { Collapsible } from "@/components/pathway/ui/Collapsible";
 import { Display, TCard } from "@/components/pathway/ui/tropa";
 import { strings } from "@/lib/strings";
 
@@ -38,6 +39,21 @@ export function GuideScreen() {
           </li>
         ))}
       </ol>
+      <TCard>
+        <Display as="h2" className="text-[18px]">
+          {strings.guide.faqTitle}
+        </Display>
+        <ul className="mt-3 flex flex-col gap-2">
+          {strings.guide.faq.map((item) => (
+            <li key={item.q} className="rounded-[14px] bg-background px-3 py-2 ring-1 ring-border">
+              <p className="text-[14px] font-bold">{item.q}</p>
+              <Collapsible className="mt-1" label="Ответ">
+                <p>{item.a}</p>
+              </Collapsible>
+            </li>
+          ))}
+        </ul>
+      </TCard>
     </div>
   );
 }
