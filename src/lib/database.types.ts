@@ -1,7 +1,8 @@
 /**
  * Hand-written Supabase database types for the Pathway schema.
  * Additive columns and tables for the logic layer are declared in
- * supabase/migrations/20260926140000_logic.sql. Keep this file in sync.
+ * supabase/migrations/20260926140000_logic.sql. Mentor flags RPC:
+ * supabase/migrations/20260926150000_mentor_flags.sql. Keep this file in sync.
  */
 
 export type Json =
@@ -518,6 +519,10 @@ export interface Database {
             profiles_with_cv: number;
           };
         };
+      };
+      mentor_flags: {
+        Args: { ids: string[] };
+        Returns: { user_id: string }[];
       };
     };
     Enums: Record<string, never>;

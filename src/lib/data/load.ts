@@ -283,6 +283,18 @@ export async function loadMentorBoard(supabase: DbClient) {
       supabase.from("mentor_answers").select("*").order("created_at", { ascending: true }),
     ]);
   if (questionError || answerError) return { questions: [], error_ru: LOAD_ERROR };
+  const ids = [
+    ...new Set([
+      ...(questions ?? []).map((row) => row.user_id),
+      ...(answers ?? []).map((row) => row.user_id),
+    ]),
+  ];
+  let mentorIds = new Set<string>();
+  if (ids.length > 0) {
+    const { data: flags, error: flagError } = await supabase.rpc("mentor_flags", { ids });
+    if (flagError) return { questions: [], error_ru: LOAD_ERROR };
+    mentorIds = new Set((flags ?? []).map((row) => row.user_id));
+  }
   const grouped = new Map<string, NonNullable<typeof answers>>();
   for (const answer of answers ?? []) {
     const list = grouped.get(answer.question_id) ?? [];
@@ -292,11 +304,17 @@ export async function loadMentorBoard(supabase: DbClient) {
   return {
     questions: (questions ?? []).map((question) => ({
       ...question,
-      answers: grouped.get(question.id) ?? [],
+      isMentor: mentorIds.has(question.user_id),
+      answers: (grouped.get(question.id) ?? []).map((answer) => ({
+        ...answer,
+        isMentor: mentorIds.has(answer.user_id),
+      })),
     })),
     error_ru: null,
   };
 }
+
+export type MentorBoardQuestion = Awaited<ReturnType<typeof loadMentorBoard>>["questions"][number];
 
 export async function loadAgentHistory(supabase: DbClient, userId: string) {
   const { data, error } = await supabase
