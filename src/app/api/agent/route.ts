@@ -9,15 +9,21 @@ import {
 import { agentErrorText, logAgentError } from "@/lib/agent/errors";
 import { agentModelId } from "@/lib/agent/model";
 import {
-  englishOrientationRu,
+  asksForUniversityMatches,
+  fitCategoryRu,
   forcedToolChoice,
+  historyForCurrentUniversity,
+  matchToolChoice,
+  profileMatchContext,
   universityFactsContext,
   universityNamedInMessage,
+  wantsGrantMatches,
 } from "@/lib/agent/forced-lookup";
 import { historyForModel, partsToJson, textFromParts } from "@/lib/agent/messages";
 import { AGENT_SYSTEM_PROMPT } from "@/lib/agent/prompt";
 import { englishRequirementLabel } from "@/lib/agent/university-facts";
-import { loadUniversity } from "@/lib/data/load";
+import { loadShortlist, loadUniversities, loadUniversity } from "@/lib/data/load";
+import { parseProfile } from "@/lib/profile/parse";
 import {
   AGENT_RATE_LIMIT_MESSAGE_RU,
   isOverAgentRateLimit,
@@ -92,15 +98,21 @@ export async function POST(request: Request) {
     return Response.json({ error: "Не удалось загрузить историю." }, { status: 500 });
   }
 
+  const { data: catalog } = await supabase.from("universities").select("slug, name");
+  const catalogRows = catalog ?? [];
+  const named = universityNamedInMessage(parsed.data.message, catalogRows);
+  const matchQuestion = asksForUniversityMatches(parsed.data.message, catalogRows);
   const messages: ModelMessage[] = [
-    ...historyForModel(
-      (history ?? []).slice().reverse().map((row) => ({ role: row.role, content: row.content })),
+    ...historyForCurrentUniversity(
+      historyForModel(
+        (history ?? []).slice().reverse().map((row) => ({ role: row.role, content: row.content })),
+      ),
+      parsed.data.message,
+      catalogRows,
     ),
     { role: "user", content: parsed.data.message },
   ];
 
-  const { data: catalog } = await supabase.from("universities").select("slug, name");
-  const named = universityNamedInMessage(parsed.data.message, catalog ?? []);
   let system = AGENT_SYSTEM_PROMPT;
   if (named) {
     const { item } = await loadUniversity(supabase, user.id, named.slug);
@@ -113,9 +125,37 @@ export async function POST(request: Request) {
         toeflMin: item.toefl_min,
         duolingoMin: item.duolingo_min,
         englishRequirementRu: englishRequirementLabel(item.fit),
-        orientationRu: englishOrientationRu(item.requirements),
+        orientationRu: null,
       })}`;
     }
+  } else if (matchQuestion) {
+    const grantOnly = wantsGrantMatches(parsed.data.message);
+    const [profileRow, shortlist, universities] = await Promise.all([
+      supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+      loadShortlist(supabase, user.id),
+      loadUniversities(supabase, user.id, grantOnly ? { freeOrGrantOnly: true } : {}),
+    ]);
+    const profile = profileRow.data ? parseProfile(profileRow.data) : null;
+    system = `${AGENT_SYSTEM_PROMPT}\n\n${profileMatchContext({
+      grantOnly,
+      profile: {
+        intendedMajor: profile?.intended_major ?? null,
+        budgetUsd: profile?.budget_usd ?? null,
+        needsScholarship: profile?.needs_scholarship ?? false,
+        exams: (profile?.exams ?? [])
+          .filter((exam) => exam.status === "taken")
+          .map((exam) => ({ code: exam.code, score: String(exam.score) })),
+        shortlist: shortlist.items.map((item) => ({
+          name: item.university.name,
+          category: fitCategoryRu(item.category),
+        })),
+      },
+      matches: universities.items.slice(0, 6).map((item) => ({
+        name: item.name,
+        categoryRu: fitCategoryRu(item.fit.suggestedCategory),
+        sourceUrl: item.source_url,
+      })),
+    })}`;
   }
 
   try {
@@ -127,7 +167,9 @@ export async function POST(request: Request) {
       messages,
       tools: createAgentTools(supabase, user.id),
       prepareStep: ({ stepNumber }) => {
-        const toolChoice = forcedToolChoice(stepNumber, named?.slug ?? null);
+        const toolChoice = named
+          ? forcedToolChoice(stepNumber, named.slug)
+          : matchToolChoice(stepNumber, matchQuestion);
         return toolChoice ? { toolChoice } : {};
       },
       stopWhen: isStepCount(6),
