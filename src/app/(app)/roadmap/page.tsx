@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 
 import { RoadmapBoard } from "@/components/pathway/roadmap/RoadmapBoard";
 import { SyncRoadmapButton } from "@/components/pathway/roadmap/SyncRoadmapButton";
-import { Display, EmptyCta } from "@/components/pathway/ui/tropa";
+import { CalendarMark } from "@/components/pathway/ui/illustrations";
+import { EmptyCta, PageHeader } from "@/components/pathway/ui/tropa";
 import { getRoadmap } from "@/lib/data";
 import { strings } from "@/lib/strings";
 
@@ -15,10 +16,8 @@ export default async function RoadmapPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Display as="h1" className="text-[28px] font-bold sm:text-[32px]">
-          {strings.roadmap.title}
-        </Display>
+      <PageHeader title={strings.roadmap.title} illustration={<CalendarMark className="w-full" />} />
+      <div className="flex justify-end">
         <SyncRoadmapButton />
       </div>
       {error_ru ? (

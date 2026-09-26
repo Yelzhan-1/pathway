@@ -13,7 +13,10 @@ export async function setWeeklyGoal(
   const ctx = await getActionContext();
   if (!ctx.ok) return fail("Войдите в аккаунт.");
   const result = await setWeeklyGoalForUser(ctx.supabase, ctx.userId, input);
-  if (result.ok) revalidatePath("/dashboard");
+  if (result.ok) {
+    revalidatePath("/dashboard");
+    revalidatePath("/tasks");
+  }
   return result;
 }
 

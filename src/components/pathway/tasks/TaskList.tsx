@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { toast } from "sonner";
 
+import { Collapsible } from "@/components/pathway/ui/Collapsible";
 import { dayMonth } from "@/lib/format";
 import { deleteTask, restoreTask, updateTaskStatus } from "@/lib/actions/tasks";
 import type { Database, TaskStatus } from "@/lib/database.types";
@@ -34,9 +35,10 @@ export function TaskList({ items }: { items: TaskRow[] }) {
   }
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="relative flex flex-col gap-6 border-l-2 border-dashed border-border pl-5">
       {groups.map((group) => (
-        <section key={group.key} className="flex flex-col gap-2">
+        <section key={group.key} className="relative flex flex-col gap-2">
+          <span className="absolute -left-[27px] top-0.5 size-3 rounded-full bg-primary ring-4 ring-background" aria-hidden />
           <h2 className="text-[14px] font-extrabold text-ink-2">{weekHeading(group.start, today)}</h2>
           <ul className="grid gap-2">
             {group.items.map((task) => (
@@ -86,9 +88,9 @@ export function TaskList({ items }: { items: TaskRow[] }) {
                   </button>
                 </div>
                 {task.description ? (
-                  <p className="mt-2 min-w-0 whitespace-pre-line break-all text-[13.5px] font-medium leading-snug text-muted-foreground [overflow-wrap:anywhere]">
-                    {task.description}
-                  </p>
+                  <Collapsible className="mt-2">
+                    <p className="min-w-0 whitespace-pre-line break-all [overflow-wrap:anywhere]">{task.description}</p>
+                  </Collapsible>
                 ) : null}
                 <div className="mt-3 flex flex-wrap gap-2">
                   {STATUSES.map((status) => {
