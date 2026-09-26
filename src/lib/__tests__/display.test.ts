@@ -15,6 +15,10 @@ import { strings } from "@/lib/strings";
 describe("display labels", () => {
   it("formats money, aid, rounds, and exam codes in Russian", () => {
     expect(formatMoneyUsd(10000)).toBe("10 000 $");
+    expect(formatMoneyUsd(72500)).toBe("72 500 $");
+    expect(formatMoneyUsd(12080)).toBe("12 080 $");
+    expect(formatMoneyUsd(1000000)).toBe("1 000 000 $");
+    expect(displayCost("paid: max USD 99,500 extra")).toBe("платно: максимум 99 500 $ extra");
     expect(aidLabel("need_blind")).toBe("Без учёта дохода");
     expect(aidLabel("merit")).toBe("За успехи");
     expect(aidLabel("funded")).toBe("С финансированием");

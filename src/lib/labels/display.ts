@@ -35,11 +35,20 @@ const AID_LABELS: Record<string, string> = {
   full_ride: "Полное покрытие",
 };
 
-export function formatMoneyUsd(amount: number): string {
-  const formatted = Math.round(amount)
+function spaceThousands(amount: number): string {
+  return Math.round(amount)
     .toString()
     .replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-  return `${formatted} $`;
+}
+
+export function formatMoneyUsd(amount: number): string {
+  return `${spaceThousands(amount)} $`;
+}
+
+function usdWithSpaces(raw: string): string {
+  const amount = Number(raw.replace(/,/g, ""));
+  if (!Number.isFinite(amount)) return `${raw} $`;
+  return formatMoneyUsd(amount);
 }
 
 export function aidLabel(value: string | null | undefined): string | null {
@@ -98,9 +107,9 @@ function translatePaidCost(text: string): string {
     .replace(/financial aid available/gi, "есть финансовая помощь")
     .replace(/program fee/gi, "взнос за программу")
     .replace(/tuition/gi, "обучение")
-    .replace(/max USD ([0-9,]+)/gi, "максимум $1 $")
-    .replace(/up to USD ([0-9,]+)/gi, "до $1 $")
-    .replace(/USD ([0-9,]+)/gi, "$1 $")
+    .replace(/max USD ([0-9,]+)/gi, (_match, raw: string) => `максимум ${usdWithSpaces(raw)}`)
+    .replace(/up to USD ([0-9,]+)/gi, (_match, raw: string) => `до ${usdWithSpaces(raw)}`)
+    .replace(/USD ([0-9,]+)/gi, (_match, raw: string) => usdWithSpaces(raw))
     .replace(/fees with /gi, "взносы, ")
     .replace(/Innovation Stage entry fee \(amount not captured\)/gi, "взнос этапа Innovation Stage (сумма не указана)");
 }

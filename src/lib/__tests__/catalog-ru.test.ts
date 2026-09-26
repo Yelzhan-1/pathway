@@ -81,4 +81,12 @@ describe("catalog Russian sentences", () => {
     });
     expect(offenders).toEqual([]);
   });
+
+  it("writes dollar amounts with a space between thousands", () => {
+    const commaThousands = Object.values(CATALOG_RU).filter((russian) => /\d,\d{3}(?!\d)/.test(russian));
+    expect(commaThousands).toEqual([]);
+    expect(publicNote("2026–27 tuition USD 72,500 (plus activity fee $185, housing $12,080, food $9,520, books $1,000, personal $2,700).")).toContain(
+      "72 500 $",
+    );
+  });
 });
