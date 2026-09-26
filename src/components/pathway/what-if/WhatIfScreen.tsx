@@ -124,7 +124,7 @@ export function WhatIfScreen({
                   onChange={(event) =>
                     setScores((current) => ({ ...current, [code]: Number(event.target.value) }))
                   }
-                  className="mt-2 w-full accent-[var(--primary)]"
+                  className="mt-2 w-full min-w-0 max-w-full accent-[var(--primary)]"
                 />
               </label>
             );
@@ -143,7 +143,7 @@ export function WhatIfScreen({
                 value={gpa ?? 0}
                 aria-label={strings.whatIf.gpa}
                 onChange={(event) => setGpa(Number(event.target.value))}
-                className="mt-2 w-full accent-[var(--primary)]"
+                className="mt-2 w-full min-w-0 max-w-full accent-[var(--primary)]"
               />
             </label>
           ) : null}
@@ -162,20 +162,22 @@ export function WhatIfScreen({
             <h2 className="text-[14px] font-extrabold text-ink-2">
               {group === "shortlist" ? strings.whatIf.shortlist : strings.whatIf.catalog}
             </h2>
-            <ul className="mt-2 grid gap-2">
+            <ul className="mt-2 grid w-full min-w-0 max-w-full gap-2">
               {items.map((row) => (
-                <li key={row.id}>
+                <li key={row.id} className="min-w-0 w-full max-w-full">
                   <Link
                     href={`/universities/${row.slug}`}
                     className={cn(
-                      "flex min-w-0 items-center justify-between gap-3 rounded-[18px] bg-card p-3 ring-1 ring-border",
+                      "flex w-full min-w-0 max-w-full flex-wrap items-start justify-between gap-2 rounded-[18px] bg-card p-3 ring-1 ring-border",
                       row.improved && "ring-2 ring-primary",
                     )}
                   >
-                    <span className="min-w-0">
-                      <span className="block truncate text-[14px] font-bold">{row.name}</span>
+                    <span className="min-w-0 flex-1 basis-0">
+                      <span className="block break-words text-[14px] font-bold [overflow-wrap:anywhere]">
+                        {row.name}
+                      </span>
                       {row.before !== row.after ? (
-                        <span className="mt-0.5 block text-[12px] font-bold text-primary">
+                        <span className="mt-0.5 block break-words text-[12px] font-bold text-primary">
                           {strings.whatIf.fromTo(
                             row.before ? strings.fit.category[row.before] : strings.universities.littleData,
                             row.after ? strings.fit.category[row.after] : strings.universities.littleData,
@@ -183,7 +185,9 @@ export function WhatIfScreen({
                         </span>
                       ) : null}
                     </span>
-                    <FitBadge category={row.after} score={null} />
+                    <span className="max-w-full shrink-0">
+                      <FitBadge category={row.after} score={null} />
+                    </span>
                   </Link>
                 </li>
               ))}
