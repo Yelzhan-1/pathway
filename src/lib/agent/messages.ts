@@ -1,3 +1,5 @@
+import type { UIMessage } from "ai";
+
 import type { Json } from "@/lib/database.types";
 
 export function textFromParts(parts: unknown): string {
@@ -15,4 +17,15 @@ export function textFromParts(parts: unknown): string {
 
 export function partsToJson(parts: unknown): Json {
   return JSON.parse(JSON.stringify(parts ?? [])) as Json;
+}
+
+export function rowsToUiMessages(
+  rows: Array<{ id: string; role: "user" | "assistant"; content: string; parts: Json }>,
+): UIMessage[] {
+  return rows.map((row) => {
+    const raw = Array.isArray(row.parts) ? row.parts : [];
+    const parts =
+      raw.length > 0 ? (raw as UIMessage["parts"]) : [{ type: "text" as const, text: row.content }];
+    return { id: row.id, role: row.role, parts };
+  });
 }

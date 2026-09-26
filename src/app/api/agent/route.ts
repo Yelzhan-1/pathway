@@ -98,26 +98,34 @@ export async function POST(request: Request) {
     .reverse()
     .map((row) => ({ role: row.role, content: row.content }));
 
-  const result = streamText({
-    model: agentModelId(),
-    system: AGENT_SYSTEM_PROMPT,
-    messages,
-    tools: createAgentTools(supabase, user.id),
-    stopWhen: isStepCount(6),
-  });
+  try {
+    const result = streamText({
+      model: agentModelId(),
+      system: AGENT_SYSTEM_PROMPT,
+      messages,
+      tools: createAgentTools(supabase, user.id),
+      stopWhen: isStepCount(6),
+    });
 
-  const uiStream = toUIMessageStream({
-    stream: result.stream,
-    onFinish: async ({ responseMessage }) => {
-      const content = textFromParts(responseMessage.parts);
-      await supabase.from("agent_messages").insert({
-        user_id: user.id,
-        role: "assistant",
-        content: content || "…",
-        parts: partsToJson(responseMessage.parts),
-      });
-    },
-  });
+    const uiStream = toUIMessageStream({
+      stream: result.stream,
+      onFinish: async ({ responseMessage }) => {
+        const content = textFromParts(responseMessage.parts);
+        await supabase.from("agent_messages").insert({
+          user_id: user.id,
+          role: "assistant",
+          content: content || "…",
+          parts: partsToJson(responseMessage.parts),
+        });
+      },
+    });
 
-  return createUIMessageStreamResponse({ stream: uiStream });
+    return createUIMessageStreamResponse({ stream: uiStream });
+  } catch (error) {
+    console.error("agent", error);
+    return Response.json(
+      { error: "Помощник сейчас недоступен. Попробуй позже." },
+      { status: 503 },
+    );
+  }
 }

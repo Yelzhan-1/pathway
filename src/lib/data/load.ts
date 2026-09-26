@@ -298,6 +298,17 @@ export async function loadMentorBoard(supabase: DbClient) {
   };
 }
 
+export async function loadAgentHistory(supabase: DbClient, userId: string) {
+  const { data, error } = await supabase
+    .from("agent_messages")
+    .select("id, role, content, parts")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: true })
+    .limit(50);
+  if (error) return { messages: [], error_ru: LOAD_ERROR };
+  return { messages: data ?? [], error_ru: null };
+}
+
 export async function loadImpactStats(supabase: DbClient) {
   const { data, error } = await supabase.rpc("impact_stats");
   if (error || !data) return { stats: null, error_ru: LOAD_ERROR };

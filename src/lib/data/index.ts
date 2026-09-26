@@ -4,6 +4,7 @@ import type { UniversityFilters } from "@/lib/matching/types";
 import type { OpportunityFilters } from "@/lib/opportunities/match";
 
 import {
+  loadAgentHistory,
   loadImpactStats,
   loadMentorBoard,
   loadOpportunities,
@@ -76,6 +77,12 @@ export async function getMentorBoard() {
   const { supabase, userId } = await session();
   if (!userId) return { questions: [], error_ru: SIGN_IN };
   return loadMentorBoard(supabase);
+}
+
+export async function getAgentHistory() {
+  const { supabase, userId } = await session();
+  if (!userId) return { messages: [], error_ru: SIGN_IN };
+  return loadAgentHistory(supabase, userId);
 }
 
 export async function getImpactStats() {
