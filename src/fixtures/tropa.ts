@@ -47,7 +47,6 @@ export const exampleDashboard: DashboardData = {
     { id: 'kaist', name: 'KAIST', monogram: 'KAIST', city: 'Тэджон', country: 'KR', tags: ['Стипендия'], href: '/universities/kaist' },
     { id: 'tum', name: 'TU Munich', monogram: 'TUM', city: 'Мюнхен', country: 'DE', tags: ['EN', 'Без оплаты'], href: '/universities/tum' },
   ],
-  popularTotal: 35,
   checkOptions: {
     programs: [{ value: 'nis', label: 'НИШ' }, { value: 'kz', label: 'Госшкола' }, { value: 'ib', label: 'IB' }],
     countries: [{ value: 'KR', label: 'Корея', country: 'KR' }, { value: 'KZ', label: 'Казахстан' }, { value: 'DE', label: 'Германия' }],
@@ -145,6 +144,6 @@ export const exampleLanding: LandingData = {
   title: ['Твоя тропа', 'к поступлению'],
   lead: 'Ответь на 10 вопросов — и Pathway проложит маршрут: вузы, экзамены, документы и сроки. Шаг за шагом, без хаоса в голове.',
   cta: 'Начать бесплатно', secondary: 'Как это работает',
-  bullets: ['35 вузов в каталоге', 'План за 3 минуты', 'Бесплатно для школьников'],
-  photo: campus.nu,
+  bullets: ['Вузы в каталоге', 'План за 3 минуты', 'Бесплатно для школьников'],
+  photo: campus.kaist,
 };

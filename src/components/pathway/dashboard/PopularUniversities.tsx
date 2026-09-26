@@ -13,7 +13,7 @@ const TILT = ['lg:-rotate-[1.5deg]', 'lg:rotate-1', 'lg:-rotate-1'];
 
 /**
  * «Collectible» university cards. Monogram + flag (NO logos). Block 3 catalog — the list itself can already come from the
- * `universities` table (35 rows, sorted by popularity/manual rank). Mobile: horizontal snap scroll, no tilt.
+ * `universities` table, sorted by popularity or manual rank. Mobile: horizontal snap scroll, no tilt.
  * `onToggleSave` → server action; optimistic local state here.
  */
 export function PopularUniversities({ unis, total, loading, onToggleSave }: { unis: UniCard[] | null; total?: number; loading?: boolean; onToggleSave?: (id: string, saved: boolean) => void }) {

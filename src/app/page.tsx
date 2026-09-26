@@ -1,29 +1,37 @@
 import Link from "next/link";
 
-import { Photo } from "@/components/pathway/primitives/Photo";
+import { CapabilityTiles } from "@/components/pathway/landing/CapabilityTiles";
+import { HeroStack } from "@/components/pathway/landing/HeroStack";
 import { Display, Logo } from "@/components/pathway/ui/tropa";
 import { Button } from "@/components/ui/button";
 import { plural } from "@/lib/format";
 import { strings } from "@/lib/strings";
 import { createClient } from "@/lib/supabase/server";
 
-const CAMPUS = {
-  src: "/images/campus/nazarbayev-720.webp",
-  width: 720,
-  height: 450,
-  alt: "Атриум Назарбаев Университета, Астана",
-  credit: "Dinononozavr1 · Wikimedia Commons · CC BY-SA 4.0",
-};
-
 export default async function LandingPage() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const { count, error } = await supabase
-    .from("universities")
-    .select("id", { count: "exact", head: true });
-  const catalogCount = error ? null : count;
+  const [universityCount, countryRows, opportunityCount] = await Promise.all([
+    supabase.from("universities").select("id", { count: "exact", head: true }),
+    supabase.from("universities").select("country"),
+    supabase.from("opportunities").select("id", { count: "exact", head: true }),
+  ]);
+  const catalogCount = universityCount.error ? null : universityCount.count;
+  const countryCount = countryRows.error
+    ? null
+    : new Set((countryRows.data ?? []).map((row) => row.country).filter((country) => country.trim().length > 0)).size;
+  const grantCount = opportunityCount.error ? null : opportunityCount.count;
+  const stats = [
+    catalogCount == null
+      ? null
+      : { value: catalogCount, label: plural(catalogCount, ...strings.landing.statUniversity) },
+    countryCount == null
+      ? null
+      : { value: countryCount, label: plural(countryCount, ...strings.landing.statCountry) },
+    grantCount == null ? null : { value: grantCount, label: strings.landing.statOpportunity },
+  ].filter((stat) => stat != null);
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
@@ -46,10 +54,15 @@ export default async function LandingPage() {
             {strings.landing.title}
           </Display>
           <p className="mt-5 max-w-xl text-[18px] font-medium text-ink-2">{strings.landing.tagline}</p>
-          {catalogCount != null ? (
-            <p className="mt-3 text-[15px] font-bold text-primary">
-              В каталоге {catalogCount} {plural(catalogCount, "вуз", "вуза", "вузов")}
-            </p>
+          {stats.length > 0 ? (
+            <ul className="mt-8 flex flex-wrap gap-x-10 gap-y-4">
+              {stats.map((stat) => (
+                <li key={stat.label}>
+                  <p className="font-display text-[32px] font-bold leading-none text-primary">{stat.value}</p>
+                  <p className="mt-1.5 text-[13px] font-bold text-ink-2">{stat.label}</p>
+                </li>
+              ))}
+            </ul>
           ) : null}
           {user ? (
             <Button className="mt-7" size="lg" nativeButton={false} render={<Link href="/dashboard" />}>
@@ -66,12 +79,7 @@ export default async function LandingPage() {
             </div>
           )}
         </div>
-        <figure>
-          <Photo img={CAMPUS} sizes="(min-width: 1024px) 520px, 100vw" eager className="aspect-[16/10] w-full" rounded="rounded-[var(--radius-hero)]" />
-          <figcaption className="mt-2 text-[13px] font-medium text-muted-foreground">
-            Фото: {CAMPUS.credit}
-          </figcaption>
-        </figure>
+        <HeroStack />
       </main>
 
       <section className="mx-auto w-full max-w-[1240px] px-5 pb-16 lg:px-10">
@@ -86,6 +94,8 @@ export default async function LandingPage() {
           ))}
         </div>
       </section>
+
+      <CapabilityTiles />
 
       <footer className="mt-auto border-t border-border px-5 py-6">
         <div className="mx-auto flex w-full max-w-[1240px] items-center justify-between gap-4">

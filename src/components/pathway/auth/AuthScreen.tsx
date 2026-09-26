@@ -49,7 +49,7 @@ export function AuthScreen({ mode = 'signup', error }: { mode?: 'login' | 'signu
           <p className="mt-3 max-w-[460px] font-display text-[30px] font-bold leading-[1.15] tracking-[-0.03em]">Вузы, экзамены и сроки — на одной тропе</p>
         </div>
         <ul className="relative mt-7 flex flex-wrap gap-2.5 px-12">
-          {([['35', 'вузов в каталоге', 'lg:-rotate-2'], ['10', 'вопросов о тебе', 'lg:rotate-2'], ['0 ₸', 'для школьников', 'lg:-rotate-1']] as const).map(([n, l, r]) => (
+          {([['вузы', 'в каталоге', 'lg:-rotate-2'], ['10', 'вопросов о тебе', 'lg:rotate-2'], ['0 ₸', 'для школьников', 'lg:-rotate-1']] as const).map(([n, l, r]) => (
             <li key={l} className={`flex items-center gap-2.5 rounded-[18px] bg-card/95 py-2 pl-3 pr-4 shadow-[0_3px_0_var(--map-hill-1)] ring-1 ring-border ${r}`}><span className="font-display text-[22px] font-semibold">{n}</span><span className="max-w-[90px] text-[12px] font-bold leading-tight text-muted-foreground">{l}</span></li>
           ))}
         </ul>

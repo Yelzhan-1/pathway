@@ -78,6 +78,32 @@ export const strings = {
           "Еженедельные задачи и трекер, чтобы не пропустить дедлайны.",
       },
     ],
+    statUniversity: ["вуз", "вуза", "вузов"] as const,
+    statCountry: ["страна", "страны", "стран"] as const,
+    statOpportunity: "грантов и возможностей",
+    capabilitiesTitle: "Что умеет Pathway",
+    capabilities: [
+      {
+        id: "whatif",
+        title: "Что если",
+        text: "Двигаешь баллы и видишь, как меняются шансы.",
+      },
+      {
+        id: "assistant",
+        title: "AI-помощник",
+        text: "Отвечает по официальным данным со ссылками.",
+      },
+      {
+        id: "path",
+        title: "Кратчайший путь",
+        text: "Шаги до вуза мечты.",
+      },
+      {
+        id: "essay",
+        title: "Разбор письма",
+        text: "Оценка и 3 правки.",
+      },
+    ] as const,
     ctaStart: "Начать",
     ctaLogin: "Войти",
     ctaDashboard: "Открыть кабинет",

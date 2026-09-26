@@ -6,14 +6,6 @@ import { strings } from "@/lib/strings";
 
 const CREDITS = [
   {
-    file: "campus/nazarbayev-*.webp",
-    what: "Атриум Назарбаев Университета, Астана",
-    author: "Dinononozavr1",
-    src: "https://commons.wikimedia.org/wiki/File:Nazarbayev_University_2.jpg",
-    lic: "CC BY-SA 4.0",
-    licUrl: "https://creativecommons.org/licenses/by-sa/4.0",
-  },
-  {
     file: "campus/kaist-*.webp",
     what: "Кампус KAIST, Тэджон",
     author: "AhmadElq",
