@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { computeProfileCompleteness } from "@/lib/profile/completeness";
+import { DashboardScreen } from "@/components/pathway/dashboard/DashboardScreen";
+import { presentDashboard, todayInAlmaty, type UniversityRow } from "@/lib/dashboard/present";
 import { getCurrentProfile } from "@/lib/profile/queries";
 import { strings } from "@/lib/strings";
 
@@ -12,49 +10,26 @@ export const metadata: Metadata = {
 };
 
 export default async function DashboardPage() {
-  const { user, profile } = await getCurrentProfile();
-  const displayName = profile.full_name ?? user.email ?? "";
-  const completeness = computeProfileCompleteness(profile);
+  const { user, profile, supabase } = await getCurrentProfile();
+  const today = todayInAlmaty(new Date());
 
-  return (
-    <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold tracking-tight">
-        {strings.dashboard.greeting(displayName)}
-      </h1>
+  const [shortlist, universities] = await Promise.all([
+    supabase.from("shortlist").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+    supabase
+      .from("universities")
+      .select("id, name, country, city, majors", { count: "exact" })
+      .order("name")
+      .limit(3),
+  ]);
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{strings.dashboard.completenessTitle(completeness.percent)}</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-3">
-          {completeness.firstMissing ? (
-            <Button nativeButton={false} render={<Link href={completeness.firstMissing.href} />}>
-              {strings.dashboard.completenessCta}
-            </Button>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              {strings.dashboard.completenessDone}
-            </p>
-          )}
-        </CardContent>
-      </Card>
+  const data = presentDashboard({
+    today,
+    profile,
+    email: user.email ?? null,
+    shortlistCount: shortlist.error ? null : (shortlist.count ?? 0),
+    universities: universities.error ? null : ((universities.data ?? []) as UniversityRow[]),
+    universityTotal: universities.error ? null : universities.count,
+  });
 
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            {profile.onboarding_completed
-              ? strings.dashboard.onboardingDone
-              : strings.dashboard.onboardingPending}
-          </CardTitle>
-        </CardHeader>
-        {!profile.onboarding_completed && (
-          <CardContent>
-            <Button nativeButton={false} render={<Link href="/onboarding" />}>
-              {strings.dashboard.onboardingCta}
-            </Button>
-          </CardContent>
-        )}
-      </Card>
-    </div>
-  );
+  return <DashboardScreen data={data} />;
 }

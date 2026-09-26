@@ -176,7 +176,7 @@ export function ProfileForm({
           <CardTitle>{strings.profile.sections.basics}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-6">
-          <Field>
+          <Field id="full_name" className="scroll-mt-24">
             <FieldLabel htmlFor="fullName">{strings.profile.fields.fullName}</FieldLabel>
             <Input
               id="fullName"
@@ -186,12 +186,15 @@ export function ProfileForm({
               autoComplete="name"
             />
           </Field>
+          <div id="path" className="scroll-mt-24">
           <StatusField
             path={path}
             gradeOrYear={grade}
             onPathChange={handlePathChange}
             onGradeChange={setGrade}
           />
+          </div>
+          <div id="city" className="scroll-mt-24">
           <CityField
             value={city}
             onChange={setCity}
@@ -199,7 +202,10 @@ export function ProfileForm({
             isOther={cityIsOther}
             onIsOtherChange={setCityIsOther}
           />
+          </div>
+          <div id="intake_year" className="scroll-mt-24">
           <IntakeYearField value={intakeYear} onChange={setIntakeYear} />
+          </div>
         </CardContent>
       </Card>
 
@@ -208,6 +214,7 @@ export function ProfileForm({
           <CardTitle>{strings.profile.sections.goals}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-6">
+          <div id="intended_major" className="scroll-mt-24">
           <MajorField
             value={major}
             onChange={setMajor}
@@ -215,15 +222,18 @@ export function ProfileForm({
             isOther={majorIsOther}
             onIsOtherChange={setMajorIsOther}
           />
+          </div>
+          <div id="target_countries" className="scroll-mt-24">
           <CountriesField
             countries={countries}
             value={targetCountries}
             onChange={setTargetCountries}
           />
+          </div>
         </CardContent>
       </Card>
 
-      <Card id="budget">
+      <Card id="budget" className="scroll-mt-24">
         <CardHeader>
           <CardTitle>{strings.profile.sections.budget}</CardTitle>
         </CardHeader>
@@ -242,8 +252,12 @@ export function ProfileForm({
           <CardTitle>{strings.profile.sections.english}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-6">
+          <div id="english_level" className="scroll-mt-24">
           <EnglishLevelField value={englishLevel} onChange={setEnglishLevel} />
+          </div>
+          <div id="exams" className="scroll-mt-24">
           <ExamsField ref={examsRef} value={exams} onChange={setExams} />
+          </div>
         </CardContent>
       </Card>
 
@@ -252,12 +266,14 @@ export function ProfileForm({
           <CardTitle>{strings.profile.sections.academics}</CardTitle>
         </CardHeader>
         <CardContent>
+          <div id="gpa" className="scroll-mt-24">
           <GpaField
             gpa={gpa}
             gpaScale={gpaScale}
             onGpaChange={setGpa}
             onScaleChange={setGpaScale}
           />
+          </div>
         </CardContent>
       </Card>
 

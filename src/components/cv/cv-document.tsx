@@ -40,7 +40,7 @@ export function CvDocument({
     lang === "en" ? strings.cv.plannedSuffixEn : strings.cv.plannedSuffix;
 
   return (
-    <article className="cv-document mx-auto max-w-[210mm] bg-background p-6 text-foreground shadow-sm ring-1 ring-foreground/10 print:max-w-none print:p-0 print:shadow-none print:ring-0">
+    <article className="cv-document cv-print-root mx-auto max-w-[210mm] bg-white p-6 text-neutral-950 shadow-card ring-1 ring-border print:max-w-none print:p-0 print:shadow-none print:ring-0">
       <header className="mb-6 border-b pb-4">
         <h1 className="text-2xl font-semibold tracking-tight">{fullName}</h1>
         <p className="mt-2 text-sm text-muted-foreground">

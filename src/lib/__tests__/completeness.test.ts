@@ -53,7 +53,7 @@ describe("computeProfileCompleteness", () => {
     expect(result.percent).toBe(80);
     expect(result.firstMissing).toEqual({
       field: "intended_major",
-      href: "/profile#goals",
+      href: "/profile#intended_major",
     });
   });
 

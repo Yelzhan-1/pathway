@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 
 import { SignOutButton } from "@/components/nav/sign-out-button";
+import { Logo } from "@/components/pathway/ui/tropa";
 import { getCurrentProfile } from "@/lib/profile/queries";
-import { strings } from "@/lib/strings";
 
 export default async function OnboardingLayout({
   children,
@@ -16,12 +16,12 @@ export default async function OnboardingLayout({
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-muted/30 px-4 py-8">
-      <header className="mx-auto mb-8 flex w-full max-w-lg items-center justify-between">
-        <div className="text-lg font-semibold tracking-tight">{strings.app.name}</div>
+    <div className="flex min-h-dvh flex-col bg-background px-4 py-6 sm:px-6">
+      <header className="mx-auto mb-6 flex w-full max-w-5xl items-center justify-between">
+        <Logo />
         <SignOutButton userId={user.id} />
       </header>
-      <main className="mx-auto w-full max-w-lg pb-12">{children}</main>
+      <main className="mx-auto w-full max-w-5xl pb-16">{children}</main>
     </div>
   );
 }

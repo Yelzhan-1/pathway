@@ -646,7 +646,7 @@ export function CvBuilder({
     <div className="flex flex-col gap-6">
       <div className="app-chrome flex flex-col gap-4 print:hidden sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight">{strings.cv.title}</h1>
+          <h1 className="font-display text-balance text-[28px] font-bold tracking-tight">{strings.cv.title}</h1>
           <AutosaveIndicator status={saveStatus} error={saveError} />
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -667,7 +667,7 @@ export function CvBuilder({
       <div
         role="tablist"
         aria-label={strings.cv.title}
-        className="grid w-full grid-cols-2 gap-1 rounded-lg bg-muted p-[3px] lg:hidden print:hidden"
+        className="grid w-full grid-cols-2 gap-1 rounded-lg bg-muted p-[3px] print:hidden xl:hidden"
       >
         <Button
           type="button"
@@ -691,19 +691,19 @@ export function CvBuilder({
         </Button>
       </div>
 
-      <div className="flex flex-col gap-6 lg:grid lg:grid-cols-2">
+      <div className="flex flex-col gap-6 xl:grid xl:grid-cols-[minmax(0,1fr)_600px]">
         <div
           className={cn(
             "print:hidden",
-            mobileTab === "preview" && "max-lg:hidden",
+            mobileTab === "preview" && "max-xl:hidden",
           )}
         >
           {editor}
         </div>
         <div
           className={cn(
-            "lg:sticky lg:top-6 lg:self-start print:hidden",
-            mobileTab === "editor" && "max-lg:hidden",
+            "print:hidden xl:sticky xl:top-6 xl:self-start",
+            mobileTab === "editor" && "max-xl:hidden",
           )}
         >
           {preview}

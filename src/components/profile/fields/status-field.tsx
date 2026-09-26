@@ -39,9 +39,10 @@ export function StatusField({
       </div>
       {path ? (
         <div
+          id="grade_or_year"
           role="radiogroup"
           aria-label={strings.onboarding.steps.status.gradeLegend}
-          className="grid grid-cols-2 gap-3"
+          className="grid scroll-mt-24 grid-cols-2 gap-3"
         >
           {grades.map((grade) => (
             <OptionCard

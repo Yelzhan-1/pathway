@@ -1,20 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { ThemeProvider } from "next-themes";
 
+import { PathwayProviders } from "@/components/pathway/PathwayProviders";
 import { Toaster } from "@/components/ui/sonner";
 import { strings } from "@/lib/strings";
 
+import { caveat, onest, unbounded } from "./fonts";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin", "cyrillic"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin", "cyrillic"],
-});
 
 export const metadata: Metadata = {
   title: strings.app.name,
@@ -23,17 +15,26 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#F3FDF8" },
+    { media: "(prefers-color-scheme: dark)", color: "#05110C" },
+  ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="ru"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${onest.variable} ${unbounded.variable} ${caveat.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">
-        {children}
-        <Toaster />
+      <body className="flex min-h-full flex-col">
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <PathwayProviders>
+            {children}
+            <Toaster />
+          </PathwayProviders>
+        </ThemeProvider>
       </body>
     </html>
   );

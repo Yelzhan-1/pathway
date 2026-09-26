@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { SoonScreen } from "@/components/pathway/shell/SoonScreen";
 import { strings } from "@/lib/strings";
 
 export const metadata: Metadata = {
@@ -8,13 +9,9 @@ export const metadata: Metadata = {
 
 export default function RoadmapPage() {
   return (
-    <div className="flex flex-col gap-2">
-      <h1 className="text-2xl font-semibold tracking-tight">
-        {strings.placeholders.roadmap.title}
-      </h1>
-      <p className="text-muted-foreground">
-        {strings.placeholders.roadmap.description}
-      </p>
-    </div>
+    <SoonScreen
+      title={strings.placeholders.roadmap.title}
+      detail={strings.placeholders.roadmap.description}
+    />
   );
 }

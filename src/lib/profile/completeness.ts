@@ -47,17 +47,17 @@ export type ProfileCompleteness = {
 };
 
 const FIELD_HREFS: Record<CompletenessField, string> = {
-  full_name: "/profile#basics",
-  path: "/profile#basics",
-  grade_or_year: "/profile#basics",
-  city: "/profile#basics",
-  intended_major: "/profile#goals",
-  target_countries: "/profile#goals",
+  full_name: "/profile#full_name",
+  path: "/profile#path",
+  grade_or_year: "/profile#grade_or_year",
+  city: "/profile#city",
+  intended_major: "/profile#intended_major",
+  target_countries: "/profile#target_countries",
   budget: "/profile#budget",
-  english_level: "/profile#english",
-  exams: "/profile#english",
-  gpa: "/profile#academics",
-  intake_year: "/profile#basics",
+  english_level: "/profile#english_level",
+  exams: "/profile#exams",
+  gpa: "/profile#gpa",
+  intake_year: "/profile#intake_year",
 };
 
 const ONBOARDING_HREFS: Record<CompletenessField, string> = {

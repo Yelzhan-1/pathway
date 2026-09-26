@@ -1,5 +1,6 @@
 "use client";
 
+import { HandNote } from "@/components/pathway/primitives/Scribble";
 import { Button } from "@/components/ui/button";
 import { FieldError, FieldLegend, FieldSet } from "@/components/ui/field";
 import { strings } from "@/lib/strings";
@@ -39,7 +40,10 @@ export function StepForm({
       className="flex flex-col gap-6"
     >
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+        <h1 className="font-display text-balance text-[28px] font-bold leading-tight tracking-tight">{title}</h1>
+        <HandNote hidden={false} color="forest" className="text-[22px]">
+          {strings.onboarding.noteEditable}
+        </HandNote>
       </div>
 
       <div aria-live="assertive">
@@ -51,7 +55,7 @@ export function StepForm({
         <div className="flex flex-col gap-3">{children}</div>
       </FieldSet>
 
-      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
+      <div className="sticky bottom-0 z-10 -mx-4 flex flex-col-reverse gap-3 border-t border-border bg-background/95 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:flex-row sm:items-center sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
         {showBack ? (
           <Button
             type="button"

@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 
-import { AppSidebar } from "@/components/nav/app-sidebar";
-import { BottomNav } from "@/components/nav/bottom-nav";
-import { TopBar } from "@/components/nav/top-bar";
+import { AppShellWithRoute } from "@/components/pathway/shell/AppShellWithRoute";
+import { displayName } from "@/lib/dashboard/present";
+import { buildShellData } from "@/lib/shell";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AppLayout({
@@ -24,34 +24,33 @@ export default async function AppLayout({
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, onboarding_completed")
-    .eq("id", user.id)
-    .maybeSingle();
+  const [{ data: profile }, shortlist] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("full_name, city, onboarding_completed")
+      .eq("id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("shortlist")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id),
+  ]);
 
   if (!profile?.onboarding_completed) {
     redirect("/onboarding");
   }
 
-  const fullName = profile?.full_name ?? user.email ?? "";
+  const fullName = displayName(profile.full_name, user.email ?? null);
+  const shell = buildShellData({
+    name: fullName,
+    city: profile.city,
+    email: user.email ?? null,
+    shortlistCount: shortlist.error ? null : shortlist.count ?? 0,
+  });
 
   return (
-    <div className="flex min-h-screen">
-      <div className="app-chrome print:hidden">
-        <AppSidebar />
-      </div>
-      <div className="flex min-h-screen flex-1 flex-col">
-        <div className="app-chrome print:hidden">
-          <TopBar fullName={fullName} userId={user.id} />
-        </div>
-        <main className="flex-1 overflow-y-auto px-4 pb-24 pt-6 md:px-8 md:pb-6 print:px-0 print:pb-0 print:pt-0">
-          {children}
-        </main>
-      </div>
-      <div className="app-chrome print:hidden">
-        <BottomNav />
-      </div>
-    </div>
+    <AppShellWithRoute data={shell} userId={user.id}>
+      {children}
+    </AppShellWithRoute>
   );
 }
