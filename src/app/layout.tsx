@@ -28,7 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${onest.variable} ${unbounded.variable} ${caveat.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="flex min-h-full flex-col">
+      <body className="flex min-h-full flex-col overflow-x-hidden">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <PathwayProviders>
             {children}

@@ -24,11 +24,11 @@ import { MOBILE_TABS, NAV_ICON } from './nav';
 export function AppShell({ data, active, children, isExample, initialMoreOpen = false, userId }: { data: ShellData; active: string; children: ReactNode; isExample?: boolean; initialMoreOpen?: boolean; userId: string }) {
   const [more, setMore] = useState(initialMoreOpen);
   return (
-    <div className="min-h-dvh bg-background text-foreground lg:flex">
+    <div className="min-h-dvh max-w-[100vw] overflow-x-hidden bg-background text-foreground lg:flex">
       <Sidebar data={data} active={active} userId={userId} />
       <div className="min-w-0 flex-1">
         <TopBar data={data} isExample={isExample} />
-        <main id="main" className="px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-2 sm:px-6 lg:pb-12 lg:pl-0 lg:pr-6">{children}</main>
+        <main id="main" className="min-w-0 px-4 pb-[calc(8rem+env(safe-area-inset-bottom))] pt-2 sm:px-6 lg:pb-12 lg:pl-0 lg:pr-6">{children}</main>
       </div>
       <MobileNav data={data} active={active} onMore={() => setMore(true)} moreOpen={more} />
       <MoreSheet data={data} active={active} open={more} onClose={() => setMore(false)} userId={userId} />
@@ -111,15 +111,17 @@ function StreakChip({ days }: { days: number }) {
 
 function TopBar({ data, isExample }: { data: ShellData; isExample?: boolean }) {
   return (
-    <header data-shell className="sticky top-0 z-30 flex h-16 items-center gap-2 bg-background/90 px-4 backdrop-blur-md sm:px-6 lg:static lg:h-[72px] lg:gap-3 lg:bg-transparent lg:pl-0 lg:pr-6 lg:backdrop-blur-none">
-      <Link href="/dashboard" className="lg:hidden" aria-label="pathway — на главную"><Logo /></Link>
-      <form role="search" className="relative hidden lg:block" action="/universities">
+    <header data-shell className="sticky top-0 z-30 flex h-16 min-w-0 items-center gap-1 overflow-hidden bg-background/90 px-3 backdrop-blur-md sm:gap-2 sm:px-6 lg:static lg:h-[72px] lg:gap-3 lg:overflow-visible lg:bg-transparent lg:pl-0 lg:pr-6 lg:backdrop-blur-none">
+      <Link href="/dashboard" className="shrink-0 lg:hidden" aria-label="pathway — на главную"><Logo /></Link>
+      <form role="search" className="relative hidden min-w-0 lg:block" action="/universities">
         <Search className="pointer-events-none absolute left-4 top-1/2 size-[18px] -translate-y-1/2 text-muted-foreground" aria-hidden />
         <input name="q" type="search" placeholder="Найти вуз или программу" aria-label="Поиск вузов и программ"
           className="h-12 w-[min(420px,32vw)] rounded-full bg-card pl-11 pr-4 text-[14.5px] shadow-chunky-soft ring-1 ring-border placeholder:text-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
       </form>
-      <FreeOnlyToggle freeOnly={data.freeOnly} compact />
-      <div className="ml-auto flex items-center gap-2">
+      <div className="hidden min-w-0 lg:block">
+        <FreeOnlyToggle freeOnly={data.freeOnly} compact />
+      </div>
+      <div className="ml-auto flex min-w-0 shrink-0 items-center gap-1 sm:gap-2">
         {data.streakDays != null && data.streakDays > 0 && <StreakChip days={data.streakDays} />}
         {isExample && <ExampleChip className="hidden sm:inline-flex" />}
         <ThemeToggle />
@@ -133,16 +135,16 @@ function TopBar({ data, isExample }: { data: ShellData; isExample?: boolean }) {
 function MobileNav({ data, active, onMore, moreOpen }: { data: ShellData; active: string; onMore: () => void; moreOpen: boolean }) {
   const inTabs = MOBILE_TABS.some((t) => t.id === active);
   return (
-    <nav data-shell aria-label="Основная навигация" className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 pb-[max(env(safe-area-inset-bottom),6px)] backdrop-blur-md lg:hidden">
-      <ul className="mx-auto grid max-w-[560px] grid-cols-6 px-1 pt-1.5">
+    <nav data-shell aria-label="Основная навигация" className="fixed inset-x-0 bottom-0 z-40 max-w-[100vw] overflow-x-hidden border-t border-border bg-card/95 pb-[max(env(safe-area-inset-bottom),6px)] backdrop-blur-md lg:hidden">
+      <ul className="mx-auto grid max-w-[560px] grid-cols-6 px-0.5 pt-1.5">
         {MOBILE_TABS.map((t) => {
           const n = data.nav.find((x) => x.id === t.id); if (!n) return null;
           const I = NAV_ICON[n.icon]; const on = t.id === active;
           return (
             <li key={t.id}>
-              <Link href={n.href} aria-current={on ? 'page' : undefined} className="flex min-h-[54px] flex-col items-center justify-center gap-1 rounded-[14px] text-[11px] font-bold">
-                <span className={cn('grid h-8 w-12 place-items-center rounded-full transition-colors', on ? 'bg-primary text-primary-foreground shadow-chunky' : 'text-ink-2')}><I className="size-[19px]" strokeWidth={2.4} aria-hidden /></span>
-                <span className={on ? 'text-foreground' : 'text-muted-foreground'}>{t.label}</span>
+              <Link href={n.href} aria-current={on ? 'page' : undefined} className="flex min-h-[54px] min-w-0 flex-col items-center justify-center gap-1 rounded-[14px] px-0.5 text-[10.5px] font-bold leading-tight">
+                <span className={cn('grid h-8 w-10 place-items-center rounded-full transition-colors sm:w-12', on ? 'bg-primary text-primary-foreground shadow-chunky' : 'text-ink-2')}><I className="size-[19px]" strokeWidth={2.4} aria-hidden /></span>
+                <span className={cn('max-w-full truncate', on ? 'text-foreground' : 'text-muted-foreground')}>{t.label}</span>
               </Link>
             </li>
           );

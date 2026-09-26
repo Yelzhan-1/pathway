@@ -22,15 +22,15 @@ export function RoadmapBoard({ tasks }: { tasks: RoadmapTaskDraft[] }) {
           <h2 className="text-[14px] font-extrabold text-ink-2">{weekHeading(group.start, today)}</h2>
           <ul className="grid gap-2">
             {group.items.map((task) => (
-              <li key={task.roadmapKey} className="rounded-[var(--radius-card)] bg-card p-4 shadow-card ring-1 ring-border">
-                <h3 className="text-[15px] font-bold leading-tight">{task.title}</h3>
+              <li key={task.roadmapKey} className="min-w-0 rounded-[var(--radius-card)] bg-card p-4 shadow-card ring-1 ring-border">
+                <h3 className="text-[15px] font-bold leading-tight [overflow-wrap:anywhere]">{task.title}</h3>
                 {task.dueDate ? (
                   <p className="mt-1 text-[13px] font-semibold text-muted-foreground">{dayMonth(task.dueDate)}</p>
                 ) : null}
                 {task.lastCycle ? (
                   <p className="mt-2 text-[13px] font-medium text-ink-2">{LAST_CYCLE_WARNING_RU}</p>
                 ) : null}
-                <p className="mt-2 whitespace-pre-line text-[13.5px] font-medium leading-snug text-muted-foreground">
+                <p className="mt-2 min-w-0 whitespace-pre-line break-all text-[13.5px] font-medium leading-snug text-muted-foreground [overflow-wrap:anywhere]">
                   {task.description}
                 </p>
               </li>

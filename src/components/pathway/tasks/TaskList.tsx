@@ -42,9 +42,9 @@ export function TaskList({ items }: { items: TaskRow[] }) {
             {group.items.map((task) => (
               <li key={task.id} className="rounded-[var(--radius-card)] bg-card p-4 shadow-card ring-1 ring-border">
                 <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="text-[12px] font-bold text-muted-foreground">{strings.tasks.source[task.source]}</p>
-                    <h3 className="text-[15px] font-bold leading-tight">{task.title}</h3>
+                    <h3 className="text-[15px] font-bold leading-tight [overflow-wrap:anywhere]">{task.title}</h3>
                     {task.due_date ? (
                       <p className="mt-1 text-[13px] font-semibold text-muted-foreground">{dayMonth(task.due_date.slice(0, 10))}</p>
                     ) : null}
@@ -59,7 +59,7 @@ export function TaskList({ items }: { items: TaskRow[] }) {
                   </button>
                 </div>
                 {task.description ? (
-                  <p className="mt-2 whitespace-pre-line text-[13.5px] font-medium leading-snug text-muted-foreground">
+                  <p className="mt-2 min-w-0 whitespace-pre-line break-all text-[13.5px] font-medium leading-snug text-muted-foreground [overflow-wrap:anywhere]">
                     {task.description}
                   </p>
                 ) : null}

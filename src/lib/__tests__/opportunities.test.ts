@@ -87,6 +87,38 @@ describe("matchOpportunities", () => {
     );
     expect(items.map((item) => item.slug)).toEqual(["uni"]);
   });
+
+  it("matches grade 11 against grade-11 olympiads stored as 11 or 11 класс", () => {
+    const items = matchOpportunities(
+      { grade_or_year: "11 класс", path: "graduate" },
+      [
+        opportunity({ slug: "eleven", grades: ["11"] }),
+        opportunity({ slug: "eleven-ru", grades: ["11 класс"] }),
+        opportunity({ slug: "nine", grades: ["9"] }),
+      ],
+      {},
+      TODAY,
+    );
+    expect(items.map((item) => item.slug)).toEqual(["eleven", "eleven-ru"]);
+  });
+
+  it("hides master's and doctoral items from school students", () => {
+    const items = matchOpportunities(
+      { grade_or_year: "11 класс", path: "graduate" },
+      [
+        opportunity({
+          slug: "masters",
+          grades: [],
+          title: "Master's research internship",
+          eligibility: "Open to master's and doctoral students",
+        }),
+        opportunity({ slug: "school", grades: [], eligibility: null }),
+      ],
+      {},
+      TODAY,
+    );
+    expect(items.map((item) => item.slug)).toEqual(["school"]);
+  });
 });
 
 describe("opportunityReasons", () => {
@@ -97,5 +129,21 @@ describe("opportunityReasons", () => {
       TODAY,
     );
     expect(reasons).toEqual(["Подходит по классу: 11 класс", "Бесплатно", "Дедлайн ещё открыт", "online"]);
+  });
+
+  it("does not tell school students that a master's item has no grade limit", () => {
+    const reasons = opportunityReasons(
+      { grade_or_year: "11 класс", path: "graduate" },
+      opportunity({
+        grades: [],
+        title: "PhD summer school",
+        eligibility: "Doctoral students",
+        cost: null,
+        deadline: null,
+        format: null,
+      }),
+      TODAY,
+    );
+    expect(reasons).not.toContain("Нет ограничения по классу");
   });
 });

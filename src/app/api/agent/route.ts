@@ -6,6 +6,7 @@ import {
   type ModelMessage,
 } from "ai";
 
+import { agentErrorText } from "@/lib/agent/errors";
 import { agentModelId } from "@/lib/agent/model";
 import { partsToJson, textFromParts } from "@/lib/agent/messages";
 import { AGENT_SYSTEM_PROMPT } from "@/lib/agent/prompt";
@@ -73,16 +74,6 @@ export async function POST(request: Request) {
     return Response.json({ error: AGENT_RATE_LIMIT_MESSAGE_RU }, { status: 429 });
   }
 
-  const { error: insertError } = await supabase.from("agent_messages").insert({
-    user_id: user.id,
-    role: "user",
-    content: parsed.data.message,
-    parts: [{ type: "text", text: parsed.data.message }],
-  });
-  if (insertError) {
-    return Response.json({ error: "Не удалось сохранить сообщение." }, { status: 500 });
-  }
-
   const { data: history, error: historyError } = await supabase
     .from("agent_messages")
     .select("role, content")
@@ -93,39 +84,61 @@ export async function POST(request: Request) {
     return Response.json({ error: "Не удалось загрузить историю." }, { status: 500 });
   }
 
-  const messages: ModelMessage[] = (history ?? [])
-    .slice()
-    .reverse()
-    .map((row) => ({ role: row.role, content: row.content }));
+  const messages: ModelMessage[] = [
+    ...(history ?? [])
+      .slice()
+      .reverse()
+      .map((row) => ({ role: row.role, content: row.content })),
+    { role: "user", content: parsed.data.message },
+  ];
 
   try {
+    let failed = false;
+
     const result = streamText({
       model: agentModelId(),
       system: AGENT_SYSTEM_PROMPT,
       messages,
       tools: createAgentTools(supabase, user.id),
       stopWhen: isStepCount(6),
+      onError({ error }) {
+        failed = true;
+        console.error("agent", error);
+      },
     });
 
     const uiStream = toUIMessageStream({
       stream: result.stream,
+      onError: (error) => {
+        failed = true;
+        console.error("agent", error);
+        return agentErrorText(error);
+      },
       onFinish: async ({ responseMessage }) => {
+        if (failed) return;
         const content = textFromParts(responseMessage.parts);
-        await supabase.from("agent_messages").insert({
-          user_id: user.id,
-          role: "assistant",
-          content: content || "…",
-          parts: partsToJson(responseMessage.parts),
-        });
+        if (!content || content === "…") return;
+        const { error: insertError } = await supabase.from("agent_messages").insert([
+          {
+            user_id: user.id,
+            role: "user",
+            content: parsed.data.message,
+            parts: [{ type: "text", text: parsed.data.message }],
+          },
+          {
+            user_id: user.id,
+            role: "assistant",
+            content,
+            parts: partsToJson(responseMessage.parts),
+          },
+        ]);
+        if (insertError) console.error("agent persist", insertError);
       },
     });
 
     return createUIMessageStreamResponse({ stream: uiStream });
   } catch (error) {
     console.error("agent", error);
-    return Response.json(
-      { error: "Помощник сейчас недоступен. Попробуй позже." },
-      { status: 503 },
-    );
+    return Response.json({ error: agentErrorText(error) }, { status: 503 });
   }
 }

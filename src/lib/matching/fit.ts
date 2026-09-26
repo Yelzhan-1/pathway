@@ -1,6 +1,7 @@
 import { isFreeOrGrantUniversity, isGrantAid } from "./budget";
 import { classifyDeadlines, LAST_CYCLE_WARNING_RU } from "./deadlines";
 import { gpaRatio, universityGpaMinRatio } from "./gpa";
+import { majorMatches, universityMatchesQuery } from "./synonyms";
 import {
   SCORED_FIT_KEYS,
   type FitCategory,
@@ -13,6 +14,8 @@ import {
   type ScoredFitKey,
   type UniversityFilters,
 } from "./types";
+
+export { majorMatches } from "./synonyms";
 
 const PROFILE_GAP_RU: Record<ScoredFitKey | "country", string> = {
   english: "добавьте результат IELTS, TOEFL или Duolingo",
@@ -29,26 +32,19 @@ type BuiltCheck = {
   gap: FitGap | null;
 };
 
-function formatNumber(value: number): string {
+function formatNumber(value: number, decimals?: number): string {
   const rounded = Math.round(value * 10) / 10;
+  if (decimals === 1) return rounded.toFixed(1);
   return Number.isInteger(rounded) ? String(rounded) : String(rounded);
+}
+
+function formatExamScore(label: string, value: number): string {
+  if (label === "IELTS") return formatNumber(value, 1);
+  return formatNumber(value);
 }
 
 function normalize(value: string): string {
   return value.trim().toLocaleLowerCase("ru").replace(/\s+/g, " ");
-}
-
-export function majorMatches(intended: string, majors: string[]): boolean {
-  const needle = normalize(intended);
-  if (needle.length < 2) return false;
-  return majors.some((major) => {
-    const hay = normalize(major);
-    if (!hay) return false;
-    if (hay === needle) return true;
-    const shorter = Math.min(hay.length, needle.length);
-    if (shorter < 4) return false;
-    return hay.includes(needle) || needle.includes(hay);
-  });
 }
 
 function takenScore(profile: FitProfile, code: string): number | null {
@@ -114,8 +110,16 @@ function englishCheck(profile: FitProfile, university: FitUniversity): BuiltChec
   }
 
   const taken = evaluated.filter((option) => option.score != null);
-  if (taken.length === evaluated.length) {
-    const worst = taken[0]!;
+  const below = taken.filter(
+    (option) => option.min != null && option.score != null && option.score < option.min,
+  );
+  if (below.length > 0) {
+    const closest = below.slice().sort((a, b) => {
+      const aGap = (a.min as number) - (a.score as number);
+      const bGap = (b.min as number) - (b.score as number);
+      return aGap - bGap;
+    })[0]!;
+    const raise = `поднять ${closest.label} до ${formatExamScore(closest.label, closest.min as number)}`;
     return check({
       check: {
         key: "english",
@@ -128,8 +132,8 @@ function englishCheck(profile: FitProfile, university: FitUniversity): BuiltChec
       },
       gap: {
         key: "english",
-        message_ru: "результат английского ниже требования",
-        delta: `${worst.label} ${formatNumber(worst.score as number)} < ${formatNumber(worst.min as number)}`,
+        message_ru: raise,
+        delta: raise,
       },
     });
   }
@@ -558,12 +562,7 @@ export function fitUniversity(
 }
 
 function includesQuery(university: FitUniversity, query: string): boolean {
-  const needle = normalize(query);
-  if (!needle) return true;
-  const hay = [university.name, university.city, university.country, university.slug]
-    .filter((part): part is string => Boolean(part))
-    .map((part) => normalize(part));
-  return hay.some((part) => part.includes(needle));
+  return universityMatchesQuery(university, query);
 }
 
 export function rankUniversities(

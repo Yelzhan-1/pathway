@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 
-import { SoonScreen } from "@/components/pathway/shell/SoonScreen";
+import { GuideScreen } from "@/components/pathway/guide/GuideScreen";
 import { strings } from "@/lib/strings";
 
 export const metadata: Metadata = {
-  title: `С чего начать — ${strings.app.name}`,
+  title: `${strings.guide.title} — ${strings.app.name}`,
 };
 
 export default function GuidePage() {
-  return <SoonScreen title="С чего начать?" />;
+  return <GuideScreen />;
 }

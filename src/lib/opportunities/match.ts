@@ -62,21 +62,61 @@ function normalize(value: string): string {
   return value.trim().toLocaleLowerCase("ru").replace(/\s+/g, " ");
 }
 
+const GRADUATE_LEVEL =
+  /master'?s|\bmsc\b|\bma\b|doctoral|doctorate|ph\.?\s*d|аспирант|докторант|магистер|магистратур|graduate school|postgraduate/i;
+
+export function parseGradeNumbers(value: string | null | undefined): number[] {
+  if (!value?.trim()) return [];
+  const text = value.toLocaleLowerCase("ru");
+  const range = text.match(/(\d{1,2})\s*[-–—]\s*(\d{1,2})/);
+  if (range) {
+    const start = Number(range[1]);
+    const end = Number(range[2]);
+    if (!Number.isFinite(start) || !Number.isFinite(end)) return [];
+    const from = Math.min(start, end);
+    const to = Math.max(start, end);
+    const nums: number[] = [];
+    for (let grade = from; grade <= to; grade += 1) nums.push(grade);
+    return nums;
+  }
+  const single = text.match(/(\d{1,2})/);
+  if (!single) return [];
+  const grade = Number(single[1]);
+  return Number.isFinite(grade) ? [grade] : [];
+}
+
 export function gradeMatches(grade: string | null, grades: string[] | null): boolean {
   if (!grades || grades.length === 0) return true;
   if (!grade?.trim()) return true;
   const needle = normalize(grade);
+  const needleNums = parseGradeNumbers(grade);
   return grades.some((item) => {
     const hay = normalize(item);
     if (!hay) return false;
     if (hay === needle) return true;
-    const shorter = Math.min(hay.length, needle.length);
-    if (shorter < 4) return false;
-    return hay.includes(needle) || needle.includes(hay);
+    const hayNums = parseGradeNumbers(item);
+    if (needleNums.length > 0 && hayNums.length > 0) {
+      return needleNums.some((num) => hayNums.includes(num));
+    }
+    return false;
   });
 }
 
+export function isGraduateLevelOpportunity(opportunity: OpportunityInput): boolean {
+  const text = [opportunity.title, opportunity.eligibility, opportunity.field, opportunity.description]
+    .filter(Boolean)
+    .join(" ");
+  return GRADUATE_LEVEL.test(text);
+}
+
+export function isSchoolStudent(profile: OpportunityProfile): boolean {
+  if (profile.path === "transfer") return false;
+  if (profile.path === "graduate") return true;
+  return parseGradeNumbers(profile.grade_or_year).some((grade) => grade >= 9 && grade <= 12);
+}
+
 function pathAllowed(profile: OpportunityProfile, opportunity: OpportunityInput): boolean {
+  if (isGraduateLevelOpportunity(opportunity) && isSchoolStudent(profile)) return false;
   if (opportunity.grades && opportunity.grades.length > 0) return true;
   if (!profile.path || !opportunity.eligibility) return true;
   const text = opportunity.eligibility.toLocaleLowerCase("ru");
@@ -98,7 +138,7 @@ export function opportunityReasons(
     if (profile.grade_or_year && gradeMatches(profile.grade_or_year, opportunity.grades)) {
       reasons.push(`Подходит по классу: ${profile.grade_or_year}`);
     }
-  } else {
+  } else if (!(isGraduateLevelOpportunity(opportunity) && isSchoolStudent(profile))) {
     reasons.push("Нет ограничения по классу");
   }
   if (isFreeCost(opportunity.cost) === true) reasons.push("Бесплатно");

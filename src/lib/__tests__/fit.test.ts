@@ -69,6 +69,39 @@ describe("fitUniversity", () => {
     expect(result.gaps.some((gap) => gap.key === "english" && gap.delta)).toBe(true);
   });
 
+  it("marks english below when any taken test is under the requirement", () => {
+    const result = fitUniversity(
+      profile({ exams: [{ code: "IELTS", score: 6.5, status: "taken" }] }),
+      university({ ielts_min: 7, toefl_min: 100 }),
+      TODAY,
+    );
+    expect(checkByKey(result, "english").status).toBe("below");
+    expect(result.gaps).toContainEqual({
+      key: "english",
+      message_ru: "поднять IELTS до 7.0",
+      delta: "поднять IELTS до 7.0",
+    });
+  });
+
+  it("matches a Russian specialty to English program names", () => {
+    const result = fitUniversity(
+      profile({ intended_major: "Компьютерные науки" }),
+      university({ majors: ["BSc Computer Science", "Economics"] }),
+      TODAY,
+    );
+    expect(checkByKey(result, "major").status).toBe("meets");
+  });
+
+  it("treats a missing program list as unknown, not failed", () => {
+    const result = fitUniversity(
+      profile({ intended_major: "Компьютерные науки" }),
+      university({ majors: [] }),
+      TODAY,
+    );
+    expect(checkByKey(result, "major").status).toBe("unknown");
+    expect(result.suggestedCategory).not.toBe("dream");
+  });
+
   it("asks for a missing profile score instead of penalizing it", () => {
     const result = fitUniversity(profile({ exams: [] }), university(), TODAY);
     expect(checkByKey(result, "english").status).toBe("unknown");
