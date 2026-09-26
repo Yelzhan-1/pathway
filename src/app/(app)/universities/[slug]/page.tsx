@@ -8,7 +8,9 @@ import { ShortestPathCard } from "@/components/pathway/universities/ShortestPath
 import { ShortlistControls } from "@/components/pathway/universities/ShortlistControls";
 import { FitBadge } from "@/components/pathway/fit/FitBadge";
 import { Flag } from "@/components/pathway/ui/Flag";
-import { Display, TCard } from "@/components/pathway/ui/tropa";
+import { Books } from "@/components/pathway/ui/illustrations";
+import { Collapsible } from "@/components/pathway/ui/Collapsible";
+import { Display, StatChip, TCard } from "@/components/pathway/ui/tropa";
 import { UniMonogram } from "@/components/pathway/ui/UniMonogram";
 import { getShortlist, getUniversity } from "@/lib/data";
 import { toFitProfile } from "@/lib/data/map";
@@ -22,6 +24,10 @@ import { getCountryLabel } from "@/lib/profile/types";
 import { getCurrentProfile } from "@/lib/profile/queries";
 import { universityFeedbackPage } from "@/lib/feedback/storage";
 import { strings } from "@/lib/strings";
+import { Gift, Languages, Wallet } from "lucide-react";
+import { universityKeyFacts, type KeyFactIcon } from "@/lib/universities/keyFacts";
+
+const KEY_FACT_ICON: Record<KeyFactIcon, typeof Wallet> = { price: Wallet, grant: Gift, ielts: Languages };
 
 export async function generateMetadata({
   params,
@@ -69,11 +75,13 @@ export default async function UniversityDetailPage({
   const tuitionNote = publicNote(item.tuition_note);
   const scholarshipsNote = publicNote(item.scholarships);
   const hasGrant = isGrantAid(item.aid_for_internationals) || item.tuition_usd_per_year === 0;
+  const keyFacts = universityKeyFacts(item);
 
   return (
     <div className="flex flex-col gap-4">
-      <TCard>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+      <TCard className="relative overflow-hidden">
+        <Books className="pointer-events-none absolute -right-3 -top-3 hidden w-[104px] opacity-90 sm:block" />
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start">
           <UniMonogram id={item.id} text={initials(item.name)} size={56} />
           <div className="min-w-0 flex-1">
             <Display as="h1" className="text-[28px] font-bold sm:text-[32px]">
@@ -86,10 +94,17 @@ export default async function UniversityDetailPage({
           </div>
           <FitBadge category={item.fit.suggestedCategory} score={item.fit.score} savedCategory={saved} />
         </div>
-        <div className="mt-4">
+        {keyFacts.length > 0 ? (
+          <p className="relative mt-3 flex flex-wrap gap-1.5">
+            {keyFacts.map((fact) => (
+              <StatChip key={fact.icon} icon={KEY_FACT_ICON[fact.icon]} value={fact.value} tone="mint" />
+            ))}
+          </p>
+        ) : null}
+        <div className="relative mt-4">
           <ShortlistControls universityId={item.id} current={saved} />
         </div>
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="relative mt-4 flex flex-wrap gap-2">
           <a
             href={item.source_url}
             target="_blank"
@@ -136,10 +151,14 @@ export default async function UniversityDetailPage({
           {strings.universities.cost}
         </Display>
         <p className="mt-2 text-[16px] font-bold">{tuition}</p>
-        {tuitionNote ? <p className="mt-1 text-[14px] font-medium text-ink-2">{tuitionNote}</p> : null}
+        {tuitionNote ? (
+          <Collapsible className="mt-1">{tuitionNote}</Collapsible>
+        ) : null}
         <p className="mt-3 text-[13px] font-bold text-muted-foreground">{strings.universities.grants}</p>
         <p className="text-[14px] font-semibold">{grant ?? (hasGrant ? strings.universities.freeTuition : "—")}</p>
-        {scholarshipsNote ? <p className="mt-1 text-[14px] font-medium text-ink-2">{scholarshipsNote}</p> : null}
+        {scholarshipsNote ? (
+          <Collapsible className="mt-1">{scholarshipsNote}</Collapsible>
+        ) : null}
       </TCard>
 
       <FeedbackWidget page={universityFeedbackPage(item.slug)} />

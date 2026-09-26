@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 
 import { UniversityCard } from "@/components/pathway/universities/UniversityCard";
 import { UniversityFilters } from "@/components/pathway/universities/UniversityFilters";
-import { Display, EmptyCta } from "@/components/pathway/ui/tropa";
+import { Compass } from "@/components/pathway/ui/illustrations";
+import { EmptyCta, PageHeader } from "@/components/pathway/ui/tropa";
 import { getSettings, getShortlist, getUniversities } from "@/lib/data";
 import { toUtcDateString } from "@/lib/matching/dates";
 import type { FitCategory } from "@/lib/matching/types";
@@ -45,9 +46,7 @@ export default async function UniversitiesPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <Display as="h1" className="text-[28px] font-bold sm:text-[32px]">
-        {strings.universities.title}
-      </Display>
+      <PageHeader title={strings.universities.title} subtitle={strings.universities.subtitle} illustration={<Compass className="w-full" />} />
       <UniversityFilters
         q={firstParam(params.q)}
         region={firstParam(params.region)}

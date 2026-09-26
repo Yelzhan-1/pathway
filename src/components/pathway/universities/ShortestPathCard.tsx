@@ -1,4 +1,5 @@
 import { FitBadge } from "@/components/pathway/fit/FitBadge";
+import { Collapsible } from "@/components/pathway/ui/Collapsible";
 import { Display, TCard } from "@/components/pathway/ui/tropa";
 import type { ShortestPathResult } from "@/lib/matching/path";
 import { strings } from "@/lib/strings";
@@ -38,24 +39,23 @@ export function ShortestPathCard({
           <AddPathPlanButton universityId={universityId} comboIndex={0} />
           {rest.length > 0 ? (
             <div className="border-t border-border pt-3">
-              <p className="text-[12px] font-bold uppercase tracking-wide text-muted-foreground">
-                {strings.universities.pathAlt}
-              </p>
-              <ul className="mt-2 space-y-3">
-                {rest.map((combo, index) => (
-                  <li key={combo.levers.map((item) => item.id).join("|")} className="min-w-0">
-                    <p className="text-[13px] font-bold">
-                      {strings.universities.pathWeeks(combo.weeks)}
-                    </p>
-                    <p className="mt-1 text-[13px] font-medium leading-snug text-ink-2 [overflow-wrap:anywhere]">
-                      {combo.levers.map((item) => item.label_ru).join(" · ")}
-                    </p>
-                    <div className="mt-2">
-                      <AddPathPlanButton universityId={universityId} comboIndex={index + 1} />
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              <Collapsible label={strings.universities.pathAlt}>
+                <ul className="space-y-3">
+                  {rest.map((combo, index) => (
+                    <li key={combo.levers.map((item) => item.id).join("|")} className="min-w-0">
+                      <p className="text-[13px] font-bold text-foreground">
+                        {strings.universities.pathWeeks(combo.weeks)}
+                      </p>
+                      <p className="mt-1 text-[13px] font-medium leading-snug text-ink-2 [overflow-wrap:anywhere]">
+                        {combo.levers.map((item) => item.label_ru).join(" · ")}
+                      </p>
+                      <div className="mt-2">
+                        <AddPathPlanButton universityId={universityId} comboIndex={index + 1} />
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </Collapsible>
             </div>
           ) : null}
         </div>

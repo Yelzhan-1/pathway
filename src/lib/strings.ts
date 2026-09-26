@@ -202,6 +202,7 @@ export const strings = {
   },
   universities: {
     title: "Вузы",
+    subtitle: "Каталог с ценами, грантами и требованиями.",
     search: "Название или город",
     region: "Регион",
     country: "Страна",
