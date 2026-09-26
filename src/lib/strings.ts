@@ -299,6 +299,7 @@ export const strings = {
   },
   exams: {
     title: "Экзамены",
+    readiness: "Готовность",
     empty: "Добавь вузы в список — появится план подготовки.",
     emptyCta: "Выбрать вузы",
     weeks: (n: number) => `${n} нед. до дедлайна`,

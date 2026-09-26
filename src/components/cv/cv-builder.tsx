@@ -13,12 +13,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { Ring } from "@/components/pathway/primitives/Ring";
 import { moveActivity, newActivityId } from "@/lib/profile/activities";
 import { formatExamEntry } from "@/lib/profile/labels";
 import { parseActivities, parseCv } from "@/lib/profile/parse";
 import { useAutosave, type AutosaveWriteResult } from "@/lib/hooks/use-autosave";
 import { ACTIVITY_TYPES, emptyCv, type Activity, type Cv, type ProfileData } from "@/lib/profile/types";
 import { cvLinkError } from "@/lib/profile/url";
+import { cvCompleteness } from "@/lib/progress/readiness";
 import { strings } from "@/lib/strings";
 
 function sanitizeCv(cv: Cv): Cv {
@@ -648,9 +650,12 @@ export function CvBuilder({
   return (
     <div className="flex flex-col gap-6">
       <div className="app-chrome flex flex-col gap-4 print:hidden sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col gap-1">
-          <h1 className="font-display text-balance text-[28px] font-bold tracking-tight">{strings.cv.title}</h1>
-          <AutosaveIndicator status={saveStatus} error={saveError} />
+        <div className="flex items-center gap-3">
+          <Ring value={cvCompleteness(cv) ?? 0} size={64} stroke={8} />
+          <div className="flex flex-col gap-1">
+            <h1 className="font-display text-balance text-[28px] font-bold tracking-tight">{strings.cv.title}</h1>
+            <AutosaveIndicator status={saveStatus} error={saveError} />
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <HeadingLangToggle

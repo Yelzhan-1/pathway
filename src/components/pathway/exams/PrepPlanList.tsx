@@ -1,4 +1,7 @@
-import { Display, TCard } from "@/components/pathway/ui/tropa";
+import { Target, TrendingUp, CalendarClock } from "lucide-react";
+
+import { Collapsible } from "@/components/pathway/ui/Collapsible";
+import { Display, StatChip, TCard } from "@/components/pathway/ui/tropa";
 import { examLabel } from "@/lib/labels/display";
 import type { PrepExamPlan } from "@/lib/prep/plan";
 import { strings } from "@/lib/strings";
@@ -20,31 +23,34 @@ export function PrepPlanList({ exams }: { exams: PrepExamPlan[] }) {
           <p className="mt-1 text-[13px] font-semibold text-muted-foreground">
             {strings.exams.forUniversity} {exam.targetUniversityName}
           </p>
-          <dl className="mt-3 grid grid-cols-2 gap-3 text-[14px] sm:grid-cols-3">
-            <div>
-              <dt className="text-[12px] font-bold text-muted-foreground">{strings.exams.target}</dt>
-              <dd className="font-extrabold">{exam.target}</dd>
-            </div>
-            <div>
-              <dt className="text-[12px] font-bold text-muted-foreground">{strings.exams.current}</dt>
-              <dd className="font-extrabold">{exam.current ?? strings.exams.noScore}</dd>
-            </div>
-            <div className="col-span-2 sm:col-span-1">
-              <dt className="text-[12px] font-bold text-muted-foreground">{strings.exams.plan}</dt>
-              <dd className="font-extrabold">
-                {exam.weeksUntilDeadline != null
-                  ? strings.exams.weeks(exam.weeksUntilDeadline)
-                  : strings.exams.noWeeks}
-              </dd>
-            </div>
-          </dl>
+          <p className="mt-3 flex flex-wrap gap-1.5">
+            <StatChip icon={Target} label={strings.exams.target} value={String(exam.target)} tone="honey" />
+            <StatChip
+              icon={TrendingUp}
+              label={strings.exams.current}
+              value={exam.current != null ? String(exam.current) : strings.exams.noScore}
+              tone="mint"
+            />
+            <StatChip
+              icon={CalendarClock}
+              value={exam.weeksUntilDeadline != null ? strings.exams.weeks(exam.weeksUntilDeadline) : strings.exams.noWeeks}
+            />
+          </p>
           {exam.lastCycleWarning ? (
-            <p className="mt-3 text-[13px] font-medium text-ink-2">{exam.lastCycleWarning}</p>
+            <Collapsible className="mt-3">
+              <p>{exam.lastCycleWarning}</p>
+            </Collapsible>
           ) : null}
-          <ol className="mt-4 space-y-2">
+          <ol className="mt-4 grid gap-2 sm:grid-cols-2">
             {exam.milestones.map((step) => (
-              <li key={`${exam.code}-${step.week}`} className="rounded-[14px] bg-secondary px-3 py-2 text-[14px] font-semibold">
-                {strings.exams.week(step.week)}: {step.title_ru}
+              <li
+                key={`${exam.code}-${step.week}`}
+                className="flex items-start gap-2 rounded-[14px] bg-secondary px-3 py-2.5 text-[14px] font-semibold"
+              >
+                <span className="inline-flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full bg-card px-1.5 text-[11px] font-extrabold text-primary ring-1 ring-border">
+                  {step.week}
+                </span>
+                <span className="min-w-0 leading-snug [overflow-wrap:anywhere]">{step.title_ru}</span>
               </li>
             ))}
           </ol>
