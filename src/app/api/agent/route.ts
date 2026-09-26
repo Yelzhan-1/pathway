@@ -8,8 +8,16 @@ import {
 
 import { agentErrorText, logAgentError } from "@/lib/agent/errors";
 import { agentModelId } from "@/lib/agent/model";
+import {
+  englishOrientationRu,
+  forcedToolChoice,
+  universityFactsContext,
+  universityNamedInMessage,
+} from "@/lib/agent/forced-lookup";
 import { historyForModel, partsToJson, textFromParts } from "@/lib/agent/messages";
 import { AGENT_SYSTEM_PROMPT } from "@/lib/agent/prompt";
+import { englishRequirementLabel } from "@/lib/agent/university-facts";
+import { loadUniversity } from "@/lib/data/load";
 import {
   AGENT_RATE_LIMIT_MESSAGE_RU,
   isOverAgentRateLimit,
@@ -91,14 +99,37 @@ export async function POST(request: Request) {
     { role: "user", content: parsed.data.message },
   ];
 
+  const { data: catalog } = await supabase.from("universities").select("slug, name");
+  const named = universityNamedInMessage(parsed.data.message, catalog ?? []);
+  let system = AGENT_SYSTEM_PROMPT;
+  if (named) {
+    const { item } = await loadUniversity(supabase, user.id, named.slug);
+    if (item) {
+      system = `${AGENT_SYSTEM_PROMPT}\n\n${universityFactsContext({
+        name: item.name,
+        slug: item.slug,
+        sourceUrl: item.source_url,
+        ieltsMin: item.ielts_min,
+        toeflMin: item.toefl_min,
+        duolingoMin: item.duolingo_min,
+        englishRequirementRu: englishRequirementLabel(item.fit),
+        orientationRu: englishOrientationRu(item.requirements),
+      })}`;
+    }
+  }
+
   try {
     let failed = false;
 
     const result = streamText({
       model: agentModelId(),
-      system: AGENT_SYSTEM_PROMPT,
+      system,
       messages,
       tools: createAgentTools(supabase, user.id),
+      prepareStep: ({ stepNumber }) => {
+        const toolChoice = forcedToolChoice(stepNumber, named?.slug ?? null);
+        return toolChoice ? { toolChoice } : {};
+      },
       stopWhen: isStepCount(6),
       onError({ error }) {
         failed = true;
