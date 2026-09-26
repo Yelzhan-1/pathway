@@ -207,4 +207,22 @@ describe("rankUniversities", () => {
     const ranked = rankUniversities(profile(), [hidden, open], { region: "usa" }, TODAY);
     expect(ranked.map((item) => item.id)).toEqual(["open"]);
   });
+
+  it("keeps only free or grant universities when asked", () => {
+    const free = university({
+      id: "free",
+      name: "Free Uni",
+      slug: "free",
+      tuition_usd_per_year: 0,
+    });
+    const paid = university({
+      id: "paid",
+      name: "Paid Uni",
+      slug: "paid",
+      tuition_usd_per_year: 40000,
+      aid_for_internationals: "none",
+    });
+    const ranked = rankUniversities(profile(), [paid, free], { freeOrGrantOnly: true }, TODAY);
+    expect(ranked.map((item) => item.id)).toEqual(["free"]);
+  });
 });

@@ -14,14 +14,20 @@ function denied<T>(): ActionResult<T> {
   return fail("Войдите в аккаунт.");
 }
 
+function refreshShortlist() {
+  revalidatePath("/universities", "layout");
+  revalidatePath("/favorites");
+  revalidatePath("/compare");
+  revalidatePath("/dashboard");
+  revalidatePath("/roadmap");
+  revalidatePath("/exams");
+}
+
 export async function addToShortlist(input: unknown): Promise<ActionResult<{ universityId: string }>> {
   const ctx = await getActionContext();
   if (!ctx.ok) return denied();
   const result = await addToShortlistForUser(ctx.supabase, ctx.userId, input);
-  if (result.ok) {
-    revalidatePath("/universities");
-    revalidatePath("/dashboard");
-  }
+  if (result.ok) refreshShortlist();
   return result;
 }
 
@@ -31,10 +37,7 @@ export async function removeFromShortlist(
   const ctx = await getActionContext();
   if (!ctx.ok) return denied();
   const result = await removeFromShortlistForUser(ctx.supabase, ctx.userId, input);
-  if (result.ok) {
-    revalidatePath("/universities");
-    revalidatePath("/dashboard");
-  }
+  if (result.ok) refreshShortlist();
   return result;
 }
 
@@ -44,9 +47,6 @@ export async function changeShortlistCategory(
   const ctx = await getActionContext();
   if (!ctx.ok) return denied();
   const result = await changeShortlistCategoryForUser(ctx.supabase, ctx.userId, input);
-  if (result.ok) {
-    revalidatePath("/universities");
-    revalidatePath("/dashboard");
-  }
+  if (result.ok) refreshShortlist();
   return result;
 }

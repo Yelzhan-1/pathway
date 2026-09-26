@@ -10,6 +10,7 @@ import {
   loadPrepPlan,
   loadProgress,
   loadRoadmap,
+  loadSettings,
   loadShortlist,
   loadTasks,
   loadUniversities,
@@ -81,4 +82,12 @@ export async function getImpactStats() {
   const { supabase, userId } = await session();
   if (!userId) return { stats: null, error_ru: SIGN_IN };
   return loadImpactStats(supabase);
+}
+
+export async function getSettings() {
+  const { supabase, userId } = await session();
+  if (!userId) {
+    return { weeklyGoal: null, freeOnly: false, isMentor: false, error_ru: SIGN_IN };
+  }
+  return loadSettings(supabase, userId);
 }

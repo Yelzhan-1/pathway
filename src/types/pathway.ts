@@ -5,20 +5,21 @@
  */
 export type Img = { src: string; width: number; height: number; blurDataURL?: string; alt: string; credit?: string };
 export type CountryCode = 'KZ' | 'US' | 'DE' | 'TR' | 'KR' | 'NL' | 'GB' | 'CH' | 'JP' | 'CN' | 'SG' | 'HK' | 'AE' | 'AT' | 'CZ' | 'IT' | 'HU' | 'PL' | 'MY' | 'CA';
-/** safety = «Подходит», target = «Частично», dream = «Пока нет» */
+/** Shortlist buckets: dream = «Мечта», target = «Цель», safety = «Запасной». */
 export type ChanceTier = 'safety' | 'target' | 'dream';
 export type Tone = 'forest' | 'mint' | 'honey' | 'coral' | 'dream' | 'sky';
 
 /* ---------- Shell ---------- */
-export type NavIcon = 'home' | 'profile' | 'unis' | 'favorites' | 'compare' | 'docs' | 'roadmap' | 'opportunities' | 'exams' | 'ai' | 'settings';
+export type NavIcon = 'home' | 'profile' | 'unis' | 'favorites' | 'compare' | 'docs' | 'roadmap' | 'tasks' | 'opportunities' | 'exams' | 'ai' | 'mentors' | 'impact' | 'settings';
 export type NavItem = { id: string; label: string; href: string; icon: NavIcon; tone: Tone; badge?: number; soon?: boolean };
 export type ShellUser = { name: string; city?: string | null; email?: string };
 export type ShellData = {
   user: ShellUser;
   nav: NavItem[];              // sidebar order
   mobileTabs: string[];        // 4 nav ids for the bottom bar (+ «Ещё» is added automatically) — default home, unis, roadmap, ai … see nav.ts
-  streakDays: number | null;   // block 4 → null until streaks exist (chip hidden)
+  streakDays: number | null;   // hide the chip when null or 0
   notifications: number;
+  freeOnly: boolean;
   guide?: { title: string; text: string; cta: string; href: string } | null;
 };
 

@@ -4,8 +4,15 @@ const PROTECTED_PATHS = [
   "/profile",
   "/cv",
   "/universities",
+  "/favorites",
+  "/compare",
+  "/opportunities",
+  "/exams",
   "/roadmap",
   "/tasks",
+  "/assistant",
+  "/mentors",
+  "/impact",
 ];
 
 const AUTH_PATHS = ["/login", "/signup"];

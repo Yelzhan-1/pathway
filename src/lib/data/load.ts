@@ -75,7 +75,12 @@ export async function loadUniversities(
   if (error) return { items: [], error_ru: LOAD_ERROR };
   const profile = toFitProfile(bundle.profile);
   const universities = (data ?? []).map(toFitUniversity);
-  const ranked = rankUniversities(profile, universities, filters, day);
+  const ranked = rankUniversities(
+    profile,
+    universities,
+    { ...filters, freeOrGrantOnly: filters.freeOrGrantOnly ?? bundle.freeOnly },
+    day,
+  );
   const byId = new Map((data ?? []).map((row) => [row.id, row]));
   return {
     items: ranked.flatMap((university) => {
@@ -297,6 +302,16 @@ export async function loadImpactStats(supabase: DbClient) {
   const { data, error } = await supabase.rpc("impact_stats");
   if (error || !data) return { stats: null, error_ru: LOAD_ERROR };
   return { stats: data, error_ru: null };
+}
+
+export async function loadSettings(supabase: DbClient, userId: string) {
+  const bundle = await profileBundle(supabase, userId);
+  return {
+    weeklyGoal: bundle.weeklyGoal,
+    freeOnly: bundle.freeOnly,
+    isMentor: bundle.isMentor,
+    error_ru: null as string | null,
+  };
 }
 
 export async function loadExam(supabase: DbClient, code: string) {

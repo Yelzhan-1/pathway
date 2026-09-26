@@ -22,8 +22,12 @@ export async function setFreeOnly(input: unknown): Promise<ActionResult<{ freeOn
   if (!ctx.ok) return fail("Войдите в аккаунт.");
   const result = await setFreeOnlyForUser(ctx.supabase, ctx.userId, input);
   if (result.ok) {
+    revalidatePath("/", "layout");
     revalidatePath("/dashboard");
-    revalidatePath("/universities");
+    revalidatePath("/universities", "layout");
+    revalidatePath("/opportunities");
+    revalidatePath("/favorites");
+    revalidatePath("/compare");
   }
   return result;
 }

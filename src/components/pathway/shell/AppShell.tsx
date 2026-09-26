@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { Flame } from '../primitives/Flame';
 import { Signpost } from '../ui/illustrations';
 import { Button, ExampleChip, IconTile, Logo } from '../ui/tropa';
+import { FreeOnlyToggle } from './FreeOnlyToggle';
 import { ThemeToggle } from './ThemeToggle';
 import { MOBILE_TABS, NAV_ICON } from './nav';
 
@@ -117,6 +118,7 @@ function TopBar({ data, isExample }: { data: ShellData; isExample?: boolean }) {
         <input name="q" type="search" placeholder="Найти вуз или программу" aria-label="Поиск вузов и программ"
           className="h-12 w-[min(420px,32vw)] rounded-full bg-card pl-11 pr-4 text-[14.5px] shadow-chunky-soft ring-1 ring-border placeholder:text-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
       </form>
+      <FreeOnlyToggle freeOnly={data.freeOnly} compact />
       <div className="ml-auto flex items-center gap-2">
         {data.streakDays != null && data.streakDays > 0 && <StreakChip days={data.streakDays} />}
         {isExample && <ExampleChip className="hidden sm:inline-flex" />}
@@ -188,6 +190,7 @@ function MoreSheet({ data, active, open, onClose, userId }: { data: ShellData; a
                 <Button href={data.guide.href} size="sm">{data.guide.cta}</Button>
               </div>
             )}
+            <div className="mt-3"><FreeOnlyToggle freeOnly={data.freeOnly} /></div>
             <div className="mt-3 flex items-center gap-2.5 rounded-[20px] bg-card p-3 ring-1 ring-border">
               <Avatar name={data.user.name} />
               <span className="min-w-0 flex-1"><span className="block truncate text-[14px] font-bold">{data.user.name}</span>{data.user.city && <span className="block text-[12.5px] text-muted-foreground">{data.user.city}</span>}</span>

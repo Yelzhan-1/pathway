@@ -24,6 +24,24 @@ export const strings = {
     moveUp: "Выше",
     moveDown: "Ниже",
     errorGeneric: "Не удалось сохранить. Попробуйте ещё раз.",
+    loading: "Загружаем…",
+  },
+  preference: {
+    freeOnly: "Только бесплатно / грант",
+    freeOnlyHint: "В каталоге и возможностях останутся варианты без платы или с грантом.",
+  },
+  fit: {
+    category: {
+      dream: "Мечта",
+      target: "Цель",
+      safety: "Запасной",
+    },
+    check: {
+      meets: "Подходит",
+      below: "Частично",
+      unknown: "Пока нет",
+      not_required: "Не требуется",
+    },
   },
   nav: {
     dashboard: "Дашборд",
@@ -33,6 +51,8 @@ export const strings = {
     roadmap: "План",
     tasks: "Задачи",
     agent: "Агент",
+    mentors: "Наставники",
+    impact: "Импакт",
     signOut: "Выйти",
   },
   landing: {

@@ -1,9 +1,24 @@
-import { Building2, FileText, Heart, House, Leaf, NotebookPen, Route, Scale, Settings, Trophy, UserRound, type LucideIcon } from 'lucide-react';
+import { BarChart3, Building2, FileText, Heart, House, Leaf, ListTodo, MessagesSquare, NotebookPen, Route, Scale, Settings, Trophy, UserRound, type LucideIcon } from 'lucide-react';
 import type { NavIcon, NavItem } from '@/types/pathway';
 
-export const NAV_ICON: Record<NavIcon, LucideIcon> = { home: House, profile: UserRound, unis: Building2, favorites: Heart, compare: Scale, docs: FileText, roadmap: Route, opportunities: Trophy, exams: NotebookPen, ai: Leaf, settings: Settings };
+export const NAV_ICON: Record<NavIcon, LucideIcon> = {
+  home: House,
+  profile: UserRound,
+  unis: Building2,
+  favorites: Heart,
+  compare: Scale,
+  docs: FileText,
+  roadmap: Route,
+  tasks: ListTodo,
+  opportunities: Trophy,
+  exams: NotebookPen,
+  ai: Leaf,
+  mentors: MessagesSquare,
+  impact: BarChart3,
+  settings: Settings,
+};
 
-/** Default IA. Routes are suggestions — map to your app router. `soon` = feature from a later block (shows «скоро», still navigable to a stub). */
+/** Default IA. Routes map to the app router. */
 export const DEFAULT_NAV: NavItem[] = [
   { id: 'home', label: 'Главная', href: '/dashboard', icon: 'home', tone: 'forest' },
   { id: 'profile', label: 'Профиль', href: '/profile', icon: 'profile', tone: 'mint' },
@@ -12,9 +27,12 @@ export const DEFAULT_NAV: NavItem[] = [
   { id: 'compare', label: 'Сравнение', href: '/compare', icon: 'compare', tone: 'dream' },
   { id: 'docs', label: 'Резюме и документы', href: '/cv', icon: 'docs', tone: 'sky' },
   { id: 'roadmap', label: 'Дорожная карта', href: '/roadmap', icon: 'roadmap', tone: 'mint' },
+  { id: 'tasks', label: 'Задачи', href: '/tasks', icon: 'tasks', tone: 'sky' },
   { id: 'opportunities', label: 'Возможности', href: '/opportunities', icon: 'opportunities', tone: 'honey' },
   { id: 'exams', label: 'Экзамены', href: '/exams', icon: 'exams', tone: 'dream' },
   { id: 'ai', label: 'AI-помощник', href: '/assistant', icon: 'ai', tone: 'forest' },
+  { id: 'mentors', label: 'Наставники', href: '/mentors', icon: 'mentors', tone: 'mint' },
+  { id: 'impact', label: 'Импакт', href: '/impact', icon: 'impact', tone: 'coral' },
 ];
 /** Mobile bottom bar: exactly these 5 (short labels) + «Ещё» (sheet with the rest). */
 export const MOBILE_TABS: { id: string; label: string }[] = [

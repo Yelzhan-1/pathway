@@ -31,5 +31,17 @@ describe("decideProxyRedirect", () => {
         serverUser: null,
       }),
     ).toBeNull();
+    expect(
+      decideProxyRedirect("/favorites", {
+        claimsAuthenticated: false,
+        serverUser: null,
+      }),
+    ).toBe("/login");
+    expect(
+      decideProxyRedirect("/mentors", {
+        claimsAuthenticated: false,
+        serverUser: null,
+      }),
+    ).toBe("/login");
   });
 });

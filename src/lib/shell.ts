@@ -1,13 +1,13 @@
 import { DEFAULT_NAV } from "@/components/pathway/shell/nav";
 import type { ShellData } from "@/types/pathway";
 
-const SOON = new Set(["favorites", "compare", "roadmap", "opportunities", "exams", "ai"]);
-
 export function buildShellData(input: {
   name: string;
   city: string | null;
   email: string | null;
   shortlistCount: number | null;
+  freeOnly?: boolean;
+  streakDays?: number | null;
 }): ShellData {
   return {
     user: {
@@ -17,12 +17,12 @@ export function buildShellData(input: {
     },
     nav: DEFAULT_NAV.map((item) => ({
       ...item,
-      soon: SOON.has(item.id) || undefined,
       badge: item.id === "favorites" && input.shortlistCount ? input.shortlistCount : undefined,
     })),
     mobileTabs: ["home", "unis", "roadmap", "ai", "profile"],
-    streakDays: null,
+    streakDays: input.streakDays ?? null,
     notifications: 0,
+    freeOnly: input.freeOnly ?? false,
     guide: {
       title: "С чего начать?",
       text: "Профиль, резюме и вузы",

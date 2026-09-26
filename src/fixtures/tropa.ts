@@ -10,7 +10,7 @@ export const exampleShell: ShellData = {
   user: { name: 'Айгерим Сейткали', city: 'Алматы', email: 'aigerim@example.com' },
   nav: DEFAULT_NAV.map((n) => (n.id === 'favorites' ? { ...n, badge: 7 } : n)),
   mobileTabs: ['home', 'unis', 'roadmap', 'ai', 'profile'],
-  streakDays: 5, notifications: 2,
+  streakDays: 5, notifications: 2, freeOnly: false,
   guide: { title: 'С чего начать?', text: '3 шага на 5 минут', cta: 'Пройти гид', href: '/guide' },
 };
 export const emptyShell: ShellData = { ...exampleShell, user: { name: 'Даурен', city: null }, nav: DEFAULT_NAV, streakDays: null, notifications: 0 };

@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 
 import { AppShellWithRoute } from "@/components/pathway/shell/AppShellWithRoute";
 import { displayName } from "@/lib/dashboard/present";
+import { toUtcDateString } from "@/lib/matching/dates";
+import { computeStreak } from "@/lib/progress/readiness";
 import { buildShellData } from "@/lib/shell";
 import { createClient } from "@/lib/supabase/server";
 
@@ -24,16 +26,17 @@ export default async function AppLayout({
     redirect("/login");
   }
 
-  const [{ data: profile }, shortlist] = await Promise.all([
+  const [{ data: profile }, shortlist, activity] = await Promise.all([
     supabase
       .from("profiles")
-      .select("full_name, city, onboarding_completed")
+      .select("full_name, city, onboarding_completed, free_only")
       .eq("id", user.id)
       .maybeSingle(),
     supabase
       .from("shortlist")
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id),
+    supabase.from("activity_days").select("day").eq("user_id", user.id),
   ]);
 
   if (!profile?.onboarding_completed) {
@@ -41,11 +44,19 @@ export default async function AppLayout({
   }
 
   const fullName = displayName(profile.full_name, user.email ?? null);
+  const streakDays = activity.error
+    ? null
+    : computeStreak(
+        (activity.data ?? []).map((row) => row.day),
+        toUtcDateString(new Date()),
+      );
   const shell = buildShellData({
     name: fullName,
     city: profile.city,
     email: user.email ?? null,
     shortlistCount: shortlist.error ? null : shortlist.count ?? 0,
+    freeOnly: profile.free_only,
+    streakDays,
   });
 
   return (
