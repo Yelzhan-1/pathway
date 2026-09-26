@@ -1,6 +1,6 @@
 import { examLabel } from "@/lib/labels/display";
 import { universityGpaMinRatio } from "@/lib/matching/gpa";
-import { fitUniversity, publishedSatMin } from "@/lib/matching/fit";
+import { fitUniversity, isVerySelective, publishedSatMin } from "@/lib/matching/fit";
 import type { FitCategory, FitProfile, FitUniversity } from "@/lib/matching/types";
 import { EXAM_RANGES } from "@/lib/profile/exam-ranges";
 
@@ -260,7 +260,12 @@ export function shortestPath(
     return { from, goal, combos: unique, reason_ru: null };
   }
 
-  const selective = from === "dream" && levers.length === 0 && current.checks.every((check) => check.status !== "below");
+  const selective =
+    from === "dream" &&
+    isVerySelective(university.acceptance_rate) &&
+    !current.checks.some(
+      (check) => (check.key === "budget" || check.key === "major") && check.status === "below",
+    );
   if (selective) {
     return {
       from,

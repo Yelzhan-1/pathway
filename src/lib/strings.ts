@@ -171,6 +171,7 @@ export const strings = {
     gpa: "GPA",
     scale: "шкала",
     improved: (n: number) => `Категория лучше у ${n} вузов`,
+    dropped: (n: number) => `Категория ниже у ${n} вузов`,
     grants: (n: number) => `Грантовых вузов с закрытыми требованиями: +${n}`,
     none: "По этим баллам категории не меняются.",
     fromTo: (from: string, to: string) => `${from} → ${to}`,

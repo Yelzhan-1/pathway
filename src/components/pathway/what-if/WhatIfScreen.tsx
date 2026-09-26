@@ -8,6 +8,7 @@ import { Display, TCard } from "@/components/pathway/ui/tropa";
 import { isFreeOrGrantUniversity } from "@/lib/matching/budget";
 import { fitUniversity } from "@/lib/matching/fit";
 import { SCORED_FIT_KEYS, type FitCategory, type FitProfile, type FitUniversity } from "@/lib/matching/types";
+import { hypotheticalProfile, SLIDER_EXAMS } from "@/lib/matching/what-if";
 import { examLabel } from "@/lib/labels/display";
 import { EXAM_RANGES } from "@/lib/profile/exam-ranges";
 import { strings } from "@/lib/strings";
@@ -20,8 +21,6 @@ export type WhatIfRow = {
   group: "shortlist" | "catalog";
   university: FitUniversity;
 };
-
-const SLIDER_EXAMS = ["IELTS", "TOEFL_IBT", "DET", "SAT", "UNT"] as const;
 
 function taken(profile: FitProfile, code: string): number | null {
   const scores = profile.exams
@@ -59,17 +58,10 @@ export function WhatIfScreen({
     Object.fromEntries(SLIDER_EXAMS.map((code) => [code, taken(profile, code)])),
   );
 
-  const hypothetical: FitProfile = useMemo(() => {
-    const exams = profile.exams.filter(
-      (exam) => exam.status !== "taken" || !SLIDER_EXAMS.includes(exam.code as (typeof SLIDER_EXAMS)[number]),
-    );
-    for (const code of SLIDER_EXAMS) {
-      const value = scores[code];
-      if (value == null || !Number.isFinite(value)) continue;
-      exams.push({ code, score: value, status: "taken" });
-    }
-    return { ...profile, gpa, exams };
-  }, [gpa, profile, scores]);
+  const hypothetical: FitProfile = useMemo(
+    () => hypotheticalProfile(profile, { gpa, scores }),
+    [gpa, profile, scores],
+  );
 
   const compared = useMemo(() => {
     return rows.map((row) => {
@@ -88,7 +80,15 @@ export function WhatIfScreen({
   }, [hypothetical, profile, rows, today]);
 
   const improved = compared.filter((row) => row.improved).length;
+  const dropped = compared.filter(
+    (row) => row.before !== row.after && rank(row.after) < rank(row.before),
+  ).length;
   const grants = compared.filter((row) => row.grantUnlocked).length;
+  const summary = [
+    improved > 0 ? strings.whatIf.improved(improved) : null,
+    dropped > 0 ? strings.whatIf.dropped(dropped) : null,
+    grants > 0 ? strings.whatIf.grants(grants) : null,
+  ].filter((part): part is string => part != null);
 
   return (
     <div className="flex min-w-0 flex-col gap-4">
@@ -151,9 +151,7 @@ export function WhatIfScreen({
       </TCard>
 
       <p className="text-[14px] font-bold">
-        {improved === 0 && grants === 0
-          ? strings.whatIf.none
-          : `${strings.whatIf.improved(improved)}. ${strings.whatIf.grants(grants)}`}
+        {summary.length === 0 ? strings.whatIf.none : summary.join(". ")}
       </p>
 
       {(["shortlist", "catalog"] as const).map((group) => {
