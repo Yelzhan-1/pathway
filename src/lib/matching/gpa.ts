@@ -9,11 +9,13 @@ function coerceNumber(raw: unknown): number | null {
   return Number.isFinite(value) ? value : null;
 }
 
-export function gpaRatio(gpa: number | null, scale: number | null): number | null {
-  if (gpa == null || scale == null) return null;
-  if (!SCALES.includes(scale as (typeof SCALES)[number])) return null;
-  if (!Number.isFinite(gpa) || gpa < 0 || gpa > scale) return null;
-  return gpa / scale;
+export function gpaRatio(gpa: number | string | null, scale: number | string | null): number | null {
+  const value = coerceNumber(gpa);
+  const points = coerceNumber(scale);
+  if (value == null || points == null) return null;
+  if (!SCALES.includes(points as (typeof SCALES)[number])) return null;
+  if (value < 0 || value > points) return null;
+  return value / points;
 }
 
 function ratioOnScale(raw: number, scale: number): number | null {

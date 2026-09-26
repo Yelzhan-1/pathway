@@ -3,7 +3,8 @@ import { describe, expect, it } from "vitest";
 import { fitUniversity } from "@/lib/matching/fit";
 import { shortestPath } from "@/lib/matching/path";
 import type { FitProfile, FitUniversity } from "@/lib/matching/types";
-import { hypotheticalProfile } from "@/lib/matching/what-if";
+import { hypotheticalProfile, whatIfSummary } from "@/lib/matching/what-if";
+import { strings } from "@/lib/strings";
 
 const TODAY = "2026-09-26";
 
@@ -85,6 +86,30 @@ describe("hypotheticalProfile", () => {
     const next = hypotheticalProfile(start, { gpa: 0.6, scores: { IELTS: 7.5 } });
     const after = fitUniversity(next, school, TODAY);
     expect(before.suggestedCategory).toBe("safety");
+    expect(after.suggestedCategory).toBe("dream");
+    expect(
+      whatIfSummary([{ before: before.suggestedCategory, after: after.suggestedCategory, grantUnlocked: false }]),
+    ).not.toBe(strings.whatIf.none);
+  });
+
+  it("shows the unchanged line only when every category stays put", () => {
+    expect(whatIfSummary([{ before: "safety", after: "safety", grantUnlocked: false }])).toBe(strings.whatIf.none);
+    expect(whatIfSummary([{ before: "safety", after: "dream", grantUnlocked: false }])).toMatch(/ниже/);
+  });
+
+  it("feeds a numeric-string GPA scale into the engine", () => {
+    const start = profile({
+      gpa: "4.60" as unknown as number,
+      gpa_scale: "5.00" as unknown as number,
+      exams: [{ code: "IELTS", score: 7.5, status: "taken" }],
+    });
+    const school = university({ ielts_min: 6.5, requirements: { gpa_min: 3.4 } });
+    const before = fitUniversity(start, school, TODAY);
+    expect(before.checks.find((check) => check.key === "gpa")?.have).toContain("4.6");
+    expect(before.suggestedCategory).toBe("safety");
+    const next = hypotheticalProfile(start, { gpa: 0.6, scores: { IELTS: 7.5 } });
+    const after = fitUniversity(next, school, TODAY);
+    expect(after.checks.find((check) => check.key === "gpa")?.status).toBe("below");
     expect(after.suggestedCategory).toBe("dream");
   });
 });

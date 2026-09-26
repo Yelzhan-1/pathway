@@ -8,7 +8,7 @@ import { Display, TCard } from "@/components/pathway/ui/tropa";
 import { isFreeOrGrantUniversity } from "@/lib/matching/budget";
 import { fitUniversity } from "@/lib/matching/fit";
 import { SCORED_FIT_KEYS, type FitCategory, type FitProfile, type FitUniversity } from "@/lib/matching/types";
-import { hypotheticalProfile, SLIDER_EXAMS } from "@/lib/matching/what-if";
+import { hypotheticalProfile, SLIDER_EXAMS, whatIfSummary } from "@/lib/matching/what-if";
 import { examLabel } from "@/lib/labels/display";
 import { EXAM_RANGES } from "@/lib/profile/exam-ranges";
 import { strings } from "@/lib/strings";
@@ -79,16 +79,7 @@ export function WhatIfScreen({
     });
   }, [hypothetical, profile, rows, today]);
 
-  const improved = compared.filter((row) => row.improved).length;
-  const dropped = compared.filter(
-    (row) => row.before !== row.after && rank(row.after) < rank(row.before),
-  ).length;
-  const grants = compared.filter((row) => row.grantUnlocked).length;
-  const summary = [
-    improved > 0 ? strings.whatIf.improved(improved) : null,
-    dropped > 0 ? strings.whatIf.dropped(dropped) : null,
-    grants > 0 ? strings.whatIf.grants(grants) : null,
-  ].filter((part): part is string => part != null);
+  const summary = whatIfSummary(compared);
 
   return (
     <div className="flex min-w-0 flex-col gap-4">
@@ -150,9 +141,7 @@ export function WhatIfScreen({
         </div>
       </TCard>
 
-      <p className="text-[14px] font-bold">
-        {summary.length === 0 ? strings.whatIf.none : summary.join(". ")}
-      </p>
+      <p className="text-[14px] font-bold">{summary}</p>
 
       {(["shortlist", "catalog"] as const).map((group) => {
         const items = compared.filter((row) => row.group === group);
