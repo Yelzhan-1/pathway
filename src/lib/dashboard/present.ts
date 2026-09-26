@@ -13,8 +13,8 @@ import type {
   UniCard,
 } from "@/types/pathway";
 import { classifyDeadlines } from "@/lib/matching/deadlines";
+import { displayTitle, roundLabel } from "@/lib/labels/display";
 import { displayMajor, uniqueDisplayMajors } from "@/lib/matching/synonyms";
-import { roundLabel } from "@/lib/labels/display";
 import { shiftUtcDays, utcWeekRange } from "@/lib/matching/dates";
 import type { FitCategory, FitUniversity } from "@/lib/matching/types";
 import type { ProgressReport } from "@/lib/progress/readiness";
@@ -315,7 +315,7 @@ function presentOpportunities(
     return {
       id: row.id,
       kind: opportunityKind(row.type),
-      title: row.title,
+      title: displayTitle(row.title),
       meta: row.deadline ? `${typeLabel} · ${dayMonth(row.deadline.slice(0, 10))}` : typeLabel,
       href: row.url || row.source_url,
     };

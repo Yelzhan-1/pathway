@@ -20,7 +20,7 @@ import { toFitProfile } from "@/lib/data/map";
 import { toUtcDateString } from "@/lib/matching/dates";
 import { shortestPath } from "@/lib/matching/path";
 import { isLastCycleNote } from "@/lib/matching/deadlines";
-import { displayCost, publicNote, roundLabel } from "@/lib/labels/display";
+import { displayCost, displayTitle, publicNote, roundLabel } from "@/lib/labels/display";
 import type { FitResult } from "@/lib/matching/types";
 import { parseCv, parseProfile } from "@/lib/profile/parse";
 
@@ -112,9 +112,9 @@ export function createAgentTools(supabase: DbClient, userId: string) {
           city: item.city,
           majors: item.majors,
           tuition_usd_per_year: item.tuition_usd_per_year,
-          tuition_note: item.tuition_note,
+          tuition_note: publicNote(item.tuition_note),
           aid_for_internationals: item.aid_for_internationals,
-          scholarships: item.scholarships,
+          scholarships: publicNote(item.scholarships),
           acceptance_rate: item.acceptance_rate,
           ielts_min: item.ielts_min,
           toefl_min: item.toefl_min,
@@ -202,11 +202,11 @@ export function createAgentTools(supabase: DbClient, userId: string) {
         return {
           found: true,
           items: slice.map((item) => ({
-            title: item.title,
+            title: displayTitle(item.title),
             slug: item.slug,
             type: item.type,
             deadline: item.deadline,
-            deadline_note: item.deadline_note,
+            deadline_note: publicNote(item.deadline_note),
             cost: displayCost(item.cost),
             format: item.format,
             grades: item.grades,
