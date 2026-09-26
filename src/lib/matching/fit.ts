@@ -4,6 +4,7 @@ import { gpaRatio, universityGpaMinRatio } from "./gpa";
 import { majorMatches, uniqueDisplayMajors, universityMatchesQuery } from "./synonyms";
 import { aidLabel, examLabel, formatMoneyUsd, roundLabel } from "@/lib/labels/display";
 import { getCountryLabel } from "@/lib/profile/types";
+import { coerceFinite } from "@/data/catalog-acceptance";
 import {
   SCORED_FIT_KEYS,
   type FitCategory,
@@ -512,13 +513,12 @@ function deadlineCheck(university: FitUniversity, today: string): BuiltCheck {
   });
 }
 
-/** Values ≤ 1 are fractions; values above 1 are percents. */
-export function acceptanceFraction(acceptanceRate: number | null): number | null {
-  if (acceptanceRate == null || !Number.isFinite(acceptanceRate) || acceptanceRate < 0) {
-    return null;
-  }
-  if (acceptanceRate <= 1) return acceptanceRate;
-  return acceptanceRate / 100;
+/** Values ≤ 1 are fractions; values above 1 are percents. Numeric strings from Postgres are accepted. */
+export function acceptanceFraction(acceptanceRate: unknown): number | null {
+  const rate = coerceFinite(acceptanceRate);
+  if (rate == null || rate < 0) return null;
+  if (rate <= 1) return rate;
+  return rate / 100;
 }
 
 /** Selective means 15% or under. */
