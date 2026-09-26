@@ -149,6 +149,20 @@ export const strings = {
     aiCta: "Спросить помощника",
     aiTasks: "К задачам",
     quest: "Цель недели",
+    weekTasksTitle: "На этой неделе",
+    weekTasksEmpty: "На этой неделе задач нет",
+    weekTasksEmptyText: "План подскажет, что сделать дальше.",
+    weekTasksCta: "Открыть задачи",
+    weekTasksAll: "Все задачи",
+    weekLine: (streakDays: number, done: number, goal: number) =>
+      `🔥 ${streakDays} ${streakDays === 1 ? "день" : streakDays >= 2 && streakDays <= 4 ? "дня" : "дней"} подряд · цель на неделю: ${done} из ${goal}`,
+    weekLineNoGoal: (streakDays: number) =>
+      `🔥 ${streakDays} ${streakDays === 1 ? "день" : streakDays >= 2 && streakDays <= 4 ? "дня" : "дней"} подряд`,
+    weekLineSetGoal: "Задать цель на неделю →",
+    shortlistTitle: "Твой список",
+    shortlistEmpty: "Пока нет вузов в списке",
+    shortlistCta: "Выбрать вузы",
+    feedbackLink: "Помогло ли тебе?",
   },
   soon: {
     title: "Скоро здесь…",

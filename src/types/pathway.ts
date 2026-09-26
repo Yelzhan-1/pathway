@@ -38,6 +38,8 @@ export type Opportunity = { id: string; kind: OpportunityKind; title: string; me
 export type DocStatus = 'done' | 'progress' | 'todo';
 export type DocItem = { id: 'cv' | 'passport' | 'transcript' | 'motivation' | 'english' | 'recommendations' | string; title: string; status: DocStatus; meta?: string; href?: string };
 export type AiBuddy = { message: string; primary: { label: string; href: string }; secondary?: { label: string; href: string } };
+export type HeroCta = { current: string | null; cta: string; href: string };
+export type WeekTask = { id: string; title: string; done: boolean; dueDate: string | null };
 export type Option = { value: string; label: string; country?: CountryCode; countryKey?: string; majors?: string[] };
 export type CheckChancesOptions = { programs: Option[]; countries: Option[]; universities: Option[]; defaults?: { program?: string; country?: string; university?: string } };
 
@@ -58,6 +60,8 @@ export type DashboardData = {
   opportunities: Opportunity[] | null; // block 4
   docs: DocItem[] | null;              // block 2 NOW (CV status + profile-derived list)
   ai: AiBuddy | null;                  // block 5
+  heroCta: HeroCta;                    // block 1 NOW: one big button for the current road step
+  weekTasks: WeekTask[] | null;        // block 2 NOW: up to 3 not-done tasks (overdue + this week first)
   weeklyGoal?: number | null;
   progress?: {
     readinessPercent: number | null;

@@ -9,7 +9,7 @@ import { campus } from './images';
 export const exampleShell: ShellData = {
   user: { name: 'Айгерим Сейткали', city: 'Алматы', email: 'aigerim@example.com' },
   nav: DEFAULT_NAV.map((n) => (n.id === 'favorites' ? { ...n, badge: 7 } : n)),
-  mobileTabs: ['home', 'unis', 'roadmap', 'ai', 'profile'],
+  mobileTabs: ['home', 'unis', 'roadmap', 'docs', 'ai'],
   streakDays: 5, notifications: 2, freeOnly: false,
   guide: { title: 'С чего начать?', text: '3 шага на 5 минут', cta: 'Пройти гид', href: '/guide' },
 };
@@ -27,6 +27,12 @@ export const exampleDashboard: DashboardData = {
     { id: 'essay', title: 'Эссе', status: 'locked' },
   ],
   roadFinish: 'Финиш · заявки, январь',
+  heroCta: { current: 'вузы', cta: 'Выбрать вузы', href: '/universities' },
+  weekTasks: [
+    { id: 't1', title: 'Отправить эссе в KAIST', done: false, dueDate: '2026-09-28' },
+    { id: 't2', title: 'Записаться на IELTS', done: false, dueDate: '2026-10-01' },
+    { id: 't3', title: 'Дособрать транскрипт', done: false, dueDate: null },
+  ],
   stats: [
     { id: 'viewed', label: 'вузов просмотрено', value: 24, href: '/universities?tab=history' },
     { id: 'favorites', label: 'в избранном', value: 7, href: '/favorites' },
@@ -72,6 +78,7 @@ export const emptyDashboard: DashboardData = {
   today: '2026-09-26', firstName: 'Даурен', headline: 'Начнём с профиля — это 3 минуты, и дорога откроется.',
   road: [{ id: 'profile', title: 'Заполни профиль', status: 'current', meta: '10 вопросов · 3 минуты', href: '/onboarding' }],
   roadFinish: null, stats: null, strength: null, streak: null, popular: null, checkOptions: null, chances: null, deadlines: null, opportunities: null, docs: null, ai: null,
+  heroCta: { current: 'профиль', cta: 'Заполнить профиль', href: '/onboarding' }, weekTasks: null,
 };
 
 /** Real onboarding copy (10 questions + summary). Option ids map to profile enums. */

@@ -5,12 +5,14 @@ import type {
   DeadlineTicket,
   DocItem,
   DocStatus,
+  HeroCta,
   Opportunity,
   OpportunityKind,
   RoadStep,
   StatTile,
   StreakData,
   UniCard,
+  WeekTask,
 } from "@/types/pathway";
 import { classifyDeadlines } from "@/lib/matching/deadlines";
 import { displayTitle, roundLabel } from "@/lib/labels/display";
@@ -162,6 +164,53 @@ export function roadSteps(input: {
     { id: "exams", title: "Экзамены", status: unisDone ? "current" : "locked", href: "/exams" },
     { id: "apply", title: "Заявки", status: "locked" },
   ];
+}
+
+const STEP_NOUN: Record<string, string> = {
+  profile: "профиль",
+  cv: "резюме",
+  unis: "вузы",
+  exams: "экзамены",
+  apply: "заявки",
+};
+const STEP_ACTION: Record<string, { cta: string; href: string }> = {
+  profile: { cta: "Заполнить профиль", href: "/profile" },
+  cv: { cta: "Собрать резюме", href: "/cv" },
+  unis: { cta: "Выбрать вузы", href: "/universities" },
+  exams: { cta: "Открыть план подготовки", href: "/exams" },
+  apply: { cta: "Открыть план", href: "/roadmap" },
+};
+
+/** One big hero CTA for the current road step, e.g. «Сейчас: экзамены → Открыть план подготовки». */
+export function heroCtaFor(road: RoadStep[]): HeroCta {
+  const step = road.find((item) => item.status === "current");
+  if (!step) return { current: null, cta: "Открыть план", href: "/roadmap" };
+  const action = STEP_ACTION[step.id] ?? { cta: "Открыть план", href: step.href ?? "/roadmap" };
+  return { current: STEP_NOUN[step.id] ?? step.title.toLowerCase(), ...action };
+}
+
+export type PlainTask = { id: string; title: string; status: string; due_date: string | null };
+
+/**
+ * Up to 3 not-done tasks for «На этой неделе»: overdue and due-this-week first
+ * (earliest due date first), then the nearest upcoming tasks to fill the rest.
+ * Marking a task done makes it drop off the list on the next load.
+ */
+export function presentWeekTasks(tasks: PlainTask[], today: string): WeekTask[] {
+  const { end } = utcWeekRange(today);
+  const open = tasks.filter((task) => task.status !== "done");
+  const dueSoon = open
+    .filter((task) => task.due_date != null && task.due_date.slice(0, 10) <= end)
+    .sort((a, b) => (a.due_date ?? "").localeCompare(b.due_date ?? ""));
+  const later = open
+    .filter((task) => task.due_date == null || task.due_date.slice(0, 10) > end)
+    .sort((a, b) => (a.due_date ?? "9999-99-99").localeCompare(b.due_date ?? "9999-99-99"));
+  return [...dueSoon, ...later].slice(0, 3).map((task) => ({
+    id: task.id,
+    title: task.title,
+    done: task.status === "done",
+    dueDate: task.due_date,
+  }));
 }
 
 export function dashboardHeadline(input: {
@@ -361,6 +410,7 @@ export function presentDashboard(input: {
   }> | null;
   activityDays?: string[] | null;
   progress?: ProgressReport | null;
+  tasks?: PlainTask[] | null;
 }): DashboardData {
   const completeness = computeProfileCompleteness(input.profile);
   const started = cvStarted(input.profile);
@@ -398,6 +448,11 @@ export function presentDashboard(input: {
             : null,
       }
     : null;
+  const road = roadSteps({
+    percent: completeness.percent,
+    cvStarted: started,
+    shortlistCount: input.shortlistCount,
+  });
 
   return {
     today: input.today,
@@ -407,11 +462,9 @@ export function presentDashboard(input: {
       cvStarted: started,
       shortlistCount: input.shortlistCount,
     }),
-    road: roadSteps({
-      percent: completeness.percent,
-      cvStarted: started,
-      shortlistCount: input.shortlistCount,
-    }),
+    road,
+    heroCta: heroCtaFor(road),
+    weekTasks: input.tasks ? presentWeekTasks(input.tasks, input.today) : null,
     roadFinish: completeness.percent >= 80 ? "Финиш · подача заявок" : null,
     stats,
     strength: {
