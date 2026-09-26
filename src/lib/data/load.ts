@@ -11,6 +11,7 @@ import { emptyProfile, type ProfileData } from "@/lib/profile/types";
 import { parseProfile } from "@/lib/profile/parse";
 import { buildProgress, type ProgressReport } from "@/lib/progress/readiness";
 import { buildRoadmap, type RoadmapTaskDraft } from "@/lib/roadmap/build";
+import { matchesUniversityIdentity } from "@/lib/universities/search";
 
 import { toFitProfile, toFitUniversity } from "./map";
 
@@ -92,6 +93,23 @@ export async function loadUniversities(
   };
 }
 
+async function findUniversityByIdentity(supabase: DbClient, query: string) {
+  const needle = query.trim();
+  if (!needle) return { data: null, error: null };
+  const bySlug = await supabase.from("universities").select("*").ilike("slug", needle).maybeSingle();
+  if (bySlug.error) return { data: null, error: bySlug.error };
+  if (bySlug.data) return { data: bySlug.data, error: null };
+  const byName = await supabase.from("universities").select("*").ilike("name", needle).maybeSingle();
+  if (!byName.error && byName.data) return { data: byName.data, error: null };
+  const all = await supabase.from("universities").select("*");
+  if (all.error) return { data: null, error: all.error };
+  const match =
+    (all.data ?? []).find((row) =>
+      matchesUniversityIdentity(needle, { slug: row.slug, name: row.name }),
+    ) ?? null;
+  return { data: match, error: null };
+}
+
 export async function loadUniversity(
   supabase: DbClient,
   userId: string | null,
@@ -100,7 +118,7 @@ export async function loadUniversity(
 ): Promise<{ item: UniversityWithFit | null; error_ru: string | null }> {
   const day = toUtcDateString(today);
   const [{ data, error }, bundle] = await Promise.all([
-    supabase.from("universities").select("*").eq("slug", slug).maybeSingle(),
+    findUniversityByIdentity(supabase, slug),
     profileBundle(supabase, userId),
   ]);
   if (error) return { item: null, error_ru: LOAD_ERROR };

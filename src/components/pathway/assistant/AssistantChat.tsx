@@ -17,8 +17,11 @@ async function agentFetch(input: RequestInfo | URL, init?: RequestInit) {
   throw new Error(payload?.error || strings.assistant.unavailable);
 }
 
-function messageText(message: UIMessage) {
-  return textFromParts(message.parts) || (message.role === "assistant" ? "…" : "");
+function messageText(message: UIMessage, streaming: boolean) {
+  const text = textFromParts(message.parts).trim();
+  if (text && text !== "…") return text;
+  if (message.role !== "assistant") return "";
+  return streaming ? "…" : strings.assistant.tryAgain;
 }
 
 export function AssistantChat({ initialMessages }: { initialMessages: UIMessage[] }) {
@@ -58,7 +61,7 @@ export function AssistantChat({ initialMessages }: { initialMessages: UIMessage[
                       : "rounded-tr-[4px] bg-primary text-primary-foreground",
                   )}
                 >
-                  {messageText(message)}
+                  {messageText(message, pending)}
                 </p>
               </li>
             );

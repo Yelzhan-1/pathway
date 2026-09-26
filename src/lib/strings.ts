@@ -334,6 +334,7 @@ export const strings = {
     send: "Отправить",
     stop: "Стоп",
     unavailable: "Помощник сейчас недоступен. Попробуй позже.",
+    tryAgain: "Попробуй ещё раз",
     label: "AI-помощник · ИИ, не человек",
   },
   mentors: {

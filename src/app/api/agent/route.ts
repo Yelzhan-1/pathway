@@ -116,7 +116,7 @@ export async function POST(request: Request) {
       },
       onFinish: async ({ responseMessage }) => {
         if (failed) return;
-        const content = textFromParts(responseMessage.parts);
+        const content = textFromParts(responseMessage.parts).trim();
         if (!content || content === "…") return;
         const { error: insertError } = await supabase.from("agent_messages").insert([
           {

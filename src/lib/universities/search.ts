@@ -47,3 +47,30 @@ export function matchesDeadlineFilter(
   if (filter === "upcoming") return classified.upcoming.length > 0;
   return classified.lastCycle.length > 0;
 }
+
+const NAME_STOP_WORDS = new Set(["of", "and", "the", "for", "de", "da"]);
+
+export function normalizeIdentity(value: string): string {
+  return value.trim().toLocaleLowerCase("ru").replace(/[^a-zа-яё0-9]+/gi, "");
+}
+
+/** Case-insensitive slug, full name, or short name (acronym / hyphen-stripped slug). */
+export function matchesUniversityIdentity(
+  query: string,
+  row: { slug: string; name: string },
+): boolean {
+  const raw = query.trim();
+  if (!raw) return false;
+  const needle = normalizeIdentity(raw);
+  if (!needle) return false;
+  const slug = normalizeIdentity(row.slug);
+  const name = normalizeIdentity(row.name);
+  if (needle === slug || needle === name) return true;
+  const words = row.name.split(/[^A-Za-zА-Яа-яЁё0-9]+/).filter((word) => word.length > 0);
+  const acronym = words
+    .filter((word) => !NAME_STOP_WORDS.has(word.toLocaleLowerCase("en")))
+    .map((word) => word[0] ?? "")
+    .join("")
+    .toLocaleLowerCase("en");
+  return acronym.length >= 3 && needle === acronym;
+}

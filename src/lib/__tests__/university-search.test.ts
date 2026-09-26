@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { rankUniversities } from "@/lib/matching/fit";
 import { universityMatchesQuery } from "@/lib/matching/synonyms";
 import type { FitProfile, FitUniversity } from "@/lib/matching/types";
-import { matchesDeadlineFilter, parseUniversityQuery } from "@/lib/universities/search";
+import { matchesDeadlineFilter, matchesUniversityIdentity, parseUniversityQuery } from "@/lib/universities/search";
 
 describe("parseUniversityQuery", () => {
   it("keeps known filters and drops an unknown region", () => {
@@ -112,5 +112,19 @@ describe("rankUniversities search", () => {
     };
     const ranked = rankUniversities(profile, [uni], { query: "Кембридж" }, "2026-09-26");
     expect(ranked.map((item) => item.slug)).toEqual(["cambridge"]);
+  });
+});
+
+describe("matchesUniversityIdentity", () => {
+  it("matches KAIST, kaist, and Nazarbayev University", () => {
+    const kaist = { slug: "kaist", name: "KAIST" };
+    expect(matchesUniversityIdentity("KAIST", kaist)).toBe(true);
+    expect(matchesUniversityIdentity("kaist", kaist)).toBe(true);
+    expect(matchesUniversityIdentity("Nazarbayev University", { slug: "nu", name: "Nazarbayev University" })).toBe(
+      true,
+    );
+    expect(matchesUniversityIdentity("KAIST", { slug: "korea-advanced", name: "Korea Advanced Institute of Science and Technology" })).toBe(
+      true,
+    );
   });
 });
