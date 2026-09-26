@@ -1,144 +1,59 @@
 import { useEffect, useRef, useState } from "react";
 
-import { strings } from "@/lib/strings";
+import {
+  diffPatch,
+  draftStorageKey,
+  hasExpectedUpdatedAt,
+  mergePatch,
+  pickBase,
+  readPatchDraft,
+  restoreDraft,
+  saveWithConflictRetry,
+  writePatchDraft,
+  type AutosaveWriteResult,
+  type DraftStorage,
+  type PatchDraft,
+} from "@/lib/hooks/autosave-patch";
+
+export type { AutosaveWriteResult, DraftStorage, PatchDraft };
+export {
+  clearUserDrafts,
+  createMemoryStorage,
+  diffPatch,
+  draftAfterSanitizedSave,
+  draftStorageKey,
+  hasExpectedUpdatedAt,
+  mergePatch,
+  readPatchDraft,
+  restoreDraft,
+  saveWithConflictRetry,
+  writePatchDraft,
+} from "@/lib/hooks/autosave-patch";
 
 export type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 const KEEPALIVE_LIMIT = 64 * 1024;
-export const CONFLICT_RETRY_LIMIT = 3;
-
-export type DraftStorage = {
-  getItem: (key: string) => string | null;
-  setItem: (key: string, value: string) => void;
-  removeItem: (key: string) => void;
-};
-
-export type DraftEntry<T> = {
-  payload: T;
-  clientSavedAt: number;
-};
-
-export type AutosaveWriteResult<T> = {
-  error: string | null;
-  updatedAt?: string;
-  conflict?: {
-    serverValue: T;
-    updatedAt: string;
-  };
-};
 
 export function statusAfterSkippedSave(hasSaved: boolean): "idle" | "saved" {
   return hasSaved ? "saved" : "idle";
 }
 
-export function draftStorageKey(userId: string, kind: string): string {
-  return `pathway:cv-draft:${userId}:${kind}`;
-}
-
-export function createMemoryStorage(): DraftStorage {
-  const map = new Map<string, string>();
-  return {
-    getItem: (key) => map.get(key) ?? null,
-    setItem: (key, value) => {
-      map.set(key, value);
-    },
-    removeItem: (key) => {
-      map.delete(key);
-    },
-  };
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-export function readDraft<T>(
-  storage: DraftStorage,
-  key: string,
-): DraftEntry<T> | null {
-  try {
-    const raw = storage.getItem(key);
-    if (!raw) return null;
-    const parsed: unknown = JSON.parse(raw);
-    if (!isRecord(parsed) || typeof parsed.clientSavedAt !== "number") {
-      return null;
-    }
-    if (!("payload" in parsed)) return null;
-    return {
-      payload: parsed.payload as T,
-      clientSavedAt: parsed.clientSavedAt,
-    };
-  } catch {
-    return null;
-  }
-}
-
-export function writeDraft<T>(
-  storage: DraftStorage,
-  key: string,
-  payload: T,
-  now = Date.now(),
-): void {
-  try {
-    storage.setItem(key, JSON.stringify({ payload, clientSavedAt: now }));
-  } catch {
-    // sessionStorage can be missing or quota-limited
-  }
-}
-
-export function clearDraftIfPayload<T>(
-  storage: DraftStorage,
-  key: string,
-  payload: T,
-): void {
-  const stored = readDraft<T>(storage, key);
-  if (!stored) return;
-  if (JSON.stringify(stored.payload) !== JSON.stringify(payload)) return;
-  try {
-    storage.removeItem(key);
-  } catch {
-    // ignore
-  }
-}
-
-export function resolveRestoredValue<T>(
-  serverValue: T,
-  draft: DraftEntry<T> | null,
-): T {
-  return draft ? draft.payload : serverValue;
-}
-
-export function applyDraftOnTop<T>(serverValue: T, draft: T): T {
-  if (isRecord(serverValue) && isRecord(draft)) {
-    return { ...serverValue, ...draft } as T;
-  }
-  return draft;
-}
-
-export async function saveWithConflictRetry<T>(
-  save: (value: T) => Promise<AutosaveWriteResult<T>>,
-  value: T,
-): Promise<{ error: string | null; updatedAt?: string; value: T }> {
-  let current = value;
-  for (let attempt = 0; attempt < CONFLICT_RETRY_LIMIT; attempt++) {
-    const result = await save(current);
-    if (result.conflict) {
-      current = applyDraftOnTop(result.conflict.serverValue, current);
-      continue;
-    }
-    return {
-      error: result.error,
-      updatedAt: result.updatedAt,
-      value: current,
-    };
-  }
-  return { error: strings.cv.saveError, value: current };
-}
-
 function getSessionDraftStorage(): DraftStorage | null {
   try {
     if (typeof sessionStorage === "undefined") return null;
-    return sessionStorage;
+    return {
+      getItem: (key) => sessionStorage.getItem(key),
+      setItem: (key, value) => sessionStorage.setItem(key, value),
+      removeItem: (key) => sessionStorage.removeItem(key),
+      keys: () => {
+        const names: string[] = [];
+        for (let index = 0; index < sessionStorage.length; index += 1) {
+          const key = sessionStorage.key(index);
+          if (key) names.push(key);
+        }
+        return names;
+      },
+    };
   } catch {
     return null;
   }
@@ -160,7 +75,7 @@ type AutosaveOptions<T> = {
 
 export function useAutosave<T>(
   value: T,
-  save: (value: T) => Promise<AutosaveWriteResult<T>>,
+  save: (patch: unknown) => Promise<AutosaveWriteResult<T>>,
   options: number | AutosaveOptions<T> = {},
 ): { status: SaveStatus; error: string | null } {
   const delay = typeof options === "number" ? options : (options.delay ?? 1000);
@@ -183,6 +98,7 @@ export function useAutosave<T>(
   const serialized = JSON.stringify(value);
   const serializedRef = useRef(serialized);
   const lastSavedRef = useRef(serialized);
+  const baseRef = useRef<T>(value);
   const timerRef = useRef<number | null>(null);
   const inFlightRef = useRef(false);
   const generationRef = useRef(0);
@@ -221,6 +137,29 @@ export function useAutosave<T>(
       setError(null);
     }
 
+    function journalTarget() {
+      const config = journalRef.current;
+      const storage = getSessionDraftStorage();
+      if (!config || !storage) return null;
+      return { storage, key: draftStorageKey(config.userId, config.kind) };
+    }
+
+    function syncJournal(base: T, editor: T) {
+      const target = journalTarget();
+      if (!target) return;
+      const remaining = diffPatch(base, editor);
+      if (remaining === undefined) {
+        target.storage.removeItem(target.key);
+        return;
+      }
+      writePatchDraft(target.storage, target.key, {
+        patch: remaining,
+        base: pickBase(base, remaining),
+        baseUpdatedAt: versionRef.current?.get() ?? null,
+        clientSavedAt: Date.now(),
+      });
+    }
+
     function isPending() {
       return (
         timerRef.current != null ||
@@ -229,28 +168,24 @@ export function useAutosave<T>(
       );
     }
 
-    function journalStorageAndKey() {
-      const config = journalRef.current;
-      const storage = getSessionDraftStorage();
-      if (!config || !storage) return null;
-      return { storage, key: draftStorageKey(config.userId, config.kind) };
-    }
-
     dirtyRef.current = isPending;
 
     keepaliveSendRef.current = () => {
       const config = keepaliveRef.current;
-      if (!config || !isPending()) return;
+      const expectedUpdatedAt = versionRef.current?.get() ?? null;
+      if (!config || !isPending() || !hasExpectedUpdatedAt(expectedUpdatedAt)) return;
       if (timerRef.current != null) {
         window.clearTimeout(timerRef.current);
         timerRef.current = null;
       }
       const raw = JSON.parse(serializedRef.current) as T;
       const outgoing = prepareRef.current ? prepareRef.current(raw) : raw;
+      const patch = diffPatch(baseRef.current, outgoing);
+      if (patch === undefined) return;
       const body = JSON.stringify({
         kind: config.kind,
-        data: outgoing,
-        expectedUpdatedAt: versionRef.current?.get() ?? null,
+        data: patch,
+        expectedUpdatedAt,
       });
       if (body.length >= KEEPALIVE_LIMIT) return;
       void fetch(config.url, {
@@ -284,17 +219,23 @@ export function useAutosave<T>(
 
       try {
         const raw = JSON.parse(payloadSerialized) as T;
-        const result = await saveWithConflictRetry(async (current) => {
-          const outgoing = prepareRef.current
-            ? prepareRef.current(current)
-            : current;
-          const write = await saveRef.current(outgoing);
+        const prepared = prepareRef.current ? prepareRef.current(raw) : raw;
+        const baseAtSave = baseRef.current;
+        const serverPatch = diffPatch(baseAtSave, prepared);
+
+        if (serverPatch === undefined) {
+          syncJournal(baseAtSave, raw);
+          lastSavedRef.current = payloadSerialized;
+          settle();
+          return;
+        }
+
+        const result = await saveWithConflictRetry(async (patch) => {
+          const write = await saveRef.current(patch);
           if (write.updatedAt) versionRef.current?.set(write.updatedAt);
-          if (write.conflict) {
-            versionRef.current?.set(write.conflict.updatedAt);
-          }
+          if (write.conflict) versionRef.current?.set(write.conflict.updatedAt);
           return write;
-        }, raw);
+        }, serverPatch);
 
         if (generation !== generationRef.current) {
           if (serializedRef.current === lastSavedRef.current) settle();
@@ -311,21 +252,27 @@ export function useAutosave<T>(
           return;
         }
 
-        if (serializedRef.current !== payloadSerialized) return;
-
-        lastSavedRef.current = payloadSerialized;
+        const appliedOn = result.appliedOn ?? baseAtSave;
+        const latest = JSON.parse(serializedRef.current) as T;
+        const changes = diffPatch(baseAtSave, latest);
+        const editor = result.appliedOn
+          ? mergePatch(result.appliedOn, changes ?? latest)
+          : latest;
+        baseRef.current = mergePatch(appliedOn, serverPatch);
+        syncJournal(baseRef.current, editor);
+        lastSavedRef.current = JSON.stringify(editor);
         hasSavedRef.current = true;
-        const journalTarget = journalStorageAndKey();
-        if (journalTarget) {
-          clearDraftIfPayload(
-            journalTarget.storage,
-            journalTarget.key,
-            JSON.parse(payloadSerialized) as T,
-          );
+        if (
+          result.appliedOn &&
+          JSON.stringify(editor) !== JSON.stringify(latest)
+        ) {
+          onRestoreRef.current?.(editor);
         }
-        if (mountedRef.current) {
+        if (mountedRef.current && serializedRef.current === payloadSerialized) {
           setStatus("saved");
           setError(null);
+        } else if (serializedRef.current === lastSavedRef.current) {
+          settle();
         }
       } finally {
         const newer = serializedRef.current !== payloadSerialized;
@@ -341,15 +288,29 @@ export function useAutosave<T>(
     if (first.current) {
       first.current = false;
       lastSavedRef.current = serialized;
+      baseRef.current = JSON.parse(serialized) as T;
       return;
     }
 
-    const journalTarget = (() => {
+    const target = (() => {
       const config = journalRef.current;
       const storage = getSessionDraftStorage();
       if (!config || !storage) return null;
       return { storage, key: draftStorageKey(config.userId, config.kind) };
     })();
+    const raw = JSON.parse(serialized) as T;
+    const editorPatch = diffPatch(baseRef.current, raw);
+    if (target) {
+      if (editorPatch === undefined) target.storage.removeItem(target.key);
+      else {
+        writePatchDraft(target.storage, target.key, {
+          patch: editorPatch,
+          base: pickBase(baseRef.current, editorPatch),
+          baseUpdatedAt: versionRef.current?.get() ?? null,
+          clientSavedAt: Date.now(),
+        });
+      }
+    }
 
     if (serialized === lastSavedRef.current) {
       if (mountedRef.current) {
@@ -357,10 +318,6 @@ export function useAutosave<T>(
         setError(null);
       }
       return;
-    }
-
-    if (journalTarget) {
-      writeDraft(journalTarget.storage, journalTarget.key, JSON.parse(serialized) as T);
     }
 
     if (mountedRef.current) setStatus("saving");
@@ -390,14 +347,22 @@ export function useAutosave<T>(
     const storage = getSessionDraftStorage();
     if (!config || !storage) return;
     const key = draftStorageKey(config.userId, config.kind);
-    const draft = readDraft<T>(storage, key);
+    const draft = readPatchDraft(storage, key);
     if (!draft) return;
-    if (JSON.stringify(draft.payload) === serializedRef.current) {
-      clearDraftIfPayload(storage, key, draft.payload);
+    const server = JSON.parse(serializedRef.current) as T;
+    const restored = restoreDraft(
+      server,
+      versionRef.current?.get() ?? null,
+      draft,
+    );
+    if (!restored.draft) {
+      storage.removeItem(key);
       return;
     }
+    writePatchDraft(storage, key, restored.draft);
+    if (JSON.stringify(restored.value) === serializedRef.current) return;
     pendingImmediateRef.current = true;
-    onRestoreRef.current?.(resolveRestoredValue(JSON.parse(serializedRef.current) as T, draft));
+    onRestoreRef.current?.(restored.value);
   }, []);
 
   useEffect(() => {

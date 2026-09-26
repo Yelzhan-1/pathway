@@ -1,9 +1,10 @@
 import { revalidatePath } from "next/cache";
 
 import type { Json } from "@/lib/database.types";
+import { hasExpectedUpdatedAt } from "@/lib/hooks/autosave-patch";
 import { parseActivities, parseCv } from "@/lib/profile/parse";
 import { updateProfileOptimistic } from "@/lib/profile/optimistic-update";
-import { activitiesSchema, cvSchema } from "@/lib/profile/schemas";
+import { activitiesSchema, cvPatchSchema } from "@/lib/profile/schemas";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
@@ -30,15 +31,18 @@ export async function POST(request: Request) {
     "expectedUpdatedAt" in body && typeof body.expectedUpdatedAt === "string"
       ? body.expectedUpdatedAt
       : null;
+  if (!hasExpectedUpdatedAt(expectedUpdatedAt)) {
+    return new Response(null, { status: 400 });
+  }
 
   if (kind === "cv") {
-    const parsed = cvSchema.safeParse(data);
+    const parsed = cvPatchSchema.safeParse(data);
     if (!parsed.success) return new Response(null, { status: 400 });
     const result = await updateProfileOptimistic(
       supabase,
       user.id,
       expectedUpdatedAt,
-      { cv: parsed.data as Json },
+      { cv: parsed.data },
     );
     if (result.ok) {
       revalidatePath("/cv");

@@ -82,8 +82,8 @@ export function CvBuilder({
 
   const cvSave = useAutosave(
     cv,
-    async (next): Promise<AutosaveWriteResult<Cv>> => {
-      const result = await saveCvAction(next, versionRef.current);
+    async (patch): Promise<AutosaveWriteResult<Cv>> => {
+      const result = await saveCvAction(patch, versionRef.current);
       if (result.conflict) {
         return {
           error: null,
@@ -105,8 +105,8 @@ export function CvBuilder({
   );
   const activitiesSave = useAutosave(
     activities,
-    async (next): Promise<AutosaveWriteResult<Activity[]>> => {
-      const result = await saveActivitiesAction(next, versionRef.current);
+    async (patch): Promise<AutosaveWriteResult<Activity[]>> => {
+      const result = await saveActivitiesAction(patch, versionRef.current);
       if (result.conflict) {
         return {
           error: null,

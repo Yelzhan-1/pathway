@@ -342,6 +342,15 @@ export const cvSchema = z.object({
   }),
 });
 
+export const cvPatchSchema = z.object({
+  summary: cvSchema.shape.summary.optional(),
+  skills: cvSchema.shape.skills.optional(),
+  languages: cvSchema.shape.languages.optional(),
+  contacts: cvSchema.shape.contacts.partial().optional(),
+  education: cvSchema.shape.education.partial().optional(),
+  headingsLang: cvSchema.shape.headingsLang.optional(),
+});
+
 export const profileFormSchema = z
   .object({
     full_name: z

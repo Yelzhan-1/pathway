@@ -43,7 +43,7 @@ export default async function AppLayout({
       </div>
       <div className="flex min-h-screen flex-1 flex-col">
         <div className="app-chrome print:hidden">
-          <TopBar fullName={fullName} />
+          <TopBar fullName={fullName} userId={user.id} />
         </div>
         <main className="flex-1 overflow-y-auto px-4 pb-24 pt-6 md:px-8 md:pb-6 print:px-0 print:pb-0 print:pt-0">
           {children}

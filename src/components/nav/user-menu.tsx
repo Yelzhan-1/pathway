@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { signOutAction } from "@/lib/actions/sign-out";
+import { clearBrowserCvDrafts } from "@/lib/hooks/autosave-patch";
 import { strings } from "@/lib/strings";
 
 function getInitials(name: string): string {
@@ -21,7 +22,13 @@ function getInitials(name: string): string {
   return `${parts[0]![0]}${parts[parts.length - 1]![0]}`.toUpperCase();
 }
 
-export function UserMenu({ fullName }: { fullName: string }) {
+export function UserMenu({
+  fullName,
+  userId,
+}: {
+  fullName: string;
+  userId: string;
+}) {
   const [isPending, startTransition] = useTransition();
 
   return (
@@ -42,7 +49,10 @@ export function UserMenu({ fullName }: { fullName: string }) {
         <DropdownMenuItem
           variant="destructive"
           disabled={isPending}
-          onClick={() => startTransition(() => signOutAction())}
+          onClick={() => {
+            clearBrowserCvDrafts(userId);
+            startTransition(() => signOutAction());
+          }}
         >
           {isPending ? (
             <Loader2 className="animate-spin" />

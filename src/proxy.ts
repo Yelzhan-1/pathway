@@ -1,17 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
-const PROTECTED_PATHS = [
-  "/dashboard",
-  "/onboarding",
-  "/profile",
-  "/cv",
-  "/universities",
-  "/roadmap",
-  "/tasks",
-];
-
-const AUTH_PATHS = ["/login", "/signup"];
+import { decideProxyRedirect } from "@/lib/auth/proxy-redirect";
 
 /**
  * Runs on every request (see `config.matcher` below). Refreshes the Supabase
@@ -49,19 +39,32 @@ export async function proxy(request: NextRequest) {
 
   // Do not run code between `createServerClient` and `getClaims()`. A
   // mistake here can make it very hard to debug users being randomly
-  // signed out.
+  // signed out. getClaims() only checks the JWT locally, so a revoked
+  // session still looks signed in until it expires. Auth pages confirm
+  // with getUser() before sending anyone to /dashboard.
   const { data } = await supabase.auth.getClaims();
-  const isAuthenticated = data !== null;
+  const claimsAuthenticated = data !== null;
 
   const { pathname } = request.nextUrl;
-  const isProtectedPath = PROTECTED_PATHS.some(
-    (path) => pathname === path || pathname.startsWith(`${path}/`),
-  );
-  const isAuthPath = AUTH_PATHS.some(
-    (path) => pathname === path || pathname.startsWith(`${path}/`),
-  );
+  const isAuthPath = pathname === "/login" || pathname === "/signup"
+    || pathname.startsWith("/login/") || pathname.startsWith("/signup/");
 
-  if (isProtectedPath && !isAuthenticated) {
+  let serverUser: boolean | null = null;
+  if (isAuthPath && claimsAuthenticated) {
+    const { data: userData } = await supabase.auth.getUser();
+    serverUser = userData.user != null;
+  }
+
+  const target = decideProxyRedirect(pathname, { claimsAuthenticated, serverUser });
+
+  if (isAuthPath && claimsAuthenticated && serverUser === false) {
+    for (const cookie of request.cookies.getAll()) {
+      if (!cookie.name.startsWith("sb-")) continue;
+      supabaseResponse.cookies.set(cookie.name, "", { path: "/", maxAge: 0 });
+    }
+  }
+
+  if (target === "/login") {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.search = "";
@@ -69,10 +72,15 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (isAuthPath && isAuthenticated) {
+  if (target === "/dashboard") {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
+    url.search = "";
+    const redirectResponse = NextResponse.redirect(url);
+    for (const cookie of supabaseResponse.cookies.getAll()) {
+      redirectResponse.cookies.set(cookie.name, cookie.value);
+    }
+    return redirectResponse;
   }
 
   // IMPORTANT: return the `supabaseResponse` object built above. Returning a

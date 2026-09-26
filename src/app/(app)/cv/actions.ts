@@ -6,7 +6,8 @@ import type { Json } from "@/lib/database.types";
 import { parseActivities, parseCv } from "@/lib/profile/parse";
 import { updateProfileOptimistic } from "@/lib/profile/optimistic-update";
 import { getCurrentProfile } from "@/lib/profile/queries";
-import { activitiesSchema, cvSchema } from "@/lib/profile/schemas";
+import { hasExpectedUpdatedAt } from "@/lib/hooks/autosave-patch";
+import { activitiesSchema, cvPatchSchema } from "@/lib/profile/schemas";
 import type { Activity, Cv } from "@/lib/profile/types";
 import { firstZodMessage } from "@/lib/profile/zod-error";
 import { strings } from "@/lib/strings";
@@ -24,8 +25,11 @@ export async function saveCvAction(
   raw: unknown,
   expectedUpdatedAt: string | null,
 ): Promise<CvAutosaveResult<Cv>> {
+  if (!hasExpectedUpdatedAt(expectedUpdatedAt)) {
+    return { error: strings.cv.saveError };
+  }
   const { user, supabase } = await getCurrentProfile();
-  const parsed = cvSchema.safeParse(raw);
+  const parsed = cvPatchSchema.safeParse(raw);
   if (!parsed.success) {
     return { error: firstZodMessage(parsed.error) };
   }
@@ -34,7 +38,7 @@ export async function saveCvAction(
     supabase,
     user.id,
     expectedUpdatedAt,
-    { cv: parsed.data as Json },
+    { cv: parsed.data },
   );
 
   if (result.ok) {
@@ -58,6 +62,9 @@ export async function saveActivitiesAction(
   raw: unknown,
   expectedUpdatedAt: string | null,
 ): Promise<CvAutosaveResult<Activity[]>> {
+  if (!hasExpectedUpdatedAt(expectedUpdatedAt)) {
+    return { error: strings.cv.saveError };
+  }
   const { user, supabase } = await getCurrentProfile();
   const parsed = activitiesSchema.safeParse(raw);
   if (!parsed.success) {
