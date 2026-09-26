@@ -22,6 +22,51 @@ export function Display({ as: Tag = 'h2', className, children, id }: { as?: 'h1'
   return <Tag id={id} className={cn('font-display font-semibold tracking-[-0.02em] text-balance', className)}>{children}</Tag>;
 }
 
+/**
+ * Page header for inner pages: title + one-line subtitle + optional decorative
+ * illustration scene (top-right) + optional single primary action. Same card
+ * language as the dashboard hero, so every page opens with the same rhythm.
+ */
+export function PageHeader({
+  title,
+  subtitle,
+  illustration,
+  action,
+  className,
+}: {
+  title: string;
+  subtitle?: string;
+  illustration?: ReactNode;
+  action?: { label: string; href: string };
+  className?: string;
+}) {
+  return (
+    <header className={cn('relative overflow-hidden rounded-[var(--radius-hero)] bg-card p-5 ring-1 ring-border sm:p-6', className)}>
+      {illustration && (
+        <div aria-hidden className="pointer-events-none absolute -right-3 -top-3 w-[104px] opacity-90 sm:w-[136px]">
+          {illustration}
+        </div>
+      )}
+      <div className="relative z-10 max-w-[calc(100%-84px)] sm:max-w-[440px]">
+        <Display as="h1" className="text-[24px] font-bold leading-tight sm:text-[28px]">{title}</Display>
+        {subtitle && <p className="mt-1.5 text-[14px] font-medium leading-snug text-ink-2">{subtitle}</p>}
+        {action && <Button href={action.href} size="md" className="mt-4" icon>{action.label}</Button>}
+      </div>
+    </header>
+  );
+}
+
+/** Small pill stat: optional icon tile + label + value. For key facts rows (Вузы cards, exams, etc). */
+export function StatChip({ icon: I, label, value, tone = 'mint', className }: { icon?: ComponentType<{ className?: string; strokeWidth?: number }>; label?: string; value: string; tone?: Tone; className?: string }) {
+  return (
+    <span className={cn('inline-flex min-h-9 items-center gap-2 rounded-full bg-card px-3 text-[13px] font-bold ring-1 ring-border', className)}>
+      {I && <IconTile icon={I} tone={tone} size={24} />}
+      {label && <span className="text-muted-foreground">{label}</span>}
+      <span>{value}</span>
+    </span>
+  );
+}
+
 /** White card with the 2px «chunky» bottom edge. `tone` swaps the surface. */
 export function TCard({ children, className, surface = 'card', as: Tag = 'section', labelledBy }: { children: ReactNode; className?: string; surface?: 'card' | 'honey' | 'forest' | 'mint'; as?: 'section' | 'div' | 'article'; labelledBy?: string }) {
   const s = {
