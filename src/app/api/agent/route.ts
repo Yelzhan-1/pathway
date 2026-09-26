@@ -8,7 +8,7 @@ import {
 
 import { agentErrorText, logAgentError } from "@/lib/agent/errors";
 import { agentModelId } from "@/lib/agent/model";
-import { partsToJson, textFromParts } from "@/lib/agent/messages";
+import { historyForModel, partsToJson, textFromParts } from "@/lib/agent/messages";
 import { AGENT_SYSTEM_PROMPT } from "@/lib/agent/prompt";
 import {
   AGENT_RATE_LIMIT_MESSAGE_RU,
@@ -85,10 +85,9 @@ export async function POST(request: Request) {
   }
 
   const messages: ModelMessage[] = [
-    ...(history ?? [])
-      .slice()
-      .reverse()
-      .map((row) => ({ role: row.role, content: row.content })),
+    ...historyForModel(
+      (history ?? []).slice().reverse().map((row) => ({ role: row.role, content: row.content })),
+    ),
     { role: "user", content: parsed.data.message },
   ];
 
